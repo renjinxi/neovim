@@ -70,7 +70,8 @@ local some_thing_keymap = {
 		r = { "<cmd>Format<cr>", "Format" },
 		d = { "<cmd>DiffviewOpen<cr>", "Open Diff" },
 		c = { "<cmd>DiffviewClose<cr>", "Close Diff" },
-		e = { "<cmd>edit %<cr>", "Reload Current File" },
+		E = { "<cmd>edit %<cr>", "Reload Current File" },
+		e = { "<cmd>bufdo edit %<cr>", "Reload All Buffer File" },
 	},
 }
 
