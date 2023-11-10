@@ -72,6 +72,7 @@ local some_thing_keymap = {
 		c = { "<cmd>DiffviewClose<cr>", "Close Diff" },
 		E = { "<cmd>edit %<cr>", "Reload Current File" },
 		e = { "<cmd>bufdo edit %<cr>", "Reload All Buffer File" },
+		n = { "<cmd>lua = vim.api.nvim_buf_get_name(0)<cr>", "Get File Abs Path" },
 	},
 }
 
