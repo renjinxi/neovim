@@ -92,6 +92,7 @@ local tele_keymap = {
 		r = { "<cmd>Telescope registers<cr>", "Registers" },
 		p = { "<cmd>Telescope jumplist<cr>", "Jumplist" },
 		l = { "<cmd>Telescope file_browser<cr>", "File Browser" },
+		o = { "<cmd>Telescope projects<cr>", "Recent Projects" },
 	},
 }
 
