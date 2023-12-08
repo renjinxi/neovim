@@ -82,6 +82,8 @@ local tele_keymap = {
 		f = { "<cmd>Telescope find_files<cr>", "Find Files" },
 		F = { "<cmd>lua require('telescope.builtin').find_files({no_ignore=true})<cr>", "Find Files" },
 		g = { "<cmd>Telescope live_grep<cr>", "Live Grep" },
+		u = { "<cmd>Telescope dir find_files<cr>", "Dir Find Files" },
+		i = { "<cmd>Telescope dir live_grep<cr>", "Dir Live Grep" },
 		--G = { "<cmd>lua require('telescope.builtin').live_grep({no_ignore=true})<cr>", "Find Files" },
 		b = { "<cmd>Telescope buffers<cr>", "Buffers" },
 		h = { "<cmd>Telescope help_tags<cr>", "Help Tags" },

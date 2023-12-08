@@ -65,7 +65,7 @@ local plugins = {
 
                 "L3MON4D3/LuaSnip",
                 dependencies = {
-                        "saadparwaiz1/cmp_luasnip", -- Snippets source for nvim-cmp
+                        "saadparwaiz1/cmp_luasnip",     -- Snippets source for nvim-cmp
                         "rafamadriz/friendly-snippets", --代码段合集
                 },
         },
@@ -225,7 +225,18 @@ local plugins = {
                                 -- refer to the configuration section below
                         }
                 end
+        },
+        {
+                "princejoogie/dir-telescope.nvim",
+                -- telescope.nvim is a required dependency
+                config = function()
+                        require("dir-telescope").setup({
+                                -- these are the default options set
+                                hidden = true,
+                                no_ignore = false,
+                                show_preview = true,
+                        })
+                end
         }
-
 }
 return lazy.setup(plugins, opt)
