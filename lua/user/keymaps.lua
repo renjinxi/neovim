@@ -91,7 +91,7 @@ local tele_keymap = {
 		n = { "<cmd>Telescope command_history<cr>", "Command History" },
 		s = { "<cmd>Telescope search_history<cr>", "Search History" },
 		m = { "<cmd>Telescope marks<cr>", "Marks" },
-		r = { "<cmd>Telescope registers<cr>", "Registers" },
+		r = { "<cmd>lua require'telescope'.extensions.project.project{} <cr>", "Recent Project History" },
 		p = { "<cmd>Telescope jumplist<cr>", "Jumplist" },
 		l = { "<cmd>Telescope file_browser<cr>", "File Browser" },
 		o = { "<cmd>Telescope projects<cr>", "Recent Projects" },
@@ -109,7 +109,10 @@ local window_keymap = {
 		L = { "<C-w>L", "Window Move To Right" },
 		J = { "<C-w>J", "Window Move To Blow" },
 		K = { "<C-w>K", "Window Move To Up" },
-		t = { "<C-w>T", "Window Move To New Tab" },
+		T = { "<C-w>T", "Window Move To New Tab" },
+		i = { "<C-w>]<C-w>L", "VSplit And Jump" },
+		u = { "<C-w>]", "Split And Jump" },
+		t = { "<C-w>]<C-w>T", "Split And Jump" },
 	},
 }
 

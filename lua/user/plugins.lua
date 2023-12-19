@@ -135,7 +135,6 @@ local plugins = {
         "danymat/neogen",
 
         -- theme for neovim
-        "EdenEast/nightfox.nvim",
 
         -- go to small window
         "rmagatti/goto-preview",
@@ -215,7 +214,6 @@ local plugins = {
                         vim.fn["firenvim#install"](0)
                 end
         },
-        -- Lua
         {
                 "ahmedkhalf/project.nvim",
                 config = function()
@@ -237,6 +235,9 @@ local plugins = {
                                 show_preview = true,
                         })
                 end
-        }
+        },
+
+        "nvim-telescope/telescope-project.nvim",
+        --"LunarVim/bigfile.nvim",
 }
 return lazy.setup(plugins, opt)

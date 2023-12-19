@@ -23,6 +23,7 @@ local options = {
 	autoindent = true,
 	fileformat = "unix",
 	relativenumber = true,
+        splitright = true,
 }
 
 for k, v in pairs(options) do

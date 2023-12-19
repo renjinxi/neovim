@@ -43,6 +43,7 @@ local htop = Terminal:new({ cmd = "htop", hidden = true, direction = "float", on
 local ipython = Terminal:new({ cmd = "ipython", hidden = true })
 local new_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "float", on_open = start_insert })
 local tig = Terminal:new({ cmd = "tig", hidden = true, direction = "float", on_open = start_insert })
+local new_tab_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab", on_open = start_insert })
 
 function _LAZYGIT_TOGGLE()
 	lazygit:toggle()
@@ -64,8 +65,17 @@ function _NEWTERM_TOGGLE()
 	new_term:toggle()
 end
 
-function _NEWTIG_TOGGLE()
+function _NEWTIG()
 	tig:toggle()
+end
+
+
+function _NEWTERM()
+	new_tab_term:toggle()
+end
+
+function _TERM()
+        Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab", on_open = start_insert }):toggle()
 end
 
 local status_ok, which_key = pcall(require, "which-key")
@@ -85,6 +95,8 @@ function M.setup()
 			h = { "<cmd>lua _HTOP_TOGGLE()<CR>", "Htop" },
 			u = { "<cmd>lua _NCDU_TOGGLE()<CR>", "Ncdu" },
 			g = { "<cmd>lua _NEWTIG_TOGGLE() <CR>", "Tig" },
+			t = { "<cmd>lua _NEWTERM() <CR>", "New Tab Term" },
+			j = { "<cmd>lua __TERM() <CR>", "New Tab Term" },
 		},
 	}
 
