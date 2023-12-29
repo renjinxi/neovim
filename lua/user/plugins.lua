@@ -45,6 +45,7 @@ local plugins = {
         },
 
         "nvim-telescope/telescope.nvim",
+        "nvim-telescope/telescope-live-grep-args.nvim",
         "nvim-lua/plenary.nvim",
 
         -- tree syntc
