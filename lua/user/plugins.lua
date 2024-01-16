@@ -120,7 +120,12 @@ local plugins = {
                         vim.fn["mkdp#util#install"]()
                 end,
         },
-        "simrat39/symbols-outline.nvim",
+        {
+                "simrat39/symbols-outline.nvim",
+                config = function()
+                        require("symbols-outline").setup()
+                end
+        },
 
         --debug for python
         "mfussenegger/nvim-dap",
@@ -240,5 +245,20 @@ local plugins = {
 
         "nvim-telescope/telescope-project.nvim",
         --"LunarVim/bigfile.nvim",
+        --chatgpt
+
+        {
+                "jackMort/ChatGPT.nvim",
+                event = "VeryLazy",
+                config = function()
+                        require("chatgpt").setup()
+                end,
+                dependencies = {
+                        "MunifTanjim/nui.nvim",
+                        "nvim-lua/plenary.nvim",
+                        "nvim-telescope/telescope.nvim"
+                }
+        }
+
 }
 return lazy.setup(plugins, opt)
