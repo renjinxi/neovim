@@ -20,16 +20,6 @@ require("dap-python").setup(python_path)
 
 require("dap.ext.vscode").load_launchjs(".nvim/launch.json", nil)
 
-table.insert(dap.configurations.python, {
-        type = "python",
-        request = "launch",
-        name = "My Launch file",
-        program = "${file}",
-        justMyCode = false,
-        pythonPath = function()
-                return python_path
-        end,
-})
 
 table.insert(dap.configurations.python, {
         type = "python",
@@ -52,7 +42,7 @@ table.insert(dap.configurations.python, {
 table.insert(dap.configurations.python, {
         type = "python",
         request = "launch",
-        name = "Django",
+        name = "My Django",
         program = "${file}",
         justMyCode = false,
         django = true,

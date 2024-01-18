@@ -247,18 +247,36 @@ local plugins = {
         --"LunarVim/bigfile.nvim",
         --chatgpt
 
-        {
-                "jackMort/ChatGPT.nvim",
-                event = "VeryLazy",
-                config = function()
-                        require("chatgpt").setup()
-                end,
-                dependencies = {
-                        "MunifTanjim/nui.nvim",
-                        "nvim-lua/plenary.nvim",
-                        "nvim-telescope/telescope.nvim"
-                }
-        }
+        --{
+        --"jackMort/ChatGPT.nvim",
+        --event = "VeryLazy",
+        --config = function()
+        --require("chatgpt").setup()
+        --end,
+        --dependencies = {
+        --"MunifTanjim/nui.nvim",
+        --"nvim-lua/plenary.nvim",
+        --"nvim-telescope/telescope.nvim"
+        --}
+        --}
 
+        -- sql connection
+        {
+                'kristijanhusak/vim-dadbod-ui',
+                dependencies = {
+                        { 'tpope/vim-dadbod',                     lazy = true },
+                        { 'kristijanhusak/vim-dadbod-completion', ft = { 'sql', 'mysql', 'plsql' }, lazy = true },
+                },
+                cmd = {
+                        'DBUI',
+                        'DBUIToggle',
+                        'DBUIAddConnection',
+                        'DBUIFindBuffer',
+                },
+                init = function()
+                        -- Your DBUI configuration
+                        vim.g.db_ui_use_nerd_fonts = 1
+                end,
+        }
 }
 return lazy.setup(plugins, opt)

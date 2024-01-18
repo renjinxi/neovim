@@ -80,7 +80,7 @@ local tele_keymap = {
         f = {
                 name = "Telescope",
                 f = { "<cmd>Telescope find_files<cr>", "Find Files" },
-                F = { "<cmd>lua require('telescope.builtin').find_files({no_ignore=true})<cr>", "Find Files" },
+                F = { "<cmd>lua require('telescope.builtin').find_files({no_ignore=true, hidden=true})<cr>", "Find Files" },
                 --g = { "<cmd>Telescope live_grep<cr>", "Live Grep" },
                 g = { "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", "Live Grep" },
                 k = { "<cmd>lua require('telescope-live-grep-args.shortcuts').grep_word_under_cursor()<cr>", "Live Grep" },
