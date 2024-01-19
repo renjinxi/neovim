@@ -3,7 +3,7 @@ if not status_ok then
         return
 end
 
-post_open_hook = function(_, win)
+local post_open_hook = function(_, win)
         vim.api.nvim_win_set_option(win, "winhighlight", "Normal:")
 end
 
@@ -11,9 +11,9 @@ goto_preview.setup({
         post_open_hook = post_open_hook,
 })
 
-local status_ok, which_key = pcall(require, "which-key")
+local w_status_ok, which_key = pcall(require, "which-key")
 
-if not status_ok then
+if not w_status_ok then
         return
 end
 
