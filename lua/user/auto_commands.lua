@@ -5,11 +5,12 @@ local indent_group = api.nvim_create_augroup("indent_group", { clear = true })
 local relative_group = api.nvim_create_augroup("relative_group", { clear = true })
 
 local function set_indent()
-        local default_value = 8
+        local default_value = 4
         local indent_table = {
                 python = 4,
                 markdown = 4,
-                c = 8,
+                --toml = 2,
+                --c = 4,
         }
 
         opt.textwidth = 150
