@@ -53,7 +53,7 @@ end
 
 --api.nvim_create_autocmd({ "BufEnter", "BufRead" }, {
 --api.nvim_create_autocmd({ "WinEnter", "FocusGained" }, {
-api.nvim_create_autocmd({ "WinEnter", "BufRead", "BufEnter" }, {
+api.nvim_create_autocmd({ "WinEnter", "BufRead", "BufEnter", "FocusGained" }, {
         pattern = "*",
         group = relative_group,
         desc = "set relativenumber for file",

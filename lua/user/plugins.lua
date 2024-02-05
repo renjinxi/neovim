@@ -247,19 +247,20 @@ local plugins = {
         --"LunarVim/bigfile.nvim",
         --chatgpt
 
-        --{
-        --"jackMort/ChatGPT.nvim",
-        --event = "VeryLazy",
-        --config = function()
-        --require("chatgpt").setup()
-        --end,
-        --dependencies = {
-        --"MunifTanjim/nui.nvim",
-        --"nvim-lua/plenary.nvim",
-        --"nvim-telescope/telescope.nvim"
-        --}
-        --}
-
+        -- Lazy
+        {
+                "jackMort/ChatGPT.nvim",
+                event = "VeryLazy",
+                config = function()
+                        require("chatgpt").setup()
+                end,
+                dependencies = {
+                        "MunifTanjim/nui.nvim",
+                        "nvim-lua/plenary.nvim",
+                        "folke/trouble.nvim",
+                        "nvim-telescope/telescope.nvim"
+                }
+        },
         -- sql connection
         {
                 'kristijanhusak/vim-dadbod-ui',
@@ -288,9 +289,9 @@ local plugins = {
                 config = function()
                         require("neorg").setup {
                                 load = {
-                                        ["core.defaults"] = {}, -- Loads default behaviour
+                                        ["core.defaults"] = {},  -- Loads default behaviour
                                         ["core.concealer"] = {}, -- Adds pretty icons to your documents
-                                        ["core.dirman"] = { -- Manages Neorg workspaces
+                                        ["core.dirman"] = {      -- Manages Neorg workspaces
                                                 config = {
                                                         workspaces = {
                                                                 notes = "~/notes",
