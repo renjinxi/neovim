@@ -21,5 +21,3 @@ require "user.goto_preview"
 require "user.bqf"
 require "user.telescope"
 require "user.indent_blankline"
-
-
