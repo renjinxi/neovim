@@ -141,9 +141,35 @@ local insert_keymap = {
     b = { "<esc>cb", "Delete Pre Word" },
 }
 
+local chagpt_keymap = {
+    a = {
+        name = "ChatGPT",
+        c = { "<cmd>ChatGPT<CR>", "ChatGPT" },
+        e = { "<cmd>ChatGPTEditWithInstruction<CR>", "Edit with instruction", mode = { "n", "v" } },
+        g = { "<cmd>ChatGPTRun grammar_correction<CR>", "Grammar Correction", mode = { "n", "v" } },
+        t = { "<cmd>ChatGPTRun translate<CR>", "Translate", mode = { "n", "v" } },
+        k = { "<cmd>ChatGPTRun keywords<CR>", "Keywords", mode = { "n", "v" } },
+        d = { "<cmd>ChatGPTRun docstring<CR>", "Docstring", mode = { "n", "v" } },
+        a = { "<cmd>ChatGPTRun add_tests<CR>", "Add Tests", mode = { "n", "v" } },
+        o = { "<cmd>ChatGPTRun optimize_code<CR>", "Optimize Code", mode = { "n", "v" } },
+        s = { "<cmd>ChatGPTRun summarize<CR>", "Summarize", mode = { "n", "v" } },
+        f = { "<cmd>ChatGPTRun fix_bugs<CR>", "Fix Bugs", mode = { "n", "v" } },
+        x = { "<cmd>ChatGPTRun explain_code<CR>", "Explain Code", mode = { "n", "v" } },
+        r = { "<cmd>ChatGPTRun roxygen_edit<CR>", "Roxygen Edit", mode = { "n", "v" } },
+        l = { "<cmd>ChatGPTRun code_readability_analysis<CR>", "Code Readability Analysis", mode = { "n", "v" } },
+    },
+}
 local insert_opts = {
     mode = "i",
     prefix = "<M-c>",
+    buffer = nil,
+    silent = true,
+    noremap = true,
+    nowait = false,
+}
+local gpt_opts = {
+    mode = { "n", "v" },
+    prefix = "<leader>",
     buffer = nil,
     silent = true,
     noremap = true,
@@ -155,6 +181,7 @@ which_key.register(window_keymap, n_opts)
 which_key.register(zen_keymap, n_opts)
 which_key.register(zen_v_keymap, v_opts)
 which_key.register(insert_keymap, insert_opts)
+which_key.register(chagpt_keymap, gpt_opts)
 
 for i = 1, 9 do
     local key = string.format("<leader>w%d", i)

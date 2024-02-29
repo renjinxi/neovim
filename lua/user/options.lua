@@ -24,6 +24,7 @@ local options = {
     fileformat = "unix",
     --relativenumber = true,
     splitright = true,
+    --termguicolors = true,
 }
 
 for k, v in pairs(options) do

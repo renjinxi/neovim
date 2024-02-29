@@ -1,4 +1,3 @@
-" Name:         shine
 " Description:  Light colorscheme inspired by normal text editors.
 " Author:       Original author is Yasuhiro Matsumoto <mattn@mail.goo.ne.jp>
 " Maintainer:   Original maintainer is Yasuhiro Matsumoto <mattn@mail.goo.ne.jp>

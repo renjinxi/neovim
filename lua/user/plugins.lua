@@ -5,7 +5,7 @@ if not vim.loop.fs_stat(lazypath) then
         "clone",
         "--filter=blob:none",
         "https://github.com/folke/lazy.nvim.git",
-        "--branch=stable",         -- latest stable release
+        "--branch=stable", -- latest stable release
         lazypath,
     })
 end
@@ -66,8 +66,8 @@ local plugins = {
 
         "L3MON4D3/LuaSnip",
         dependencies = {
-            "saadparwaiz1/cmp_luasnip",                 -- Snippets source for nvim-cmp
-            "rafamadriz/friendly-snippets",             --代码段合集
+            "saadparwaiz1/cmp_luasnip",     -- Snippets source for nvim-cmp
+            "rafamadriz/friendly-snippets", --代码段合集
         },
     },
 
@@ -94,7 +94,7 @@ local plugins = {
     },
     {
         "kylechui/nvim-surround",
-        version = "*",         -- Use for stability; omit to use `main` branch for the latest features
+        version = "*", -- Use for stability; omit to use `main` branch for the latest features
         event = "VeryLazy",
         config = function()
             require("nvim-surround").setup({
@@ -289,9 +289,9 @@ local plugins = {
         config = function()
             require("neorg").setup {
                 load = {
-                    ["core.defaults"] = {},                      -- Loads default behaviour
-                    ["core.concealer"] = {},                     -- Adds pretty icons to your documents
-                    ["core.dirman"] = {                          -- Manages Neorg workspaces
+                    ["core.defaults"] = {},  -- Loads default behaviour
+                    ["core.concealer"] = {}, -- Adds pretty icons to your documents
+                    ["core.dirman"] = {      -- Manages Neorg workspaces
                         config = {
                             workspaces = {
                                 notes = "~/notes",
@@ -302,5 +302,6 @@ local plugins = {
             }
         end,
     },
+
 }
 return lazy.setup(plugins, opt)
