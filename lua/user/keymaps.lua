@@ -57,6 +57,7 @@ local some_thing_keymap = {
     v = {
         name = "Some Thing",
         l = { "<cmd>noh<cr>", "Cachel HighLight" },
+        i = { "<cmd>luafile ~/.config/nvim/init.lua<cr><cmd>Lazy restore<cr>", "reload config" },
         j = { "<cmd>set relativenumber<cr>", "Set Relative Number" },
         k = { "<cmd>set norelativenumber<cr>", "Cancel Relative Number" },
         h = { "<cmd>SymbolsOutline<cr>", "Toggle Symbols" },
@@ -73,6 +74,7 @@ local some_thing_keymap = {
         E = { "<cmd>edit %<cr>", "Reload Current File" },
         e = { "<cmd>bufdo edit %<cr>", "Reload All Buffer File" },
         n = { "<cmd>lua = vim.api.nvim_buf_get_name(0)<cr>", "Get File Abs Path" },
+        b = { "<cmd>%bd|e#<cr>", "Delete Other Buffers" },
     },
 }
 
