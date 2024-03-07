@@ -207,7 +207,7 @@ local plugins = {
         end,
     },
     {
-        'williamboman/mason.nvim',
+        'williamboman/mason-lspconfig',
         config = function()
             require("mason-lspconfig").setup({
                 -- Automatically install LSP servers
