@@ -177,6 +177,31 @@ local gpt_opts = {
     noremap = true,
     nowait = false,
 }
+
+local lsp_mappings = {
+    l = {
+        name = "LSP", -- naming the prefix group
+        s = {"<cmd>lua vim.lsp.buf.document_symbol()<CR>", "Document Symbols"},
+        D = {"<cmd>lua vim.lsp.buf.declaration()<CR>", "Declaration"},
+        d = {"<cmd>lua vim.lsp.buf.definition()<CR>", "Definition"},
+        I = {"<cmd>lua vim.lsp.buf.implementation()<CR>", "Implementation"},
+        sh = {"<cmd>lua vim.lsp.buf.signature_help()<CR>", "Signature Help"},
+        wa = {"<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", "Add Workspace Folder"},
+        wr = {"<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", "Remove Workspace Folder"},
+        wl = {"<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>", "List Workspace Folders"},
+        r = {"<cmd>lua vim.lsp.buf.rename()<CR>", "Rename"},
+        c = {"<cmd>lua vim.lsp.buf.code_action()<CR>", "Code Action"},
+        R = {"<cmd>lua vim.lsp.buf.references()<CR>", "References"},
+        f = {"<cmd>lua vim.lsp.buf.format { async = true }<CR>", "Format"},
+        -- Note: You have 'lD' defined twice, for 'declaration' and 'type_definition'.
+        -- This example keeps the 'type_definition' mapping.
+        e = {"<cmd>lua vim.diagnostic.open_float()<CR>", "Diagnostic Float"},
+        q = {"<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>", "Diagnostic Loclist"},
+    },
+    ["[d"] = {"<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>", "Previous Diagnostic"},
+    ["]d"] = {"<cmd>lua vim.lsp.diagnostic.goto_next()<CR>", "Next Diagnostic"},
+    K = {"<cmd>lua vim.lsp.buf.hover()<CR>", "Hover"}
+}
 which_key.register(some_thing_keymap, n_opts)
 which_key.register(tele_keymap, n_opts)
 which_key.register(window_keymap, n_opts)
@@ -184,6 +209,7 @@ which_key.register(zen_keymap, n_opts)
 which_key.register(zen_v_keymap, v_opts)
 which_key.register(insert_keymap, insert_opts)
 which_key.register(chagpt_keymap, gpt_opts)
+which_key.register(lsp_mappings, gpt_opts)
 
 for i = 1, 9 do
     local key = string.format("<leader>w%d", i)

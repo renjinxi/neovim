@@ -5,7 +5,7 @@ if not status_ok then
 end
 
 local lspconfig = require("lspconfig")
-local servers = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo" }
+local servers = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" }
 
 lsp_installer.setup({
     ensure_installed = servers,

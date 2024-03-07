@@ -252,13 +252,14 @@ local plugins = {
         "jackMort/ChatGPT.nvim",
         event = "VeryLazy",
         config = function()
+            --require("chatgpt").setup({})
             require("chatgpt").setup({
                 openai_params = {
-                    --model = "gpt-3.5-turbo",
-                    model = "gpt-4-turbo-preview",
+                    model = "gpt-3.5-turbo",
+                    --model = "gpt-4-turbo-preview",
                     frequency_penalty = 0,
                     presence_penalty = 0,
-                    max_tokens = 1000,
+                    max_tokens = 300,
                     temperature = 0,
                     top_p = 1,
                     n = 1,

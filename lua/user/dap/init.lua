@@ -8,7 +8,8 @@ if status_ok then
     dap_ui.setup()
 end
 
-local python_path = "/usr/local/bin/python3"
+local settings = require("user.settings")
+local python_path = settings.debug_python_path
 local dap = require("dap")
 dap.adapters.python = {
     type = "executable",
@@ -60,7 +61,7 @@ table.insert(dap.configurations.python, {
 
 dap.adapters.lldb = {
     type = "executable",
-    command = "/usr/local/Cellar/llvm/17.0.2/bin/lldb-vscode",     -- adjust as needed, must be absolute path
+    command = "/usr/local/Cellar/llvm/17.0.2/bin/lldb-vscode", -- adjust as needed, must be absolute path
     name = "lldb",
 }
 

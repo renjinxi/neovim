@@ -1,10 +1,12 @@
-local settings = {}
+local settings = {
+    debug_python_path = "/usr/local/bin/python3"
+}
 
 local state, local_settings = pcall(require, "user.local_settings")
 
 if state then
     for k, v in pairs(local_settings) do
-        local_settings[k] = v
+        settings[k] = v
     end
 end
 
