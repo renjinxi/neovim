@@ -206,6 +206,18 @@ local plugins = {
             require("mason").setup()
         end,
     },
+    {
+        'williamboman/mason.nvim',
+        config = function()
+            require("mason-lspconfig").setup {
+                -- Automatically install LSP servers
+                ensure_installed = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" }
+                -- Automatically configure installed servers with nvim-lspconfig
+                automatic_installation = true,
+            }
+        end
+
+    },
 
     -- format
     "mhartington/formatter.nvim",
