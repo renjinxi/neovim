@@ -28,11 +28,7 @@ local opt = {
 local plugins = {
     -- manage itself
     "folke/lazy.nvim",
-
     "neovim/nvim-lspconfig",
-
-    "williamboman/nvim-lsp-installer",
-
     "Pocco81/auto-save.nvim",
 
     -- quick move
@@ -46,7 +42,7 @@ local plugins = {
 
     "nvim-telescope/telescope.nvim",
     "nvim-telescope/telescope-live-grep-args.nvim",
-    "nvim-lua/plenary.nvim",
+    --"nvim-lua/plenary.nvim",
 
     -- tree syntc
     "nvim-treesitter/nvim-treesitter",
@@ -59,8 +55,6 @@ local plugins = {
     "hrsh7th/cmp-cmdline",
     "hrsh7th/nvim-cmp",
 
-    "L3MON4D3/LuaSnip",
-    "saadparwaiz1/cmp_luasnip",
     -- 代码段提示
     {
 
@@ -109,8 +103,6 @@ local plugins = {
     -- which key
     "folke/which-key.nvim",
 
-    -- highlit word cursor
-    -- "RRethy/vim-illuminate"
     { "akinsho/toggleterm.nvim",             version = "*" },
 
     {
@@ -219,8 +211,6 @@ local plugins = {
 
     },
 
-    -- format
-    "mhartington/formatter.nvim",
     --
     {
         'glacambre/firenvim',
@@ -285,47 +275,8 @@ local plugins = {
             "nvim-telescope/telescope.nvim"
         }
     },
-    -- sql connection
-    {
-        'kristijanhusak/vim-dadbod-ui',
-        dependencies = {
-            { 'tpope/vim-dadbod',                     lazy = true },
-            { 'kristijanhusak/vim-dadbod-completion', ft = { 'sql', 'mysql', 'plsql' }, lazy = true },
-        },
-        cmd = {
-            'DBUI',
-            'DBUIToggle',
-            'DBUIAddConnection',
-            'DBUIFindBuffer',
-        },
-        init = function()
-            -- Your DBUI configuration
-            vim.g.db_ui_use_nerd_fonts = 1
-        end,
-    },
     -- startuptime
     "dstein64/vim-startuptime",
-    {
-        "nvim-neorg/neorg",
-        build = ":Neorg sync-parsers",
-        -- tag = "*",
-        dependencies = { "nvim-lua/plenary.nvim" },
-        config = function()
-            require("neorg").setup {
-                load = {
-                    ["core.defaults"] = {},  -- Loads default behaviour
-                    ["core.concealer"] = {}, -- Adds pretty icons to your documents
-                    ["core.dirman"] = {      -- Manages Neorg workspaces
-                        config = {
-                            workspaces = {
-                                notes = "~/notes",
-                            },
-                        },
-                    },
-                },
-            }
-        end,
-    },
 
     {
         "uga-rosa/translate.nvim",

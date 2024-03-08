@@ -41,6 +41,7 @@ local lazygit = Terminal:new({ cmd = "lazygit", hidden = true, direction = "floa
 local ncdu = Terminal:new({ cmd = "ncdu --color dark", hidden = true, direction = "float", on_open = start_insert })
 local htop = Terminal:new({ cmd = "htop", hidden = true, direction = "float", on_open = start_insert })
 local ipython = Terminal:new({ cmd = "ipython", hidden = true })
+local lua = Terminal:new({ cmd = "lua", hidden = true })
 local cling = Terminal:new({ cmd = "cling", hidden = true })
 local new_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "float", on_open = start_insert })
 local tig = Terminal:new({ cmd = "tig", hidden = true, direction = "float", on_open = start_insert })
@@ -65,6 +66,11 @@ end
 function _CLING_TOGGLE()
     cling:toggle()
 end
+
+function _LUA_TOGGLE()
+    lua:toggle()
+end
+
 
 function _NEWTERM_TOGGLE()
     new_term:toggle()
@@ -102,6 +108,7 @@ function M.setup()
             g = { "<cmd>lua _NEWTIG_TOGGLE() <CR>", "Tig" },
             t = { "<cmd>lua _NEWTERM() <CR>", "New Tab Term" },
             j = { "<cmd>lua __TERM() <CR>", "New Tab Term" },
+            a = { "<cmd>lua __LUA_TOGGLE()<CR>", "Lua" },
         },
     }
 
