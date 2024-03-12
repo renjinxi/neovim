@@ -56,7 +56,7 @@ local v_opts = {
 local some_thing_keymap = {
     v = {
         name = "Some Thing",
-        l = { "<cmd>noh<cr>", "Cachel HighLight" },
+        --l = { "<cmd>noh<cr>", "Cachel HighLight" },
         i = { "<cmd>luafile ~/.config/nvim/init.lua<cr><cmd>Lazy restore<cr>", "reload config" },
         j = { "<cmd>set relativenumber<cr>", "Set Relative Number" },
         k = { "<cmd>set norelativenumber<cr>", "Cancel Relative Number" },
@@ -64,7 +64,6 @@ local some_thing_keymap = {
         q = { "<cmd>q<cr>", "Close Current Tab" },
         a = { "<cmd>qa<cr>", "Exit" },
         o = { "<cmd>only<cr>", "Only Window" },
-        p = { "<cmd>tabo<cr>", "Only Tab" },
         s = { "<cmd>only<cr><cmd>tabo<cr>", "Only Window Only Tab" },
         g = { "<cmd>ToggleTermToggleAll<cr>", "ToggleAllTerm" },
         u = { "<cmd>TroubleToggle<cr>", "Trouble Toggle" },
@@ -75,6 +74,7 @@ local some_thing_keymap = {
         e = { "<cmd>bufdo edit %<cr>", "Reload All Buffer File" },
         n = { "<cmd>lua = vim.api.nvim_buf_get_name(0)<cr>", "Get File Abs Path" },
         b = { "<cmd>%bd|e#<cr>", "Delete Other Buffers" },
+        p = { ":lua vim.fn.setreg('+', vim.fn.expand('%:p'))<CR>", "Copy File Path to Clipboard" }
     },
 }
 
@@ -153,6 +153,7 @@ local chagpt_keymap = {
         k = { "<cmd>ChatGPTRun keywords<CR>", "Keywords", mode = { "n", "v" } },
         d = { "<cmd>ChatGPTRun docstring<CR>", "Docstring", mode = { "n", "v" } },
         a = { "<cmd>ChatGPTRun add_tests<CR>", "Add Tests", mode = { "n", "v" } },
+        p = { "<cmd>ChatGPTRun add_py_tests<CR>", "Add Pytest Tests", mode = { "n", "v" } },
         o = { "<cmd>ChatGPTRun optimize_code<CR>", "Optimize Code", mode = { "n", "v" } },
         s = { "<cmd>ChatGPTRun summarize<CR>", "Summarize", mode = { "n", "v" } },
         f = { "<cmd>ChatGPTRun fix_bugs<CR>", "Fix Bugs", mode = { "n", "v" } },

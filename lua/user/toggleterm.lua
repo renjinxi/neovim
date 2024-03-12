@@ -84,10 +84,6 @@ function _NEWTERM()
     new_tab_term:toggle()
 end
 
-function _TERM()
-    Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab", on_open = start_insert }):toggle()
-end
-
 local status_ok, which_key = pcall(require, "which-key")
 if not status_ok then
     return
@@ -107,7 +103,6 @@ function M.setup()
             u = { "<cmd>lua _NCDU_TOGGLE()<CR>", "Ncdu" },
             g = { "<cmd>lua _NEWTIG_TOGGLE() <CR>", "Tig" },
             t = { "<cmd>lua _NEWTERM() <CR>", "New Tab Term" },
-            j = { "<cmd>lua __TERM() <CR>", "New Tab Term" },
             a = { "<cmd>lua __LUA_TOGGLE()<CR>", "Lua" },
         },
     }

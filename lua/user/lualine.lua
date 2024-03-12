@@ -7,6 +7,9 @@ local window = function()
     return vim.api.nvim_win_get_number(0)
 end
 
+local function clock()
+    return os.date('%Y-%m-%d %H:%M') -- Formats time in HH:MM:SS format
+end
 lualine.setup({
     options = {
         --theme = "nightfly"
@@ -41,7 +44,7 @@ lualine.setup({
         lualine_c = { "filename" },
         lualine_x = { "encoding", "fileformat", "filetype" },
         lualine_y = { "progress" },
-        lualine_z = { "location" },
+        lualine_z = { "location", clock },
     },
     inactive_sections = {
         --lualine_a = {'mode' },

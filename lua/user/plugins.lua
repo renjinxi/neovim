@@ -198,58 +198,20 @@ local plugins = {
             require("mason").setup()
         end,
     },
-    {
-        'williamboman/mason-lspconfig',
-        config = function()
-            require("mason-lspconfig").setup({
-                -- Automatically install LSP servers
-                ensure_installed = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" },
-                -- Automatically configure installed servers with nvim-lspconfig
-                automatic_installation = true,
-            })
-        end
+    --{
+        --'williamboman/mason-lspconfig',
+        --config = function()
+            --require("mason-lspconfig").setup({
+                ---- Automatically install LSP servers
+                --ensure_installed = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" },
+                ---- Automatically configure installed servers with nvim-lspconfig
+                --automatic_installation = true,
+            --})
+        --end
 
-    },
+    --},
 
-    --
-    {
-        'glacambre/firenvim',
-
-        -- Lazy load firenvim
-        -- Explanation: https://github.com/folke/lazy.nvim/discussions/463#discussioncomment-4819297
-        lazy = not vim.g.started_by_firenvim,
-        build = function()
-            vim.fn["firenvim#install"](0)
-        end
-    },
-    {
-        "ahmedkhalf/project.nvim",
-        config = function()
-            require("project_nvim").setup {
-                -- your configuration comes here
-                -- or leave it empty to use the default settings
-                -- refer to the configuration section below
-            }
-        end
-    },
-    {
-        "princejoogie/dir-telescope.nvim",
-        -- telescope.nvim is a required dependency
-        config = function()
-            require("dir-telescope").setup({
-                -- these are the default options set
-                hidden = true,
-                no_ignore = false,
-                show_preview = true,
-            })
-        end
-    },
-
-    "nvim-telescope/telescope-project.nvim",
-    --"LunarVim/bigfile.nvim",
     --chatgpt
-
-    -- Lazy
     {
         "jackMort/ChatGPT.nvim",
         event = "VeryLazy",
@@ -266,6 +228,7 @@ local plugins = {
                     top_p = 1,
                     n = 1,
                 },
+                actions_paths = {"~/.config/nvim/lua/user/chatgpt/actions.json"},
             })
         end,
         dependencies = {
@@ -275,15 +238,12 @@ local plugins = {
             "nvim-telescope/telescope.nvim"
         }
     },
+    --{
+        --'Exafunction/codeium.vim',
+        --event = 'BufEnter'
+    --},
     -- startuptime
     "dstein64/vim-startuptime",
-
-    {
-        "uga-rosa/translate.nvim",
-        config = function()
-            require("translate").setup({})
-        end
-    }
 
 }
 return lazy.setup(plugins, opt)
