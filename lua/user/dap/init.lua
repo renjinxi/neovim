@@ -3,14 +3,13 @@ if not status_ok then
     return
 end
 
-local status_ok, dap_ui = pcall(require, "dapui")
-if status_ok then
-    dap_ui.setup()
-end
+--local status_ok, dap_ui = pcall(require, "dapui")
+--if status_ok then
+--dap_ui.setup()
+--end
 
 local settings = require("user.settings")
 local python_path = settings.debug_python_path
-local dap = require("dap")
 dap.adapters.python = {
     type = "executable",
     command = python_path,
@@ -18,7 +17,6 @@ dap.adapters.python = {
 }
 
 require("dap-python").setup(python_path)
-
 require("dap.ext.vscode").load_launchjs(".nvim/launch.json", nil)
 
 
@@ -97,4 +95,3 @@ dap.configurations.c = {
 require("user.dap.keymap")
 require("nvim-dap-virtual-text").setup()
 require("telescope").load_extension("dap")
---require("dap-python").setup()

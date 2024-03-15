@@ -24,6 +24,8 @@ local options = {
     fileformat = "unix",
     --relativenumber = true,
     splitright = true,
+    --switchbuf = "usetab",
+    swapfile = false,
     --nohlsearch = true,
     --termguicolors = true,
 }

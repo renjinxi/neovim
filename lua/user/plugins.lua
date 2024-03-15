@@ -122,7 +122,44 @@ local plugins = {
     --debug for python
     "mfussenegger/nvim-dap",
     "Pocco81/dap-buddy.nvim",
-    "rcarriga/nvim-dap-ui",
+    {
+        "rcarriga/nvim-dap-ui",
+        config = function()
+            require("dapui").setup({
+                layouts = {
+                    {
+                        elements = {
+                            -- Elements to include in this layout
+                            { id = "scopes",      size = 0.25 }, -- Adjusts the height to 25% of the layout area
+                            { id = "breakpoints", size = 0.25 },
+                            { id = "stacks",      size = 0.25 },
+                            { id = "watches",     size = 0.25 },
+                        },
+                        size = 0.3,        -- Adjusts the width to 40 columns
+                        position = "left", -- Position the layout to the left of the Neovim window
+                    },
+                    {
+                        elements = {
+                            "repl"
+                            --{ id = "repl",    size = 0.3 },   -- Adjusts the height to 25% of the layout area
+                            --{ id = "console", size = 0.3 },
+                        },
+                        size = 0.3,          -- Adjusts the height to 25% of the Neovim window height
+                        position = "bottom", -- Position at the bottom
+                    },
+                }
+            })
+        end
+    },
+    {
+        "folke/neodev.nvim",
+        opts = {},
+        config = function()
+            --require("neodev").setup({
+                --library = { plugins = { "nvim-dap-ui" }, types = true },
+            --})
+        end
+    },
     "mfussenegger/nvim-dap-python",
     "nvim-telescope/telescope-dap.nvim",
     "theHamsta/nvim-dap-virtual-text",
@@ -199,15 +236,15 @@ local plugins = {
         end,
     },
     --{
-        --'williamboman/mason-lspconfig',
-        --config = function()
-            --require("mason-lspconfig").setup({
-                ---- Automatically install LSP servers
-                --ensure_installed = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" },
-                ---- Automatically configure installed servers with nvim-lspconfig
-                --automatic_installation = true,
-            --})
-        --end
+    --'williamboman/mason-lspconfig',
+    --config = function()
+    --require("mason-lspconfig").setup({
+    ---- Automatically install LSP servers
+    --ensure_installed = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" },
+    ---- Automatically configure installed servers with nvim-lspconfig
+    --automatic_installation = true,
+    --})
+    --end
 
     --},
 
@@ -219,16 +256,16 @@ local plugins = {
             --require("chatgpt").setup({})
             require("chatgpt").setup({
                 --openai_params = {
-                    --model = "gpt-3.5-turbo",
-                    ----model = "gpt-4-turbo-preview",
-                    --frequency_penalty = 0,
-                    --presence_penalty = 0,
-                    --max_tokens = 300,
-                    --temperature = 0,
-                    --top_p = 1,
-                    --n = 1,
+                --model = "gpt-3.5-turbo",
+                ----model = "gpt-4-turbo-preview",
+                --frequency_penalty = 0,
+                --presence_penalty = 0,
+                --max_tokens = 300,
+                --temperature = 0,
+                --top_p = 1,
+                --n = 1,
                 --},
-                actions_paths = {"~/.config/nvim/lua/user/chatgpt/actions.json"},
+                actions_paths = { "~/.config/nvim/lua/user/chatgpt/actions.json" },
             })
         end,
         dependencies = {
@@ -239,8 +276,8 @@ local plugins = {
         }
     },
     --{
-        --'Exafunction/codeium.vim',
-        --event = 'BufEnter'
+    --'Exafunction/codeium.vim',
+    --event = 'BufEnter'
     --},
     -- startuptime
     "dstein64/vim-startuptime",

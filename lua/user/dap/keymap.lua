@@ -28,7 +28,7 @@ function M.setup()
             n = { "<cmd> lua require'dap'.step_over()<cr>", "Step Over" },
             p = { "<cmd> lua require'dap'.pause.toggle()<cr>", "Pause" },
             q = { "<cmd> lua require'dap'.close()<cr>", "Quit" },
-            r = { "<cmd> lua require'dap'.repl.toggle()<cr>", "Toggle Repl" },
+            r = { "<cmd> lua require'dap'.repl.toggle()<cr><C-w>H", "Toggle Repl" },
             s = { "<cmd> lua require'dap'.continue()<cr>", "Start" },
             t = { "<cmd> lua require'dap'.toggle_breakpoint()<cr>", "Toggle Breakpoint" },
             x = { "<cmd> lua require'dap'.terminate()<cr>", "Terminate" },
