@@ -7,6 +7,9 @@ local window = function()
     return vim.api.nvim_win_get_number(0)
 end
 
+local cond200 = function()
+    return vim.fn.winwidth(0) > 200
+end
 local cond80 = function()
     return vim.fn.winwidth(0) > 80
 end
@@ -23,26 +26,26 @@ lualine.setup({
     },
     sections = {
         lualine_a = {
-            window, { "mode", cond = cond40 },
+            window, { "mode", cond = cond80 },
         },
         lualine_b = {
             { "branch",      cond = cond80 },
-            { "diff",        cond = cond80 },
-            { "diagnostics", cond = cond80, always_visible = false, },
+            { "diff",        cond = cond200 },
+            { "diagnostics", cond = cond200, },
         },
         lualine_c = {
-            { "filename", cond = cond80 },
+            { "filename", cond = cond40 },
 
         },
         lualine_x = {
             { "encoding",   cond = cond80 },
-            { "fileformat", cond = cond80 },
-            { "filetype",   cond = cond80 },
+            { "fileformat", cond = cond200 },
+            { "filetype",   cond = cond200 },
 
         },
         lualine_y = {
             { "progress", cond = cond80 },
-            { "location", cond = cond80 },
+            { "location", cond = cond200 },
         },
         lualine_z = {
             {
@@ -53,7 +56,7 @@ lualine.setup({
         },
     },
     inactive_sections = {
-        lualine_a = { window, "filename" },
+        lualine_a = { window, { "filename", cond = cond40 } }
     },
     tabline = {
         -- lualine_a = {'buffers'},
