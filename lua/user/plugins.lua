@@ -21,7 +21,7 @@ end
 local opt = {
     install = {
         missing = true,
-        colorscheme = { "shine" },
+        --colorscheme = { "PaperColor" },
     },
 }
 

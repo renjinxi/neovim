@@ -7,64 +7,54 @@ local window = function()
     return vim.api.nvim_win_get_number(0)
 end
 
+local cond80 = function()
+    return vim.fn.winwidth(0) > 80
+end
+local cond40 = function()
+    return vim.fn.winwidth(0) > 40
+end
+
 local function clock()
     return os.date('%Y-%m-%d %H:%M') -- Formats time in HH:MM:SS format
 end
 lualine.setup({
     options = {
-        --theme = "nightfly"
-        --theme = "Tomorrow"
-        --theme = "papercolor_light"
-        --theme = "ayu_light"
-        --theme = "iceberg_light"
-        --theme = "onelight"
-        -- theme = "gruvbox_dark"
-        --theme = "material"
-        --theme = "solarized_light"
-        --theme = "gruvbox_light"
         theme = "solarized_light",
-        --theme = "onelight"
-        --theme = "github"
-
-        -- icons_enabled = true,
-        -- theme = 'auto',
-        -- component_separators = { left = '', right = ''},
-        -- section_separators = { left = '', right = ''},
-        --disabled_filetypes = {},
-        disabled_filetypes = {
-            --statusline = {},
-            --statusline = { "NvimTree" },
-            --winbar = { "NvimTree" },
-        },
-        -- always_divide_middle = true,
     },
     sections = {
-        lualine_a = { window, "mode" },
-        lualine_b = { "branch", "diff", "diagnostics" },
-        lualine_c = { "filename" },
-        lualine_x = { "encoding", "fileformat", "filetype" },
-        lualine_y = { "progress" },
-        lualine_z = { "location", clock },
+        lualine_a = {
+            window, { "mode", cond = cond40 },
+        },
+        lualine_b = {
+            { "branch",      cond = cond80 },
+            { "diff",        cond = cond80 },
+            { "diagnostics", cond = cond80, always_visible = false, },
+        },
+        lualine_c = {
+            { "filename", cond = cond80 },
+
+        },
+        lualine_x = {
+            { "encoding",   cond = cond80 },
+            { "fileformat", cond = cond80 },
+            { "filetype",   cond = cond80 },
+
+        },
+        lualine_y = {
+            { "progress", cond = cond80 },
+            { "location", cond = cond80 },
+        },
+        lualine_z = {
+            {
+                clock,
+                cond = cond40,
+            }
+
+        },
     },
     inactive_sections = {
-        --lualine_a = {'mode' },
-        --lualine_a = { window, "mode"},
         lualine_a = { window, "filename" },
-        --lualine_b = { "branch", "diff", "diagnostics" },
-        --lualine_c = { "filename" },
-        --lualine_x = { "encoding", "fileformat", "filetype" },
-        --lualine_y = { "progress" },
-        --lualine_z = { "location" },
     },
-    --inactive_sections = {
-    --lualine_a = {},
-    --lualine_b = {},
-    --lualine_c = {'filename'},
-    --lualine_x = {'location'},
-    --lualine_y = {},
-    --lualine_z = {}
-    --},
-    -- tabline = {},
     tabline = {
         -- lualine_a = {'buffers'},
         lualine_a = {
