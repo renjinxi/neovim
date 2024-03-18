@@ -29,7 +29,7 @@ lualine.setup({
             window, { "mode", cond = cond80 },
         },
         lualine_b = {
-            { "branch",      cond = cond80 },
+            { "branch",      cond = cond200 },
             { "diff",        cond = cond200 },
             { "diagnostics", cond = cond200, },
         },
