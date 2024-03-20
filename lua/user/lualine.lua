@@ -38,6 +38,7 @@ lualine.setup({
 
         },
         lualine_x = {
+            { "copilot",  },
             { "encoding",   cond = cond80 },
             { "fileformat", cond = cond200 },
             { "filetype",   cond = cond200 },
@@ -75,3 +76,4 @@ lualine.setup({
     },
     extensions = {},
 })
+

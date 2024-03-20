@@ -20,6 +20,7 @@ require "user.goto_preview"
 require "user.bqf"
 require "user.telescope"
 require "user.indent_blankline"
+require "user.copilot_chat"
 
 -- end require
 require "user.vim_cmd"

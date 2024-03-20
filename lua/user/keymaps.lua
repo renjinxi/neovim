@@ -178,30 +178,57 @@ local gpt_opts = {
     noremap = true,
     nowait = false,
 }
+local chat_opts = gpt_opts
 
+local quick_chat = function()
+    local input = vim.fn.input("Quick Chat: ")
+    if input ~= "" then
+        require("CopilotChat").ask(input, { selection = require("CopilotChat.select").buffer })
+    end
+end
+
+local copilot_chat_mappings = {
+    i = {
+        name = "CopilotChat",
+        c = { "<cmd>CopilotChatTogggle<CR>", "Chat" },
+        d = { "<cmd>CopilotChatDebugInfo<CR>", "Debug" },
+        q = { quick_chat, "Quick Chat" },
+        e = { "<cmd>CopilotChatEditWithInstruction<CR>", "Edit with instruction" },
+        x = { "<cmd>CopilotChatExplain<CR>", "Explain Code" },
+        t = { "<cmd>CopilotChatTests<CR>", "Add Tests" },
+        f = { "<cmd>CopilotChatFix<CR>", "Fix" },
+        o = { "<cmd>CopilotChatOptimize<CR>", "Optimize Code" },
+        s = { "<cmd>CopilotChatDocs<CR>", "Docs" },
+        m = { "<cmd>CopilotChatCommit<CR>", "Git Commit" },
+        g = { "<cmd>CopilotChatCommitStaged<CR>", "Git Commit For Staged" },
+
+    }
+
+
+}
 local lsp_mappings = {
     l = {
         name = "LSP", -- naming the prefix group
-        s = {"<cmd>lua vim.lsp.buf.document_symbol()<CR>", "Document Symbols"},
-        D = {"<cmd>lua vim.lsp.buf.declaration()<CR>", "Declaration"},
-        d = {"<cmd>lua vim.lsp.buf.definition()<CR>", "Definition"},
-        I = {"<cmd>lua vim.lsp.buf.implementation()<CR>", "Implementation"},
-        sh = {"<cmd>lua vim.lsp.buf.signature_help()<CR>", "Signature Help"},
-        wa = {"<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", "Add Workspace Folder"},
-        wr = {"<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", "Remove Workspace Folder"},
-        wl = {"<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>", "List Workspace Folders"},
-        r = {"<cmd>lua vim.lsp.buf.rename()<CR>", "Rename"},
-        c = {"<cmd>lua vim.lsp.buf.code_action()<CR>", "Code Action"},
-        R = {"<cmd>lua vim.lsp.buf.references()<CR>", "References"},
-        f = {"<cmd>lua vim.lsp.buf.format { async = true }<CR>", "Format"},
+        s = { "<cmd>lua vim.lsp.buf.document_symbol()<CR>", "Document Symbols" },
+        D = { "<cmd>lua vim.lsp.buf.declaration()<CR>", "Declaration" },
+        d = { "<cmd>lua vim.lsp.buf.definition()<CR>", "Definition" },
+        I = { "<cmd>lua vim.lsp.buf.implementation()<CR>", "Implementation" },
+        sh = { "<cmd>lua vim.lsp.buf.signature_help()<CR>", "Signature Help" },
+        wa = { "<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", "Add Workspace Folder" },
+        wr = { "<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", "Remove Workspace Folder" },
+        wl = { "<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>", "List Workspace Folders" },
+        r = { "<cmd>lua vim.lsp.buf.rename()<CR>", "Rename" },
+        c = { "<cmd>lua vim.lsp.buf.code_action()<CR>", "Code Action" },
+        R = { "<cmd>lua vim.lsp.buf.references()<CR>", "References" },
+        f = { "<cmd>lua vim.lsp.buf.format { async = true }<CR>", "Format" },
         -- Note: You have 'lD' defined twice, for 'declaration' and 'type_definition'.
         -- This example keeps the 'type_definition' mapping.
-        e = {"<cmd>lua vim.diagnostic.open_float()<CR>", "Diagnostic Float"},
-        q = {"<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>", "Diagnostic Loclist"},
+        e = { "<cmd>lua vim.diagnostic.open_float()<CR>", "Diagnostic Float" },
+        q = { "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>", "Diagnostic Loclist" },
     },
-    ["[d"] = {"<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>", "Previous Diagnostic"},
-    ["]d"] = {"<cmd>lua vim.lsp.diagnostic.goto_next()<CR>", "Next Diagnostic"},
-    K = {"<cmd>lua vim.lsp.buf.hover()<CR>", "Hover"}
+    ["[d"] = { "<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>", "Previous Diagnostic" },
+    ["]d"] = { "<cmd>lua vim.lsp.diagnostic.goto_next()<CR>", "Next Diagnostic" },
+    K = { "<cmd>lua vim.lsp.buf.hover()<CR>", "Hover" }
 }
 which_key.register(some_thing_keymap, n_opts)
 which_key.register(tele_keymap, n_opts)
@@ -211,6 +238,7 @@ which_key.register(zen_v_keymap, v_opts)
 which_key.register(insert_keymap, insert_opts)
 which_key.register(chagpt_keymap, gpt_opts)
 which_key.register(lsp_mappings, gpt_opts)
+which_key.register(copilot_chat_mappings, chat_opts)
 
 for i = 1, 9 do
     local key = string.format("<leader>w%d", i)

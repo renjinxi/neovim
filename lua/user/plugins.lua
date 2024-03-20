@@ -54,6 +54,7 @@ local plugins = {
     "hrsh7th/cmp-path",
     "hrsh7th/cmp-cmdline",
     "hrsh7th/nvim-cmp",
+    "onsails/lspkind.nvim",
 
     -- 代码段提示
     {
@@ -67,6 +68,7 @@ local plugins = {
 
     -- status line
     "nvim-lualine/lualine.nvim",
+    { "AndreM222/copilot-lualine" },
 
     -- file explorer
     "nvim-tree/nvim-tree.lua",
@@ -103,7 +105,7 @@ local plugins = {
     -- which key
     "folke/which-key.nvim",
 
-    { "akinsho/toggleterm.nvim",             version = "*" },
+    { "akinsho/toggleterm.nvim", version = "*" },
 
     {
 
@@ -156,7 +158,7 @@ local plugins = {
         opts = {},
         config = function()
             --require("neodev").setup({
-                --library = { plugins = { "nvim-dap-ui" }, types = true },
+            --library = { plugins = { "nvim-dap-ui" }, types = true },
             --})
         end
     },
@@ -165,7 +167,7 @@ local plugins = {
     "theHamsta/nvim-dap-virtual-text",
 
     -- folding
-    { "kevinhwang91/nvim-ufo", dependencies = "kevinhwang91/promise-async" },
+    { "kevinhwang91/nvim-ufo",   dependencies = "kevinhwang91/promise-async" },
 
     "danymat/neogen",
 
@@ -281,6 +283,34 @@ local plugins = {
     --},
     -- startuptime
     "dstein64/vim-startuptime",
+    --"github/copilot.lua"
+    {
+        "zbirenbaum/copilot.lua",
+        event = "InsertEnter",
+        config = function()
+            require("copilot").setup({})
+        end,
+    },
+    {
+        "zbirenbaum/copilot-cmp",
+        config = function()
+            require("copilot_cmp").setup()
+        end
+    },
+    {
+        "CopilotC-Nvim/CopilotChat.nvim",
+        branch = "canary",
+        dependencies = {
+            { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
+            { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
+        },
+        opts = {
+            debug = true, -- Enable debugging
+            -- See Configuration section for rest
+        },
+        -- See Commands section for default commands if you want to lazy load on them
+    },
+
 
 }
 return lazy.setup(plugins, opt)
