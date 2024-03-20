@@ -186,6 +186,10 @@ local quick_chat = function()
         require("CopilotChat").ask(input, { selection = require("CopilotChat.select").buffer })
     end
 end
+local chat_actions = function()
+    local actions = require("CopilotChat.actions")
+    require("CopilotChat.integrations.telescope").pick(actions.help_actions())
+end
 
 local copilot_chat_mappings = {
     i = {
@@ -193,7 +197,7 @@ local copilot_chat_mappings = {
         c = { "<cmd>CopilotChatTogggle<CR>", "Chat" },
         d = { "<cmd>CopilotChatDebugInfo<CR>", "Debug" },
         q = { quick_chat, "Quick Chat" },
-        e = { "<cmd>CopilotChatEditWithInstruction<CR>", "Edit with instruction" },
+        a = { chat_actions, "Chat Actions" },
         x = { "<cmd>CopilotChatExplain<CR>", "Explain Code" },
         t = { "<cmd>CopilotChatTests<CR>", "Add Tests" },
         f = { "<cmd>CopilotChatFix<CR>", "Fix" },
