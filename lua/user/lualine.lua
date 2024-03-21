@@ -17,6 +17,10 @@ local cond40 = function()
     return vim.fn.winwidth(0) > 40
 end
 
+local codeium_state = function()
+    return vim.api.nvim_call_function("codeium#GetStatusString", {})
+end
+
 local function clock()
     return os.date('%Y-%m-%d %H:%M') -- Formats time in HH:MM:SS format
 end
@@ -39,6 +43,7 @@ lualine.setup({
         },
         lualine_x = {
             { "copilot",  },
+            --{ codeium_state,  },
             { "encoding",   cond = cond80 },
             { "fileformat", cond = cond200 },
             { "filetype",   cond = cond200 },
@@ -76,4 +81,3 @@ lualine.setup({
     },
     extensions = {},
 })
-

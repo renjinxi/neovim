@@ -186,30 +186,34 @@ local quick_chat = function()
         require("CopilotChat").ask(input, { selection = require("CopilotChat.select").buffer })
     end
 end
-local chat_actions = function()
+local chat_help_actions = function()
     local actions = require("CopilotChat.actions")
     require("CopilotChat.integrations.telescope").pick(actions.help_actions())
 end
 
-local copilot_chat_mappings = {
-    i = {
-        name = "CopilotChat",
-        c = { "<cmd>CopilotChatTogggle<CR>", "Chat" },
-        d = { "<cmd>CopilotChatDebugInfo<CR>", "Debug" },
-        q = { quick_chat, "Quick Chat" },
-        a = { chat_actions, "Chat Actions" },
-        x = { "<cmd>CopilotChatExplain<CR>", "Explain Code" },
-        t = { "<cmd>CopilotChatTests<CR>", "Add Tests" },
-        f = { "<cmd>CopilotChatFix<CR>", "Fix" },
-        o = { "<cmd>CopilotChatOptimize<CR>", "Optimize Code" },
-        s = { "<cmd>CopilotChatDocs<CR>", "Docs" },
-        m = { "<cmd>CopilotChatCommit<CR>", "Git Commit" },
-        g = { "<cmd>CopilotChatCommitStaged<CR>", "Git Commit For Staged" },
+local chat_actions = function()
+    local actions = require("CopilotChat.actions")
+    require("CopilotChat.integrations.telescope").pick(actions.prompt_actions())
+end
 
-    }
+--local copilot_chat_mappings = {
+    --i = {
+        --name = "CopilotChat",
+        --c = { "<cmd>CopilotChatTogggle<CR>", "Chat" },
+        --d = { "<cmd>CopilotChatDebugInfo<CR>", "Debug" },
+        --q = { quick_chat, "Quick Chat" },
+        --a = { chat_actions, "Chat Actions" },
+        --h = { chat_help_actions, "Chat Help Action" },
+        --x = { "<cmd>CopilotChatExplain<CR>", "Explain Code" },
+        --t = { "<cmd>CopilotChatTests<CR>", "Add Tests" },
+        --f = { "<cmd>CopilotChatFix<CR>", "Fix" },
+        --o = { "<cmd>CopilotChatOptimize<CR>", "Optimize Code" },
+        --s = { "<cmd>CopilotChatDocs<CR>", "Docs" },
+        --m = { "<cmd>CopilotChatCommit<CR>", "Git Commit" },
+        --g = { "<cmd>CopilotChatCommitStaged<CR>", "Git Commit For Staged" },
 
-
-}
+    --}
+--}
 local lsp_mappings = {
     l = {
         name = "LSP", -- naming the prefix group
@@ -242,7 +246,7 @@ which_key.register(zen_v_keymap, v_opts)
 which_key.register(insert_keymap, insert_opts)
 which_key.register(chagpt_keymap, gpt_opts)
 which_key.register(lsp_mappings, gpt_opts)
-which_key.register(copilot_chat_mappings, chat_opts)
+--which_key.register(copilot_chat_mappings, chat_opts)
 
 for i = 1, 9 do
     local key = string.format("<leader>w%d", i)
