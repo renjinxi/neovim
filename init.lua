@@ -21,7 +21,10 @@ require "user.goto_preview"
 require "user.bqf"
 require "user.telescope"
 require "user.indent_blankline"
---require "user.copilot_chat"
+
+---@diagnostic disable-next-line: different-requires
+require "user.neotest"
+require "user.diagnostics"
 
 -- end require
 require "user.vim_cmd"

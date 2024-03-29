@@ -1,3 +1,4 @@
+local common = require("user.common")
 local opts = { noremap = true, silent = true }
 local term_opts = { silent = true }
 
@@ -178,6 +179,28 @@ local gpt_opts = {
     noremap = true,
     nowait = false,
 }
+
+
+local function test_all()
+    local project_root = common.find_project_root_by_marker("pyproject.toml") or vim.loop.getcwd()
+    require("neotest").run.run(project_root)
+end
+
+local test_keymap = {
+    o = {
+        name = "Neotest",
+        a = { test_all, "Test All" },
+        c = { "<cmd>lua require('neotest').run.run(vim.fn.expand('%'))<cr>", "Test Current File" },
+        t = { "<cmd>lua require('neotest').stop()<cr>", "Test Stop" },
+        f = { "<cmd>Neotest output<cr>", "Show Test Result In Float" },
+        e = { "<cmd>Neotest output-panel<cr>", "Show Test Result" },
+        --d = { "<cmd>lua require('neotest').diagnostics()<cr>", "Show Test Diagnostics" },
+        --s = { "<cmd>lua require('neotest').status.toggle()<cr>", "Status Toggle" },
+        s = { "<cmd>lua require('neotest').summary.toggle()<cr>", "summary Toggle" }
+
+    }
+
+}
 local chat_opts = gpt_opts
 
 local quick_chat = function()
@@ -197,22 +220,22 @@ local chat_actions = function()
 end
 
 --local copilot_chat_mappings = {
-    --i = {
-        --name = "CopilotChat",
-        --c = { "<cmd>CopilotChatTogggle<CR>", "Chat" },
-        --d = { "<cmd>CopilotChatDebugInfo<CR>", "Debug" },
-        --q = { quick_chat, "Quick Chat" },
-        --a = { chat_actions, "Chat Actions" },
-        --h = { chat_help_actions, "Chat Help Action" },
-        --x = { "<cmd>CopilotChatExplain<CR>", "Explain Code" },
-        --t = { "<cmd>CopilotChatTests<CR>", "Add Tests" },
-        --f = { "<cmd>CopilotChatFix<CR>", "Fix" },
-        --o = { "<cmd>CopilotChatOptimize<CR>", "Optimize Code" },
-        --s = { "<cmd>CopilotChatDocs<CR>", "Docs" },
-        --m = { "<cmd>CopilotChatCommit<CR>", "Git Commit" },
-        --g = { "<cmd>CopilotChatCommitStaged<CR>", "Git Commit For Staged" },
+--i = {
+--name = "CopilotChat",
+--c = { "<cmd>CopilotChatTogggle<CR>", "Chat" },
+--d = { "<cmd>CopilotChatDebugInfo<CR>", "Debug" },
+--q = { quick_chat, "Quick Chat" },
+--a = { chat_actions, "Chat Actions" },
+--h = { chat_help_actions, "Chat Help Action" },
+--x = { "<cmd>CopilotChatExplain<CR>", "Explain Code" },
+--t = { "<cmd>CopilotChatTests<CR>", "Add Tests" },
+--f = { "<cmd>CopilotChatFix<CR>", "Fix" },
+--o = { "<cmd>CopilotChatOptimize<CR>", "Optimize Code" },
+--s = { "<cmd>CopilotChatDocs<CR>", "Docs" },
+--m = { "<cmd>CopilotChatCommit<CR>", "Git Commit" },
+--g = { "<cmd>CopilotChatCommitStaged<CR>", "Git Commit For Staged" },
 
-    --}
+--}
 --}
 local lsp_mappings = {
     l = {
@@ -246,6 +269,7 @@ which_key.register(zen_v_keymap, v_opts)
 which_key.register(insert_keymap, insert_opts)
 which_key.register(chagpt_keymap, gpt_opts)
 which_key.register(lsp_mappings, gpt_opts)
+which_key.register(test_keymap, n_opts)
 --which_key.register(copilot_chat_mappings, chat_opts)
 
 for i = 1, 9 do

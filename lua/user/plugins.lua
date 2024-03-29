@@ -1,3 +1,4 @@
+vim.cmd("highlight  CustomFloatBorder ctermfg=16 ctermbg=231 guifg=#000000 guibg=#ffffff")
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
     vim.fn.system({
@@ -45,7 +46,10 @@ local plugins = {
     --"nvim-lua/plenary.nvim",
 
     -- tree syntc
-    "nvim-treesitter/nvim-treesitter",
+    {
+        "nvim-treesitter/nvim-treesitter",
+        run = ":TSUpdate"
+    },
     "nvim-treesitter/nvim-treesitter-context",
 
     -- cmp
@@ -153,6 +157,7 @@ local plugins = {
             })
         end
     },
+    "nvim-neotest/nvim-nio",
     {
         "folke/neodev.nvim",
         opts = {},
@@ -180,16 +185,16 @@ local plugins = {
     "kevinhwang91/nvim-bqf",
 
     -- optional
-    "junegunn/fzf",
-    {
-        "ibhagwan/fzf-lua",
-        -- optional for icon support
-        dependencies = { "nvim-tree/nvim-web-devicons" },
-        config = function()
-            -- calling `setup` is optional for customization
-            require("fzf-lua").setup({})
-        end,
-    },
+    --"junegunn/fzf",
+    --{
+    --"ibhagwan/fzf-lua",
+    ---- optional for icon support
+    --dependencies = { "nvim-tree/nvim-web-devicons" },
+    --config = function()
+    ---- calling `setup` is optional for customization
+    --require("fzf-lua").setup({})
+    --end,
+    --},
     -- lazy.nvim
 
     -- habit
@@ -257,6 +262,21 @@ local plugins = {
         config = function()
             --require("chatgpt").setup({})
             require("chatgpt").setup({
+                chat = {
+                    keymaps = {
+                        next_message = "<C-l>",
+                    },
+                },
+                popup_window = {
+                    border = {
+                        highlight = "CustomFloatBorder",
+                    }
+                },
+                popup_input = {
+                    border = {
+                        highlight = "CustomFloatBorder",
+                    },
+                },
                 --openai_params = {
                 --model = "gpt-3.5-turbo",
                 ----model = "gpt-4-turbo-preview",
@@ -300,8 +320,16 @@ local plugins = {
         event = "InsertEnter",
         config = function()
             require("copilot").setup({
-                suggestion = { enabled = false },
-                panel = { enabled = false },
+                suggestion = {
+                    enabled = false,
+                    --keymap = {
+                    --next = "<M-7>",
+                    --prev = "<M-4>",
+                    --}
+                },
+                panel = {
+                    enabled = false,
+                },
             })
         end,
     },
@@ -324,7 +352,17 @@ local plugins = {
     --},
     ---- See Commands section for default commands if you want to lazy load on them
     --},
-
-
+    --
+    -- unit test
+    {
+        "nvim-neotest/neotest",
+        dependencies = {
+            "nvim-neotest/nvim-nio",
+            "nvim-lua/plenary.nvim",
+            "antoinemadec/FixCursorHold.nvim",
+            "nvim-treesitter/nvim-treesitter"
+        },
+    },
+    "nvim-neotest/neotest-python",
 }
 return lazy.setup(plugins, opt)
