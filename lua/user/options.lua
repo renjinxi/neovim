@@ -26,6 +26,7 @@ local options = {
     splitright = true,
     --switchbuf = "usetab",
     swapfile = false,
+    exrc = true,
     --nohlsearch = true,
     --termguicolors = true,
 }
