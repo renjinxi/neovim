@@ -54,25 +54,25 @@ local v_opts = {
     nowait = false,
 }
 function rename_current_file()
-  -- 获取当前文件的完整路径
-  local old_path = vim.fn.expand('%:p')
-  -- 询问新文件名
-  local new_name = vim.fn.input('New Name: ', vim.fn.expand('%:t'), 'file')
-  if new_name == "" then
-    print("Rename cancelled.")
-    return
-  end
-  -- 构建新的文件路径
-  local new_path = vim.fn.fnamemodify(old_path, ':h') .. '/' .. new_name
-  -- 重命名文件
-  local success, err = os.rename(old_path, new_path)
-  if not success then
-    print("Error renaming file: " .. err)
-    return
-  end
-  -- 更新当前缓冲区的文件路径
-  vim.api.nvim_command('e ' .. new_path)
-  print("File renamed to " .. new_name)
+    -- 获取当前文件的完整路径
+    local old_path = vim.fn.expand('%:p')
+    -- 询问新文件名
+    local new_name = vim.fn.input('New Name: ', vim.fn.expand('%:t'), 'file')
+    if new_name == "" then
+        print("Rename cancelled.")
+        return
+    end
+    -- 构建新的文件路径
+    local new_path = vim.fn.fnamemodify(old_path, ':h') .. '/' .. new_name
+    -- 重命名文件
+    local success, err = os.rename(old_path, new_path)
+    if not success then
+        print("Error renaming file: " .. err)
+        return
+    end
+    -- 更新当前缓冲区的文件路径
+    vim.api.nvim_command('e ' .. new_path)
+    print("File renamed to " .. new_name)
 end
 
 local some_thing_keymap = {
@@ -97,7 +97,7 @@ local some_thing_keymap = {
         n = { "<cmd>lua = vim.api.nvim_buf_get_name(0)<cr>", "Get File Abs Path" },
         b = { "<cmd>%bd|e#<cr>", "Delete Other Buffers" },
         p = { ":lua vim.fn.setreg('+', vim.fn.expand('%:p'))<CR>", "Copy File Path to Clipboard" },
-        l = { rename_current_file, "Rname Current File"},
+        l = { rename_current_file, "Rname Current File" },
     },
 }
 
@@ -216,6 +216,7 @@ local test_keymap = {
         t = { "<cmd>lua require('neotest').stop()<cr>", "Test Stop" },
         f = { "<cmd>Neotest output<cr>", "Show Test Result In Float" },
         e = { "<cmd>Neotest output-panel<cr>", "Show Test Result" },
+        d = { "<cmd>lua require('neotest').run.run({vim.fn.expand('%'), strategy = 'dap'})<cr>", "Debug Current File" },
         --d = { "<cmd>lua require('neotest').diagnostics()<cr>", "Show Test Diagnostics" },
         --s = { "<cmd>lua require('neotest').status.toggle()<cr>", "Status Toggle" },
         s = { "<cmd>lua require('neotest').summary.toggle()<cr>", "summary Toggle" }
