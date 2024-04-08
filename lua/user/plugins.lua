@@ -146,9 +146,9 @@ local plugins = {
                     },
                     {
                         elements = {
-                            "repl"
-                            --{ id = "repl",    size = 0.3 },   -- Adjusts the height to 25% of the layout area
-                            --{ id = "console", size = 0.3 },
+                            --"repl"
+                            { id = "repl",    size = 0.7 }, -- Adjusts the height to 25% of the layout area
+                            { id = "console", size = 0.3 },
                         },
                         size = 0.3,          -- Adjusts the height to 25% of the Neovim window height
                         position = "bottom", -- Position at the bottom
@@ -364,5 +364,15 @@ local plugins = {
         },
     },
     "nvim-neotest/neotest-python",
+    -- todo highlight
+    --{
+        --"folke/todo-comments.nvim",
+        --dependencies = { "nvim-lua/plenary.nvim" },
+        --opts = {
+            ---- your configuration comes here
+            ---- or leave it empty to use the default settings
+            ---- refer to the configuration section below
+        --}
+    --}
 }
 return lazy.setup(plugins, opt)
