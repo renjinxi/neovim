@@ -13,6 +13,7 @@ tree.setup({
         ignore_list = {},
     },
 })
+require("lsp-file-operations").setup()
 
 local status_ok, which_key = pcall(require, "which-key")
 

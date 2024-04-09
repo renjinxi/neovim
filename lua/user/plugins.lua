@@ -32,6 +32,17 @@ local plugins = {
     "neovim/nvim-lspconfig",
     "Pocco81/auto-save.nvim",
 
+    {
+        "antosha417/nvim-lsp-file-operations",
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            "nvim-tree/nvim-tree.lua",
+        },
+        --config = function()
+        --require("lsp-file-operations").setup()
+        --end,
+    },
+
     -- quick move
     "folke/trouble.nvim",
     {
@@ -81,6 +92,12 @@ local plugins = {
 
     -- git
     "tpope/vim-fugitive",
+    {
+        "wintermute-cell/gitignore.nvim",
+        config = function()
+            require('gitignore')
+        end,
+    },
 
     -- indent line
     { "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {} },
@@ -383,5 +400,14 @@ local plugins = {
     ---- refer to the configuration section below
     --}
     --}
+    {
+        'rmagatti/auto-session',
+        config = function()
+            require("auto-session").setup {
+                log_level = "error",
+                auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
+            }
+        end
+    },
 }
 return lazy.setup(plugins, opt)
