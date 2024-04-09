@@ -187,6 +187,14 @@ local plugins = {
     "mfussenegger/nvim-dap-python",
     "nvim-telescope/telescope-dap.nvim",
     "theHamsta/nvim-dap-virtual-text",
+    {
+        'Weissle/persistent-breakpoints.nvim',
+        config = function()
+            require('persistent-breakpoints').setup {
+                load_breakpoints_event = { "BufReadPost" }
+            }
+        end
+    },
 
     -- folding
     { "kevinhwang91/nvim-ufo",   dependencies = "kevinhwang91/promise-async" },
