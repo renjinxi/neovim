@@ -4,6 +4,15 @@ local opt = vim.opt
 local indent_group = api.nvim_create_augroup("indent_group", { clear = true })
 local relative_group = api.nvim_create_augroup("relative_group", { clear = true })
 
+vim.api.nvim_create_augroup('NoHlSearch', { clear = true })
+vim.api.nvim_create_autocmd('BufEnter', {
+    group = 'NoHlSearch',
+    callback = function()
+        vim.opt.hlsearch = false
+    end,
+})
+
+
 local function set_indent()
     local default_value = 4
     local indent_table = {
