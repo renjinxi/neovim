@@ -22,8 +22,8 @@ coverage.setup({
     commands = true, -- create commands
     highlights = {
         -- customize highlight groups created by the plugin
-        covered = { fg = "#C3E88D" }, -- supports style, fg, bg, sp (see :h highlight-gui)
-        uncovered = { fg = "#F07178" },
+        covered = { fg = "#9fbed9" }, -- supports style, fg, bg, sp (see :h highlight-gui)
+        uncovered = { fg = "#d86306" },
     },
     signs = {
         -- use your own highlight groups or text markers
