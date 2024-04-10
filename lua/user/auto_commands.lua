@@ -22,7 +22,6 @@ local function set_indent()
         --c = 4,
     }
 
-    opt.textwidth = 150
     opt.expandtab = true
     opt.autoindent = true
     for key, value in pairs(indent_table) do

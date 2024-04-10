@@ -1,6 +1,6 @@
 local lspconfig = require("lspconfig")
 --local servers = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" }
-local servers = { "pylsp", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" }
+local servers = { "pylsp", "biome", "clangd", "lua_ls", "taplo", "yamlls" }
 
 for _, server in pairs(servers) do
     local opts = {
