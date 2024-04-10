@@ -1,9 +1,9 @@
-require "user.theme"
+require "user.options"
 require "user.plugins"
 require "user.which_key"
 require "user.auto_commands"
 require "user.globals"
-require "user.options"
+require "user.theme"
 require "user.keymaps"
 require "user.treesitter"
 require "user.cmp"
@@ -25,7 +25,11 @@ require "user.indent_blankline"
 ---@diagnostic disable-next-line: different-requires
 require "user.neotest"
 require "user.diagnostics"
+require "user.coverage_config"
 
 -- end require
 require "user.vim_cmd"
 --require "user."
+
+-- after
+require "user.after"

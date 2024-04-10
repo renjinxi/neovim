@@ -87,7 +87,7 @@ require("ufo").setup({
 
 --which_key.register(keymap, opts)
 vim.cmd("hi Folded guifg=NONE guibg=NONE")
-vim.cmd("highlight FloatBorder guifg=NONE guibg=NONE")
+--vim.cmd("highlight FloatBorder guifg=NONE guibg=NONE")
 --vim.cmd("hi UfoFoldedEllipsis guibg=NONE")
 --vim.cmd("hi UfoFoldedEllipsis guibg=#a892a2")
 --#a0baba

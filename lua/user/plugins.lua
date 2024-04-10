@@ -202,6 +202,13 @@ local plugins = {
     "danymat/neogen",
 
     -- theme for neovim
+    {
+        'NLKNguyen/papercolor-theme',
+        --config = function()
+            --vim.o.background = "light" -- or "dark" for light mode
+            --vim.cmd("colorscheme PaperColor")
+        --end
+    },
 
     -- go to small window
     "rmagatti/goto-preview",
@@ -393,10 +400,10 @@ local plugins = {
         "andythigpen/nvim-coverage",
         requires = "nvim-lua/plenary.nvim",
         -- Optional: needed for PHP when using the cobertura parser
-        --rocks = { 'lua-xmlreader' },
-        config = function()
-            require("coverage").setup()
-        end,
+        rocks = { 'lua-xmlreader' },
+        --config = function()
+        --require("coverage").setup()
+        --end,
     },
     -- todo highlight
     --{
@@ -417,5 +424,11 @@ local plugins = {
             }
         end
     },
+    {
+        'norcalli/nvim-colorizer.lua',
+        config = function()
+            require('colorizer').setup()
+        end
+    }
 }
 return lazy.setup(plugins, opt)

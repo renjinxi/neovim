@@ -26,7 +26,8 @@ local function clock()
 end
 lualine.setup({
     options = {
-        theme = "solarized_light",
+        theme = "tomorrow",
+        --theme = "papercolor_light",
     },
     sections = {
         lualine_a = {

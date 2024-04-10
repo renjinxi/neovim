@@ -8,7 +8,7 @@ local options = {
     showtabline = 2,
     --foldmethod = "expr",
     --foldexpr = vim.call("nvim_treesitter#foldexpr"),
-    foldcolumn = "1", -- '0' is not bad
+    foldcolumn = "0", -- '0' is not bad
     foldlevel = 99,   -- Using ufo provider need a large value, feel free to decrease the value
     foldlevelstart = -1,
     foldenable = true,
@@ -27,8 +27,7 @@ local options = {
     --switchbuf = "usetab",
     swapfile = false,
     exrc = true,
-    --nohlsearch = true,
-    --termguicolors = true,
+    termguicolors = true,
 }
 
 for k, v in pairs(options) do
@@ -36,4 +35,3 @@ for k, v in pairs(options) do
 end
 
 vim.cmd("set clipboard=unnamedplus ")
-vim.cmd("set nohlsearch")
