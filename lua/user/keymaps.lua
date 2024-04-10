@@ -123,6 +123,7 @@ local tele_keymap = {
         l = { "<cmd>Telescope file_browser<cr>", "File Browser" },
         o = { "<cmd>Telescope projects<cr>", "Recent Projects" },
         y = { "<cmd>Telescope session-lens<cr>", "Session" },
+        t = { "<cmd>Telescope git_status<cr>", "Git status"},
     },
 }
 
