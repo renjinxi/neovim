@@ -8,14 +8,15 @@ toggleterm.setup({
     open_mapping = [[<c-\>]],
     hide_numbers = true,
     shade_filetypes = {},
-    shade_terminals = true,
     shading_factor = 2,
-    start_in_insert = false,
+    start_in_insert = true,
+    shade_terminals = false,
     insert_mappings = true,
     persist_size = true,
     direction = "horizontal",
     close_on_exit = true,
     shell = vim.o.shell,
+    --background = "Normal",
     float_opts = {
         border = "curved",
         winblend = 0,
@@ -37,15 +38,15 @@ local start_insert = function(term)
 end
 
 local Terminal = require("toggleterm.terminal").Terminal
-local lazygit = Terminal:new({ cmd = "lazygit", hidden = true, direction = "float", on_open = start_insert })
-local ncdu = Terminal:new({ cmd = "ncdu --color dark", hidden = true, direction = "float", on_open = start_insert })
-local htop = Terminal:new({ cmd = "htop", hidden = true, direction = "float", on_open = start_insert })
+local lazygit = Terminal:new({ cmd = "lazygit", hidden = true, direction = "float",  })
+local ncdu = Terminal:new({ cmd = "ncdu --color dark", hidden = true, direction = "float",  })
+local htop = Terminal:new({ cmd = "htop", hidden = true, direction = "float",  })
 local ipython = Terminal:new({ cmd = "ipython", hidden = true })
 local lua = Terminal:new({ cmd = "lua", hidden = true })
 local cling = Terminal:new({ cmd = "cling", hidden = true })
-local new_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "float", on_open = start_insert })
-local tig = Terminal:new({ cmd = "tig", hidden = true, direction = "float", on_open = start_insert })
-local new_tab_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab", on_open = start_insert })
+local new_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "float",  })
+local tig = Terminal:new({ cmd = "tig", hidden = true, direction = "float",  })
+local new_tab_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab",  })
 
 function _LAZYGIT_TOGGLE()
     lazygit:toggle()
@@ -70,7 +71,6 @@ end
 function _LUA_TOGGLE()
     lua:toggle()
 end
-
 
 function _NEWTERM_TOGGLE()
     new_term:toggle()

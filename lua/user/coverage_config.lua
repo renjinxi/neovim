@@ -40,8 +40,8 @@ coverage.setup({
 })
 
 -- Auto-load for python
-vim.api.nvim_create_autocmd('FileType', {
-    pattern = 'python',
-    desc = 'Auto-load coverage in python projects',
-    callback = coverage.load,
-})
+--vim.api.nvim_create_autocmd('FileType', {
+    --pattern = 'python',
+    --desc = 'Auto-load coverage in python projects',
+    --callback = coverage.load,
+--})
