@@ -98,6 +98,7 @@ local some_thing_keymap = {
         b = { "<cmd>%bd|e#<cr>", "Delete Other Buffers" },
         p = { ":lua vim.fn.setreg('+', vim.fn.expand('%:p'))<CR>", "Copy File Path to Clipboard" },
         l = { rename_current_file, "Rname Current File" },
+        m = { ":%bd|e#|bd#<cr>", "Remove Other Buffer File" },
     },
 }
 

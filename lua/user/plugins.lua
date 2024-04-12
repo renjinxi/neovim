@@ -98,7 +98,7 @@ end
 
     -- status line
     "nvim-lualine/lualine.nvim",
-    { "AndreM222/copilot-lualine" },
+    --{ "AndreM222/copilot-lualine" },
 
     -- file explorer
     "nvim-tree/nvim-tree.lua",
@@ -362,30 +362,30 @@ end
     ----})
     ----end
     --},
-    {
-        "zbirenbaum/copilot.lua",
-        event = "InsertEnter",
-        config = function()
-            require("copilot").setup({
-                suggestion = {
-                    enabled = false,
-                    --keymap = {
-                    --next = "<M-7>",
-                    --prev = "<M-4>",
-                    --}
-                },
-                panel = {
-                    enabled = false,
-                },
-            })
-        end,
-    },
-    {
-        "zbirenbaum/copilot-cmp",
-        config = function()
-            require("copilot_cmp").setup()
-        end
-    },
+    --{
+        --"zbirenbaum/copilot.lua",
+        --event = "InsertEnter",
+        --config = function()
+            --require("copilot").setup({
+                --suggestion = {
+                    --enabled = false,
+                    ----keymap = {
+                    ----next = "<M-7>",
+                    ----prev = "<M-4>",
+                    ----}
+                --},
+                --panel = {
+                    --enabled = false,
+                --},
+            --})
+        --end,
+    --},
+    --{
+        --"zbirenbaum/copilot-cmp",
+        --config = function()
+            --require("copilot_cmp").setup()
+        --end
+    --},
     --{
     --"CopilotC-Nvim/CopilotChat.nvim",
     --branch = "canary",
