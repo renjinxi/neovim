@@ -12,6 +12,14 @@ vim.api.nvim_create_autocmd('BufEnter', {
     end,
 })
 
+vim.api.nvim_create_augroup("NoSignColumnBg", { clear = true })
+vim.api.nvim_create_autocmd("BufEnter", {
+    group = "NoSignColumnBg",
+    callback = function()
+        vim.cmd("highlight SignColumn guibg=#ffffff")
+    end
+})
+
 
 local function set_indent()
     local default_value = 4

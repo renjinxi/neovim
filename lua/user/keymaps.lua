@@ -75,6 +75,10 @@ function rename_current_file()
     print("File renamed to " .. new_name)
 end
 
+local function toggle_neovide() 
+    vim.g.neovide_fullscreen = not vim.g.neovide_fullscreen
+end
+
 local some_thing_keymap = {
     v = {
         name = "Some Thing",
@@ -83,6 +87,7 @@ local some_thing_keymap = {
         j = { "<cmd>set relativenumber<cr>", "Set Relative Number" },
         k = { "<cmd>set norelativenumber<cr>", "Cancel Relative Number" },
         h = { "<cmd>SymbolsOutline<cr>", "Toggle Symbols" },
+        t = { toggle_neovide, "Toggle Neovide"},
         q = { "<cmd>q<cr>", "Close Current Tab" },
         a = { "<cmd>qa<cr>", "Exit" },
         o = { "<cmd>only<cr>", "Only Window" },

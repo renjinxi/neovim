@@ -1,7 +1,8 @@
 local lspconfig = require("lspconfig")
 --local servers = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" }
 --local servers = { "pyright", "pylsp", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" }
-local servers = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" }
+--local servers = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls", "typescript-language-server" }
+local servers = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls", "html", "tsserver"}
 local lsputil = require("lspconfig/util")
 
 for _, server in pairs(servers) do

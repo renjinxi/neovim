@@ -33,3 +33,4 @@ require "user.vim_cmd"
 
 -- after
 require "user.after"
+require "user.neovide_config"

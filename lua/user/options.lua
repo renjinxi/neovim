@@ -28,6 +28,7 @@ local options = {
     swapfile = false,
     exrc = true,
     termguicolors = true,
+    signcolumn = "auto",
 }
 
 for k, v in pairs(options) do

@@ -24,6 +24,20 @@ end
 local function clock()
     return os.date('%Y-%m-%d %H:%M') -- Formats time in HH:MM:SS format
 end
+
+local function get_project_root()
+    local cwd = vim.loop.cwd()
+    while true do
+        if vim.loop.fs_stat(cwd .. '/.git') then
+            return cwd:match("([^/\\]+)$") -- returns the name of the current directory
+        end
+        local parent = cwd:match("(.*)[/\\]")
+        if not parent or parent == cwd then break end
+        cwd = parent
+    end
+    return '[No Project]' -- default name if no .git directory is found
+end
+
 lualine.setup({
     options = {
         theme = "tomorrow",
@@ -43,7 +57,7 @@ lualine.setup({
 
         },
         lualine_x = {
-            { "copilot",  },
+            { "copilot", },
             --{ codeium_state,  },
             { "encoding",   cond = cond80 },
             { "fileformat", cond = cond200 },
@@ -69,7 +83,11 @@ lualine.setup({
         -- lualine_a = {'buffers'},
         lualine_a = {
             {
+                --{ "tabs", get_project_root },
                 "tabs",
+                --"buffers",
+                --fmt = function (buf)
+                --end
                 mode = 2,
             },
         },
