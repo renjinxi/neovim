@@ -103,7 +103,7 @@ local some_thing_keymap = {
         b = { "<cmd>%bd|e#<cr>", "Delete Other Buffers" },
         p = { ":lua vim.fn.setreg('+', vim.fn.expand('%:p'))<CR>", "Copy File Path to Clipboard" },
         l = { rename_current_file, "Rname Current File" },
-        m = { ":%bd|e#|bd#<cr>", "Remove Other Buffer File" },
+        m = { ":%bd!|e#|bd#<cr>", "Remove Other Buffer File" },
     },
 }
 
@@ -130,6 +130,7 @@ local tele_keymap = {
         o = { "<cmd>Telescope projects<cr>", "Recent Projects" },
         y = { "<cmd>Telescope session-lens<cr>", "Session" },
         t = { "<cmd>Telescope git_status<cr>", "Git status"},
+        d = { "<cmd>Telescope commands<cr>", "Commands"},
     },
 }
 
@@ -168,6 +169,21 @@ local zen_v_keymap = {
     },
 }
 
+local function foldExceptCurrent()
+    -- 折叠所有代码块
+    vim.api.nvim_command('normal! zM')
+
+    -- 获取当前行并展开该行所在的折叠
+    local current_line = vim.api.nvim_win_get_cursor(0)[1]
+    vim.api.nvim_command(current_line .. 'foldopen')
+end
+
+local ufo_keymap = {
+    z = {
+        name = "Ufo Fold",
+        o = { foldExceptCurrent, "Only Open Current Line"}
+    }
+}
 local insert_keymap = {
     c = { "<esc>cc", "Delete Line" },
     w = { "<esc>cw", "Delete Word" },
@@ -295,8 +311,9 @@ local lsp_mappings = {
 which_key.register(some_thing_keymap, n_opts)
 which_key.register(tele_keymap, n_opts)
 which_key.register(window_keymap, n_opts)
-which_key.register(zen_keymap, n_opts)
-which_key.register(zen_v_keymap, v_opts)
+which_key.register(ufo_keymap, n_opts)
+--which_key.register(zen_keymap, n_opts)
+--which_key.register(zen_v_keymap, v_opts)
 which_key.register(insert_keymap, insert_opts)
 which_key.register(chagpt_keymap, gpt_opts)
 which_key.register(lsp_mappings, gpt_opts)

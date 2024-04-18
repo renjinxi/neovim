@@ -91,4 +91,3 @@ vim.cmd("hi Folded guifg=NONE guibg=NONE")
 --vim.cmd("hi UfoFoldedEllipsis guibg=NONE")
 --vim.cmd("hi UfoFoldedEllipsis guibg=#a892a2")
 --#a0baba
---

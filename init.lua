@@ -1,3 +1,5 @@
+require "user.before"
+require "user.neovide_config"
 require "user.options"
 require "user.plugins"
 require "user.which_key"
@@ -26,6 +28,7 @@ require "user.indent_blankline"
 require "user.neotest"
 require "user.diagnostics"
 require "user.coverage_config"
+require "user.fzf"
 
 -- end require
 require "user.vim_cmd"
@@ -33,4 +36,3 @@ require "user.vim_cmd"
 
 -- after
 require "user.after"
-require "user.neovide_config"
