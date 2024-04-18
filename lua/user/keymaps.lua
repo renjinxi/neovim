@@ -75,7 +75,7 @@ function rename_current_file()
     print("File renamed to " .. new_name)
 end
 
-local function toggle_neovide() 
+local function toggle_neovide()
     vim.g.neovide_fullscreen = not vim.g.neovide_fullscreen
 end
 
@@ -87,7 +87,7 @@ local some_thing_keymap = {
         j = { "<cmd>set relativenumber<cr>", "Set Relative Number" },
         k = { "<cmd>set norelativenumber<cr>", "Cancel Relative Number" },
         h = { "<cmd>SymbolsOutline<cr>", "Toggle Symbols" },
-        t = { toggle_neovide, "Toggle Neovide"},
+        t = { toggle_neovide, "Toggle Neovide" },
         q = { "<cmd>q<cr>", "Close Current Tab" },
         a = { "<cmd>qa<cr>", "Exit" },
         o = { "<cmd>only<cr>", "Only Window" },
@@ -129,8 +129,8 @@ local tele_keymap = {
         l = { "<cmd>Telescope file_browser<cr>", "File Browser" },
         o = { "<cmd>Telescope projects<cr>", "Recent Projects" },
         y = { "<cmd>Telescope session-lens<cr>", "Session" },
-        t = { "<cmd>Telescope git_status<cr>", "Git status"},
-        d = { "<cmd>Telescope commands<cr>", "Commands"},
+        t = { "<cmd>Telescope git_status<cr>", "Git status" },
+        d = { "<cmd>Telescope commands<cr>", "Commands" },
     },
 }
 
@@ -169,19 +169,23 @@ local zen_v_keymap = {
     },
 }
 
-local function foldExceptCurrent()
-    -- 折叠所有代码块
-    vim.api.nvim_command('normal! zM')
-
-    -- 获取当前行并展开该行所在的折叠
-    local current_line = vim.api.nvim_win_get_cursor(0)[1]
-    vim.api.nvim_command(current_line .. 'foldopen')
+local function fold_except_current()
+    require("ufo").closeAllFolds()
+    local row = vim.api.nvim_win_get_cursor(0)[1]
+    --require('ufo').openFold(row)
+    local is_foled = vim.fn.foldclosed(row) ~= -1
+    if is_foled then
+        vim.api.nvim_command(row .. 'foldopen')
+    end
 end
 
 local ufo_keymap = {
     z = {
         name = "Ufo Fold",
-        o = { foldExceptCurrent, "Only Open Current Line"}
+        o = { fold_except_current, "Only Open Current Line" },
+        n = { ":lua require('ufo').goNextClosedFold()<cr>", "Go To Next Fold" },
+        p = { ":lua require('ufo').goPreviousClosedFold()<cr>", "Go To Pre Fold" },
+        h = { ":lua require('ufo').goPreviousStartFold()<cr>", "Go To Fold Start" },
     }
 }
 local insert_keymap = {
@@ -308,10 +312,18 @@ local lsp_mappings = {
     ["]d"] = { "<cmd>lua vim.lsp.diagnostic.goto_next()<CR>", "Next Diagnostic" },
     K = { "<cmd>lua vim.lsp.buf.hover()<CR>", "Hover" }
 }
+
+local lazygit_keymap = {
+    s = {
+        name = "Lazygit",
+        l = { ":LazyGit<cr>", "Lazygit" },
+    }
+}
 which_key.register(some_thing_keymap, n_opts)
 which_key.register(tele_keymap, n_opts)
 which_key.register(window_keymap, n_opts)
 which_key.register(ufo_keymap, n_opts)
+which_key.register(lazygit_keymap, n_opts)
 --which_key.register(zen_keymap, n_opts)
 --which_key.register(zen_v_keymap, v_opts)
 which_key.register(insert_keymap, insert_opts)

@@ -91,7 +91,7 @@ local plugins = {
 
         "L3MON4D3/LuaSnip",
         dependencies = {
-            "saadparwaiz1/cmp_luasnip", -- Snippets source for nvim-cmp
+            "saadparwaiz1/cmp_luasnip",     -- Snippets source for nvim-cmp
             "rafamadriz/friendly-snippets", --代码段合集
         },
     },
@@ -112,6 +112,13 @@ local plugins = {
         config = function()
             require('gitignore')
         end,
+    },
+    {
+        "kdheepak/lazygit.nvim",
+        -- optional for floating window border decoration
+        requires = {
+            "nvim-lua/plenary.nvim",
+        }
     },
 
     -- indent line
@@ -173,7 +180,7 @@ local plugins = {
                             { id = "stacks",      size = 0.25 },
                             { id = "watches",     size = 0.25 },
                         },
-                        size = 0.3, -- Adjusts the width to 40 columns
+                        size = 0.3,        -- Adjusts the width to 40 columns
                         position = "left", -- Position the layout to the left of the Neovim window
                     },
                     {
@@ -182,7 +189,7 @@ local plugins = {
                             { id = "repl",    size = 0.7 }, -- Adjusts the height to 25% of the layout area
                             { id = "console", size = 0.3 },
                         },
-                        size = 0.3, -- Adjusts the height to 25% of the Neovim window height
+                        size = 0.3,          -- Adjusts the height to 25% of the Neovim window height
                         position = "bottom", -- Position at the bottom
                     },
                 }
