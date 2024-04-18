@@ -101,7 +101,7 @@ function M.setup()
             n = { "<cmd>lua _NEWTERM_TOGGLE()<CR>", "New Term" },
             h = { "<cmd>lua _HTOP_TOGGLE()<CR>", "Htop" },
             u = { "<cmd>lua _NCDU_TOGGLE()<CR>", "Ncdu" },
-            g = { "<cmd>lua _NEWTIG_TOGGLE() <CR>", "Tig" },
+            --g = { "<cmd>lua _NEWTIG_TOGGLE() <CR>", "Tig" },
             t = { "<cmd>lua _NEWTERM() <CR>", "New Tab Term" },
             a = { "<cmd>lua __LUA_TOGGLE()<CR>", "Lua" },
         },

@@ -343,4 +343,3 @@ for i = 1, 9 do
     local desc = { desc = string.format("close window%d", i) }
     vim.keymap.set("n", key, cmd, desc)
 end
---vim.keymap.set("v", "<leader>c", "<Plug>OSCYankVisual")
