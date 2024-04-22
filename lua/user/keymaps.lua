@@ -97,6 +97,7 @@ local some_thing_keymap = {
         r = { "<cmd>LspRestart<cr>", "Lsp Restart" },
         d = { "<cmd>DiffviewOpen<cr>", "Open Diff" },
         c = { "<cmd>DiffviewClose<cr>", "Close Diff" },
+        w = { ":DiffviewFileHistory %<cr>", "File History" },
         E = { "<cmd>edit %<cr>", "Reload Current File" },
         e = { "<cmd>bufdo edit %<cr>", "Reload All Buffer File" },
         n = { "<cmd>lua = vim.api.nvim_buf_get_name(0)<cr>", "Get File Abs Path" },

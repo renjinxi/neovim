@@ -26,7 +26,8 @@ neotest.setup({
             dap = { justMyCode = false },
             runner = "pytest",
             python = custom_python_path,
-            env = get_python_env,
+            command = "coverage run -m pytest"
+            --env = get_python_env,
 
         }),
         --require("neotest-plenary"),

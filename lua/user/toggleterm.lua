@@ -95,7 +95,7 @@ function M.setup()
     local keymap = {
         g = {
             name = "Terminal",
-            l = { "<cmd>lua _LAZYGIT_TOGGLE()<CR>", "Lazygit" },
+            --l = { "<cmd>lua _LAZYGIT_TOGGLE()<CR>", "Lazygit" },
             i = { "<cmd>lua _IPYTHON_TOGGLE()<CR>", "IPython" },
             c = { "<cmd>lua _CLING_TOGGLE()<CR>", "IPython" },
             n = { "<cmd>lua _NEWTERM_TOGGLE()<CR>", "New Term" },
