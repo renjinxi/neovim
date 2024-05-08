@@ -95,3 +95,4 @@ dap.configurations.c = {
 require("user.dap.keymap")
 require("nvim-dap-virtual-text").setup()
 require("telescope").load_extension("dap")
+--require("dap-python").setup(python_path)

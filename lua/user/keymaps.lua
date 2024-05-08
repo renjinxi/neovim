@@ -14,23 +14,23 @@ vim.g.maplocalleader = " "
 keymap("t", "<Esc>", "<C-\\><C-n>", term_opts)
 
 -- insert mode
-keymap("i", "<M-o>", "<Esc>o", opts)
-keymap("i", "<M-n>", "<Esc>", opts)
-keymap("n", "<M-n>", "<Esc>", opts)
-keymap("v", "<M-n>", "<Esc>", opts)
-keymap("c", "<M-n>", "<Esc>", opts)
-keymap("t", "<M-n>", "<C-\\><C-n>", opts)
-keymap("i", "<M-l>", "<Right>", opts)
-keymap("i", "<M-j>", "<Down>", opts)
-keymap("i", "<M-k>", "<Up>", opts)
-keymap("i", "<M-h>", "<Left>", opts)
-keymap("i", "<M-i>", "<Esc>I", opts)
-keymap("i", "<M-e>", "<Esc>ea", opts)
-keymap("i", "<M-;>", "<Esc>A", opts)
-keymap("i", "<M-w>", "<Esc>wa", opts)
-keymap("i", "<M-b>", "<Esc>bi", opts)
-keymap("i", "<M-c>;", "<Esc>c$", opts)
-keymap("i", "<M-enter>;", "<Esc>$a<enter>", opts)
+--keymap("i", "<M-o>", "<Esc>o", opts)
+--keymap("i", "<M-n>", "<Esc>", opts)
+--keymap("n", "<M-n>", "<Esc>", opts)
+--keymap("v", "<M-n>", "<Esc>", opts)
+--keymap("c", "<M-n>", "<Esc>", opts)
+--keymap("t", "<M-n>", "<C-\\><C-n>", opts)
+--keymap("i", "<M-l>", "<Right>", opts)
+--keymap("i", "<M-j>", "<Down>", opts)
+--keymap("i", "<M-k>", "<Up>", opts)
+--keymap("i", "<M-h>", "<Left>", opts)
+--keymap("i", "<M-i>", "<Esc>I", opts)
+--keymap("i", "<M-e>", "<Esc>ea", opts)
+keymap("i", "<C-l>", "<C-o>l", opts)
+--keymap("i", "<M-w>", "<Esc>wa", opts)
+--keymap("i", "<M-b>", "<Esc>bi", opts)
+--keymap("i", "<M-c>;", "<Esc>c$", opts)
+--keymap("i", "<M-enter>;", "<Esc>$a<enter>", opts)
 
 local status_ok, which_key = pcall(require, "which-key")
 if not status_ok then
@@ -180,10 +180,18 @@ local function fold_except_current()
     end
 end
 
+local function foucs_next_fold_code()
+    vim.cmd('normal! zc')
+    require("ufo").goNextClosedFold()
+    vim.cmd('normal! zO')
+    vim.cmd('normal! zz')
+end
+
 local ufo_keymap = {
     z = {
         name = "Ufo Fold",
         o = { fold_except_current, "Only Open Current Line" },
+        i = { foucs_next_fold_code, "Foucs Next Fold Code" },
         n = { ":lua require('ufo').goNextClosedFold()<cr>", "Go To Next Fold" },
         p = { ":lua require('ufo').goPreviousClosedFold()<cr>", "Go To Pre Fold" },
         h = { ":lua require('ufo').goPreviousStartFold()<cr>", "Go To Fold Start" },
@@ -320,6 +328,8 @@ local lazygit_keymap = {
         l = { ":LazyGit<cr>", "Lazygit" },
     }
 }
+
+
 which_key.register(some_thing_keymap, n_opts)
 which_key.register(tele_keymap, n_opts)
 which_key.register(window_keymap, n_opts)
@@ -344,3 +354,4 @@ for i = 1, 9 do
     local desc = { desc = string.format("close window%d", i) }
     vim.keymap.set("n", key, cmd, desc)
 end
+
