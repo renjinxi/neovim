@@ -481,5 +481,16 @@ local plugins = {
             })
         end,
     },
+
+    'nvimdev/lspsaga.nvim',
+    --config = function()
+        --require('lspsaga').setup()
+        ----ss
+        ----print("test")
+    --end,
+    dependencies = {
+        'nvim-treesitter/nvim-treesitter', -- optional
+        'nvim-tree/nvim-web-devicons',     -- optional
+    },
 }
 return lazy.setup(plugins, opt)

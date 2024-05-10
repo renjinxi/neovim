@@ -308,18 +308,25 @@ local lsp_mappings = {
         wa = { "<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", "Add Workspace Folder" },
         wr = { "<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", "Remove Workspace Folder" },
         wl = { "<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>", "List Workspace Folders" },
-        r = { "<cmd>lua vim.lsp.buf.rename()<CR>", "Rename" },
-        c = { "<cmd>lua vim.lsp.buf.code_action()<CR>", "Code Action" },
+        --r = { "<cmd>lua vim.lsp.buf.rename()<CR>", "Rename" },
+        r = { "<cmd>Lspsaga rename<CR>", "Rename" },
+        --c = { "<cmd>lua vim.lsp.buf.code_action()<CR>", "Code Action" },
+        c = { "<cmd>Lspsaga code_action<CR>", "Code Action" },
+        g = { "<cmd>Lspsaga outgoing_calls<CR>", "Outgoing Calls" },
+        i = { "<cmd>Lspsaga incoming_calls<CR>", "Incoming Calls" },
+        a = { "<cmd>Lspsaga finder<CR>", "Finder Ref Def" },
         R = { "<cmd>lua vim.lsp.buf.references()<CR>", "References" },
         f = { "<cmd>lua vim.lsp.buf.format { async = true }<CR>", "Format" },
         -- Note: You have 'lD' defined twice, for 'declaration' and 'type_definition'.
         -- This example keeps the 'type_definition' mapping.
-        e = { "<cmd>lua vim.diagnostic.open_float()<CR>", "Diagnostic Float" },
+        --e = { "<cmd>lua vim.diagnostic.open_float()<CR>", "Diagnostic Float" },
+        e = { "<cmd>Lspsaga show_line_diagnostics <CR>", "Diagnostic Float" },
         q = { "<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>", "Diagnostic Loclist" },
     },
     ["[d"] = { "<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>", "Previous Diagnostic" },
     ["]d"] = { "<cmd>lua vim.lsp.diagnostic.goto_next()<CR>", "Next Diagnostic" },
-    K = { "<cmd>lua vim.lsp.buf.hover()<CR>", "Hover" }
+    --K = { "<cmd>lua vim.lsp.buf.hover()<CR>", "Hover" }
+    K = { "<cmd>Lspsaga hover_doc<CR>", "Hover" }
 }
 
 local lazygit_keymap = {

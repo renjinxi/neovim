@@ -82,3 +82,31 @@ api.nvim_create_autocmd({ "WinLeave", "BufLeave", "FocusLost" }, {
     desc = "set norelativenumber for file",
     callback = set_norelativenumber,
 })
+
+local lsp = vim.lsp
+-- 创建一个自动命令组用于管理事件
+local lsp_group = api.nvim_create_augroup("lsp_group", { clear = true })
+
+-- 创建一个回调函数，用于关闭所有的 LSP
+local function stop_all_lsp()
+    -- 停止所有的 LSP 客户端
+    lsp.stop_client(lsp.get_active_clients())
+end
+
+-- 创建一个回调函数，用于启动 LSP
+local function start_lsp()
+    -- 启动 LSP 客户端
+	vim.cmd("LspStart")
+end
+
+-- 创建一个自动命令，当切换到新的 tab 时触发
+api.nvim_create_autocmd("TabEnter", {
+    group = "lsp_group",  -- 使用前面创建的自动命令组
+    callback = function()
+        -- 在切换到新的 tab 时先停止所有的 LSP
+        stop_all_lsp()
+
+        -- 等待一段时间后重新启动 LSP
+        vim.defer_fn(start_lsp, 1000)
+    end,
+})
