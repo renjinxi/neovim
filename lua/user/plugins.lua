@@ -91,7 +91,7 @@ local plugins = {
 
         "L3MON4D3/LuaSnip",
         dependencies = {
-            "saadparwaiz1/cmp_luasnip",     -- Snippets source for nvim-cmp
+            "saadparwaiz1/cmp_luasnip", -- Snippets source for nvim-cmp
             "rafamadriz/friendly-snippets", --代码段合集
         },
     },
@@ -180,7 +180,7 @@ local plugins = {
                             { id = "stacks",      size = 0.25 },
                             { id = "watches",     size = 0.25 },
                         },
-                        size = 0.3,        -- Adjusts the width to 40 columns
+                        size = 0.3, -- Adjusts the width to 40 columns
                         position = "left", -- Position the layout to the left of the Neovim window
                     },
                     {
@@ -189,7 +189,7 @@ local plugins = {
                             { id = "repl",    size = 0.7 }, -- Adjusts the height to 25% of the layout area
                             { id = "console", size = 0.3 },
                         },
-                        size = 0.3,          -- Adjusts the height to 25% of the Neovim window height
+                        size = 0.3, -- Adjusts the height to 25% of the Neovim window height
                         position = "bottom", -- Position at the bottom
                     },
                 }
@@ -467,7 +467,7 @@ local plugins = {
             "MunifTanjim/nui.nvim",
             "nvim-lua/plenary.nvim",
             "sindrets/diffview.nvim",
-            "stevearc/dressing.nvim",     -- Recommended but not required. Better UI for pickers.
+            "stevearc/dressing.nvim", -- Recommended but not required. Better UI for pickers.
             "nvim-tree/nvim-web-devicons" -- Recommended but not required. Icons in discussion tree.
         },
         enabled = true,
@@ -484,13 +484,31 @@ local plugins = {
 
     'nvimdev/lspsaga.nvim',
     --config = function()
-        --require('lspsaga').setup()
-        ----ss
-        ----print("test")
+    --require('lspsaga').setup()
+    ----ss
+    ----print("test")
     --end,
     dependencies = {
         'nvim-treesitter/nvim-treesitter', -- optional
-        'nvim-tree/nvim-web-devicons',     -- optional
+        'nvim-tree/nvim-web-devicons', -- optional
+    },
+    {
+        "michaelb/sniprun",
+        branch = "master",
+
+        build = "sh install.sh",
+        -- do 'sh install.sh 1' if you want to force compile locally
+        -- (instead of fetching a binary from the github release). Requires Rust >= 1.65
+
+        config = function()
+            require("sniprun").setup({
+                -- your options
+            })
+        end,
+    },
+    {
+        'stevearc/conform.nvim',
+        opts = {},
     },
 }
 return lazy.setup(plugins, opt)
