@@ -153,22 +153,22 @@ local window_keymap = {
     },
 }
 
-local zen_keymap = {
-    z = {
-        name = "Zen Mode",
-        n = { "<cmd>TZNarrow<cr>", "Narrow" },
-        o = { "<cmd>TZFocus<cr>", "Focus" },
-        m = { "<cmd>TZMinimalist<cr>", "Minimalist" },
-        i = { "<cmd>TZAtaraxis<cr>", "Ataraxis" },
-    },
-}
+--local zen_keymap = {
+    --z = {
+        --name = "Zen Mode",
+        --n = { "<cmd>TZNarrow<cr>", "Narrow" },
+        --o = { "<cmd>TZFocus<cr>", "Focus" },
+        --m = { "<cmd>TZMinimalist<cr>", "Minimalist" },
+        --i = { "<cmd>TZAtaraxis<cr>", "Ataraxis" },
+    --},
+--}
 
-local zen_v_keymap = {
-    z = {
-        name = "Zen Mode",
-        n = { "<cmd>'<,'>TZNarrow<cr>", "Narrow" },
-    },
-}
+--local zen_v_keymap = {
+    --z = {
+        --name = "Zen Mode",
+        --n = { "<cmd>'<,'>TZNarrow<cr>", "Narrow" },
+    --},
+--}
 
 local function fold_except_current()
     require("ufo").closeAllFolds()

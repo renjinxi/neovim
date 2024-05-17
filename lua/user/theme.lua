@@ -9,7 +9,6 @@ vim.g.PaperColor_Theme_Options = {
     }
 }
 vim.o.background = "light" -- or "dark" for light mode
---vim.o.background = "dark" -- or "dark" for light mode
 if vim.g.neovide then
     vim.cmd("colorscheme PaperColor")
     vim.api.nvim_set_hl(0, 'VertSplit', { bg = 'NONE', fg = '#005f87' })

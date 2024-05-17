@@ -91,7 +91,7 @@ local plugins = {
 
         "L3MON4D3/LuaSnip",
         dependencies = {
-            "saadparwaiz1/cmp_luasnip", -- Snippets source for nvim-cmp
+            "saadparwaiz1/cmp_luasnip",     -- Snippets source for nvim-cmp
             "rafamadriz/friendly-snippets", --代码段合集
         },
     },
@@ -180,7 +180,7 @@ local plugins = {
                             { id = "stacks",      size = 0.25 },
                             { id = "watches",     size = 0.25 },
                         },
-                        size = 0.3, -- Adjusts the width to 40 columns
+                        size = 0.3,        -- Adjusts the width to 40 columns
                         position = "left", -- Position the layout to the left of the Neovim window
                     },
                     {
@@ -189,7 +189,7 @@ local plugins = {
                             { id = "repl",    size = 0.7 }, -- Adjusts the height to 25% of the layout area
                             { id = "console", size = 0.3 },
                         },
-                        size = 0.3, -- Adjusts the height to 25% of the Neovim window height
+                        size = 0.3,          -- Adjusts the height to 25% of the Neovim window height
                         position = "bottom", -- Position at the bottom
                     },
                 }
@@ -263,15 +263,15 @@ local plugins = {
     -- diff
     "sindrets/diffview.nvim",
     -- Lua
-    {
-        "Pocco81/true-zen.nvim",
-        config = function()
-            require("true-zen").setup({
-                -- your config goes here
-                -- or just leave it empty :)
-            })
-        end,
-    },
+    --{
+    --"Pocco81/true-zen.nvim",
+    --config = function()
+    --require("true-zen").setup({
+    ---- your config goes here
+    ---- or just leave it empty :)
+    --})
+    --end,
+    --},
 
     -- start screen
     {
@@ -312,37 +312,37 @@ local plugins = {
     {
         "jackMort/ChatGPT.nvim",
         event = "VeryLazy",
-        config = function()
-            --require("chatgpt").setup({})
-            require("chatgpt").setup({
-                chat = {
-                    keymaps = {
-                        next_message = "<C-l>",
-                    },
-                },
-                popup_window = {
-                    border = {
-                        highlight = "CustomFloatBorder",
-                    }
-                },
-                popup_input = {
-                    border = {
-                        highlight = "CustomFloatBorder",
-                    },
-                },
-                --openai_params = {
-                --model = "gpt-3.5-turbo",
-                ----model = "gpt-4-turbo-preview",
-                --frequency_penalty = 0,
-                --presence_penalty = 0,
-                --max_tokens = 300,
-                --temperature = 0,
-                --top_p = 1,
-                --n = 1,
-                --},
-                actions_paths = { "~/.config/nvim/lua/user/chatgpt/actions.json" },
-            })
-        end,
+        --config = function()
+        ----require("chatgpt").setup({})
+        --require("chatgpt").setup({
+        --chat = {
+        --keymaps = {
+        --next_message = "<C-l>",
+        --},
+        --},
+        --popup_window = {
+        --border = {
+        --highlight = "CustomFloatBorder",
+        --}
+        --},
+        --popup_input = {
+        --border = {
+        --highlight = "CustomFloatBorder",
+        --},
+        --},
+        ----openai_params = {
+        ----model = "gpt-3.5-turbo",
+        ------model = "gpt-4-turbo-preview",
+        ----frequency_penalty = 0,
+        ----presence_penalty = 0,
+        ----max_tokens = 300,
+        ----temperature = 0,
+        ----top_p = 1,
+        ----n = 1,
+        ----},
+        --actions_paths = { "~/.config/nvim/lua/user/chatgpt/actions.json" },
+        --})
+        --end,
         dependencies = {
             "MunifTanjim/nui.nvim",
             "nvim-lua/plenary.nvim",
@@ -467,7 +467,7 @@ local plugins = {
             "MunifTanjim/nui.nvim",
             "nvim-lua/plenary.nvim",
             "sindrets/diffview.nvim",
-            "stevearc/dressing.nvim", -- Recommended but not required. Better UI for pickers.
+            "stevearc/dressing.nvim",     -- Recommended but not required. Better UI for pickers.
             "nvim-tree/nvim-web-devicons" -- Recommended but not required. Icons in discussion tree.
         },
         enabled = true,
@@ -490,7 +490,7 @@ local plugins = {
     --end,
     dependencies = {
         'nvim-treesitter/nvim-treesitter', -- optional
-        'nvim-tree/nvim-web-devicons', -- optional
+        'nvim-tree/nvim-web-devicons',     -- optional
     },
     {
         "michaelb/sniprun",
@@ -510,5 +510,53 @@ local plugins = {
         'stevearc/conform.nvim',
         opts = {},
     },
+    {
+        'pwntester/octo.nvim',
+        requires = {
+            'nvim-lua/plenary.nvim',
+            'nvim-telescope/telescope.nvim',
+            -- OR 'ibhagwan/fzf-lua',
+            'nvim-tree/nvim-web-devicons',
+        },
+        --config = function()
+        --require "octo".setup()
+        --end
+    },
+    -- image show
+    {
+        "edluffy/hologram.nvim",
+        --config = function()
+        --require('hologram').setup {
+        --auto_display = true -- WIP automatic markdown image display, may be prone to breaking
+        --}
+        --end
+    },
+    {
+        'mikesmithgh/kitty-scrollback.nvim',
+        enabled = true,
+        lazy = true,
+        cmd = { 'KittyScrollbackGenerateKittens', 'KittyScrollbackCheckHealth' },
+        event = { 'User KittyScrollbackLaunch' },
+        -- version = '*', -- latest stable version, may have breaking changes if major version changed
+        -- version = '^4.0.0', -- pin major version, include fixes and features that do not have breaking changes
+        config = function()
+            require('kitty-scrollback').setup()
+        end,
+    },
+    {
+        "willothy/flatten.nvim",
+        config = function()
+            require("flatten").setup({
+                window = {
+                    open = "vsplit"
+                }
+            })
+        end,
+        -- or pass configuration with
+        -- opts = {  }
+        -- Ensure that it runs first to minimize delay when opening file from terminal
+        lazy = false,
+        priority = 1001,
+    }
 }
 return lazy.setup(plugins, opt)
