@@ -436,15 +436,15 @@ local plugins = {
     ---- refer to the configuration section below
     --}
     --}
-    {
-        'rmagatti/auto-session',
-        config = function()
-            require("auto-session").setup {
-                log_level = "error",
-                auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
-            }
-        end
-    },
+    --{
+        --'rmagatti/auto-session',
+        --config = function()
+            --require("auto-session").setup {
+                --log_level = "error",
+                --auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
+            --}
+        --end
+    --},
     {
         'norcalli/nvim-colorizer.lua',
         config = function()
