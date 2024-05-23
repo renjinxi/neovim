@@ -437,13 +437,13 @@ local plugins = {
     --}
     --}
     --{
-        --'rmagatti/auto-session',
-        --config = function()
-            --require("auto-session").setup {
-                --log_level = "error",
-                --auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
-            --}
-        --end
+    --'rmagatti/auto-session',
+    --config = function()
+    --require("auto-session").setup {
+    --log_level = "error",
+    --auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
+    --}
+    --end
     --},
     {
         'norcalli/nvim-colorizer.lua',
@@ -557,6 +557,13 @@ local plugins = {
         -- Ensure that it runs first to minimize delay when opening file from terminal
         lazy = false,
         priority = 1001,
-    }
+    },
+    {
+        'chipsenkbeil/distant.nvim',
+        branch = 'v0.3',
+        config = function()
+            require('distant'):setup()
+        end
+    },
 }
 return lazy.setup(plugins, opt)
