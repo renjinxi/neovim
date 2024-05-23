@@ -40,7 +40,7 @@ end
 
 lualine.setup({
     options = {
-        theme = "tomorrow",
+        theme = "Tomorrow",
         --theme = "papercolor_light",
     },
     sections = {
