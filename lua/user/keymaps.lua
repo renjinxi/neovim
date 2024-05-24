@@ -7,9 +7,6 @@ local keymap = vim.api.nvim_set_keymap
 -- Remap space as leader key
 
 keymap("n", "<space>", "", opts)
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
-
 --keymap('v', '<leader>vc', require('osc52').copy_visual)
 keymap("t", "<Esc>", "<C-\\><C-n>", term_opts)
 

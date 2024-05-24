@@ -41,7 +41,15 @@ end
 lualine.setup({
     options = {
         theme = "Tomorrow",
-        --theme = "papercolor_light",
+        --theme = "PaperColor",
+        --theme = "papercolor_dark",
+        --component_separators = { left = '', right = '' },
+        --section_separators = { left = '', right = '' },
+        section_separators = { left = '', right = '' },
+        component_separators = { left = '', right = '' },
+        --section_separators = "",
+        --component_separators = "",
+        --theme = "papercolor_dark",
     },
     sections = {
         lualine_a = {
@@ -89,6 +97,18 @@ lualine.setup({
                 --fmt = function (buf)
                 --end
                 mode = 2,
+                tabs_color = {
+                    active = function(s)
+                        -- Doesn't update the divider:
+                        return vim.bo.modified and "lualine_" .. s.section .. "_insert" or
+                        "lualine_" .. s.section .. "_normal"
+                        -- Does update the divider:
+                        -- return {
+                        --   fg = vim.bo.modified and '#aa3355' or '#33aa88',
+                        --   bg = vim.bo.modified and '#a0a0a0' or '#282828',
+                        -- }
+                    end,
+                }
             },
         },
         -- lualine_b = {'branch'},
