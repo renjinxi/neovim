@@ -91,24 +91,8 @@ lualine.setup({
         -- lualine_a = {'buffers'},
         lualine_a = {
             {
-                --{ "tabs", get_project_root },
                 "tabs",
-                --"buffers",
-                --fmt = function (buf)
-                --end
-                mode = 2,
-                tabs_color = {
-                    active = function(s)
-                        -- Doesn't update the divider:
-                        return vim.bo.modified and "lualine_" .. s.section .. "_insert" or
-                        "lualine_" .. s.section .. "_normal"
-                        -- Does update the divider:
-                        -- return {
-                        --   fg = vim.bo.modified and '#aa3355' or '#33aa88',
-                        --   bg = vim.bo.modified and '#a0a0a0' or '#282828',
-                        -- }
-                    end,
-                }
+                mode = 2
             },
         },
         -- lualine_b = {'branch'},
