@@ -2,7 +2,12 @@ return {
     -- manage itself
     "folke/lazy.nvim",
     "neovim/nvim-lspconfig",
-    "Pocco81/auto-save.nvim",
+    {
+        "Pocco81/auto-save.nvim",
+        config = function()
+            require("user.plugins.autosave")
+        end
+    },
 
     {
         "antosha417/nvim-lsp-file-operations",
@@ -16,7 +21,12 @@ return {
     },
 
     -- quick move
-    "folke/trouble.nvim",
+    {
+        "folke/trouble.nvim",
+        config = function()
+            require("user.plugins.lualine")
+        end
+    },
     {
         "ggandor/leap.nvim",
         config = function()
@@ -38,7 +48,12 @@ return {
         end
     },
 
-    "nvim-telescope/telescope.nvim",
+    {
+        "nvim-telescope/telescope.nvim",
+        config = function()
+            require("user.plugins.telescope")
+        end
+    },
     "nvim-telescope/telescope-live-grep-args.nvim",
     'nvim-telescope/telescope-ui-select.nvim',
     --"nvim-lua/plenary.nvim",
@@ -46,7 +61,10 @@ return {
     -- tree syntc
     {
         "nvim-treesitter/nvim-treesitter",
-        run = ":TSUpdate"
+        run = ":TSUpdate",
+        config = function()
+            require("user.plugins.treesitter")
+        end
     },
     "nvim-treesitter/nvim-treesitter-context",
 
@@ -55,7 +73,12 @@ return {
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-path",
     "hrsh7th/cmp-cmdline",
-    "hrsh7th/nvim-cmp",
+    {
+        "hrsh7th/nvim-cmp",
+        config = function()
+            require("user.plugins.cmp")
+        end
+    },
     "onsails/lspkind.nvim",
 
     -- 代码段提示
@@ -69,13 +92,20 @@ return {
     },
 
     -- status line
-    "nvim-lualine/lualine.nvim",
-    --{ "AndreM222/copilot-lualine" },
+    {
+        "nvim-lualine/lualine.nvim",
+        config = function()
+            require("user.plugins.lualine")
+        end
+    },
 
     -- file explorer
-    "nvim-tree/nvim-tree.lua",
-
-    "nvim-tree/nvim-web-devicons",
+    {
+        "nvim-tree/nvim-tree.lua",
+        config = function()
+            require("user.plugins.nvim-tree")
+        end
+    },
 
     -- git
     "tpope/vim-fugitive",
@@ -94,7 +124,12 @@ return {
     },
 
     -- indent line
-    { "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {} },
+    {
+        "lukas-reineke/indent-blankline.nvim",
+        config = function()
+            require("user.plugins.lualine")
+        end
+    },
 
     -- auto pairs
     {
@@ -118,9 +153,19 @@ return {
     "preservim/nerdcommenter",
 
     -- which key
-    "folke/which-key.nvim",
+    {
+        "folke/which-key.nvim",
+        config = function()
+            require("user.plugins.which-key")
+        end
+    },
 
-    { "akinsho/toggleterm.nvim",             version = "*" },
+    {
+        "akinsho/toggleterm.nvim",
+        config = function()
+            require("user.plugins.toggleterm")
+        end
+    },
 
     {
 
@@ -191,9 +236,13 @@ return {
     },
 
     -- folding
-    { "kevinhwang91/nvim-ufo", dependencies = "kevinhwang91/promise-async" },
-
-    "danymat/neogen",
+    {
+        "kevinhwang91/nvim-ufo",
+        dependencies = "kevinhwang91/promise-async",
+        config = function()
+            require("user.plugins.ufo")
+        end
+    },
 
     -- theme for neovim
     {
@@ -205,10 +254,20 @@ return {
     },
 
     -- go to small window
-    "rmagatti/goto-preview",
+    {
+        "rmagatti/goto-preview",
+        config = function()
+            require("user.plugins.goto-preview")
+        end
+    },
 
     -- quickfix window
-    "kevinhwang91/nvim-bqf",
+    {
+        "kevinhwang91/nvim-bqf",
+        config = function()
+            require("user.plugins.bqf")
+        end
+    },
 
     -- optional
     --"junegunn/fzf",
@@ -218,7 +277,7 @@ return {
         dependencies = { "nvim-tree/nvim-web-devicons" },
         config = function()
             -- calling `setup` is optional for customization
-            require("fzf-lua").setup({})
+            require("user.plugins.fzf")
         end,
     },
     -- lazy.nvim
@@ -387,11 +446,17 @@ return {
             "antoinemadec/FixCursorHold.nvim",
             "nvim-treesitter/nvim-treesitter"
         },
+        config = function()
+            require("user.plugins.neotest")
+        end
     },
     "nvim-neotest/neotest-python",
     {
         "andythigpen/nvim-coverage",
         requires = "nvim-lua/plenary.nvim",
+        config = function()
+            require("user.plugins.coverage")
+        end,
         -- Optional: needed for PHP when using the cobertura parser
         rocks = { 'lua-xmlreader' },
         --config = function()
@@ -454,12 +519,12 @@ return {
         end,
     },
 
-    'nvimdev/lspsaga.nvim',
-    --config = function()
-    --require('lspsaga').setup()
-    ----ss
-    ----print("test")
-    --end,
+    {
+        'nvimdev/lspsaga.nvim',
+        config = function()
+            require("user.plugins.lspsaga")
+        end
+    },
     dependencies = {
         'nvim-treesitter/nvim-treesitter', -- optional
         'nvim-tree/nvim-web-devicons',     -- optional
@@ -481,6 +546,9 @@ return {
     {
         'stevearc/conform.nvim',
         opts = {},
+        config = function()
+            require("user.plugins.conform")
+        end
     },
     {
         'pwntester/octo.nvim',
@@ -498,9 +566,9 @@ return {
     {
         "edluffy/hologram.nvim",
         --config = function()
-            --require('hologram').setup {
-                --auto_display = true -- WIP automatic markdown image display, may be prone to breaking
-            --}
+        --require('hologram').setup {
+        --auto_display = true -- WIP automatic markdown image display, may be prone to breaking
+        --}
         --end
     },
     {

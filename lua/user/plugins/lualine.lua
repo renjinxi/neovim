@@ -1,8 +1,3 @@
-local status_ok, lualine = pcall(require, "lualine")
-if not status_ok then
-    return
-end
-
 local window = function()
     return vim.api.nvim_win_get_number(0)
 end
@@ -38,7 +33,7 @@ local function get_project_root()
     return '[No Project]' -- default name if no .git directory is found
 end
 
-lualine.setup({
+require("lualine").setup({
     options = {
         theme = "Tomorrow",
         --theme = "PaperColor",

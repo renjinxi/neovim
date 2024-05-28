@@ -1,7 +1,3 @@
-local status_ok, _ = pcall(require, "lspsaga")
-if not status_ok then
-    return
-end
 require('lspsaga').setup({
     lighthub = {
         enable = false,

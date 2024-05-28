@@ -1,13 +1,8 @@
-local status_ok, goto_preview = pcall(require, "goto-preview")
-if not status_ok then
-    return
-end
-
 local post_open_hook = function(_, win)
     vim.api.nvim_win_set_option(win, "winhighlight", "Normal:")
 end
 
-goto_preview.setup({
+require("goto-preview").setup({
     post_open_hook = post_open_hook,
 })
 

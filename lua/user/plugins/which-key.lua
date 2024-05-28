@@ -1,8 +1,3 @@
-local status_ok, which_key = pcall(require, "which-key")
-if not status_ok then
-    return
-end
-
 local setup = {
     plugins = {
         marks = false,                    -- shows a list of your marks on ' and `
@@ -69,4 +64,4 @@ local setup = {
     },
 }
 
-which_key.setup(setup)
+require("which-key").setup(setup)

@@ -1,12 +1,7 @@
-local status_ok, tree = pcall(require, "nvim-tree")
-if not status_ok then
-    return
-end
-
 vim.g.loaded = 1
 vim.g.loaded_netrwPlugin = 1
 
-tree.setup({
+require("nvim-tree").setup({
     update_focused_file = {
         enable = true,
         update_root = true,

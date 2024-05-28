@@ -1,9 +1,6 @@
-local cmp_status_ok, cmp = pcall(require, "cmp")
+local cmp = require("cmp")
 local lspkind = require('lspkind')
 
-if not cmp_status_ok then
-    return
-end
 
 local has_words_before = function()
     if vim.api.nvim_buf_get_option(0, "buftype") == "prompt" then return false end

@@ -1,0 +1,10 @@
+vim.keymap.set("n", "zR", require("ufo").openAllFolds)
+vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
+
+require("ufo").setup({
+    provider_selector = function(bufnr, filetype, buftype)
+        return { "lsp", "indent" }
+    end,
+})
+
+vim.cmd("hi Folded guifg=NONE guibg=NONE")

@@ -1,9 +1,5 @@
-local status, neotest = pcall(require, 'neotest')
 local common = require('user.common')
 
-if not status then
-    return
-end
 local function custom_python_path(file_path)
     local project_root = common.find_project_root_by_marker("pyproject.toml") or vim.fn.getcwd()
     local python_interpreter = project_root .. "/.venv/bin/python" -- Adjust this based on your env path
@@ -20,7 +16,7 @@ local function get_python_env(file_path)
     }
 end
 
-neotest.setup({
+require("neotest").setup({
     adapters = {
         require("neotest-python")({
             dap = { justMyCode = false },
