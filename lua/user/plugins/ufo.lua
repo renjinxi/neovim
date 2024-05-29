@@ -6,5 +6,3 @@ require("ufo").setup({
         return { "lsp", "indent" }
     end,
 })
-
-vim.cmd("hi Folded guifg=NONE guibg=NONE")

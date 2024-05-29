@@ -24,7 +24,7 @@ return {
     {
         "folke/trouble.nvim",
         config = function()
-            require("user.plugins.lualine")
+            require("user.plugins.trouble")
         end
     },
     {
@@ -127,7 +127,7 @@ return {
     {
         "lukas-reineke/indent-blankline.nvim",
         config = function()
-            require("user.plugins.lualine")
+            require("user.plugins.indent_blankline")
         end
     },
 

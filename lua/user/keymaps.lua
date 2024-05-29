@@ -4,12 +4,26 @@ local term_opts = { silent = true }
 
 local keymap = vim.api.nvim_set_keymap
 
--- Remap space as leader key
+local open_command = 'xdg-open'
+if vim.fn.has('mac') == 1 then
+  open_command = 'open'
+end
 
+local function url_repo()
+  local cursorword = vim.fn.expand('<cfile>')
+  if string.find(cursorword, '^[a-zA-Z0-9-_.]*/[a-zA-Z0-9-_.]*$') then
+    cursorword = 'https://github.com/' .. cursorword
+  end
+  return cursorword or ''
+end
+
+vim.keymap.set('n', 'gx', function()
+  vim.fn.jobstart({ open_command, url_repo() }, { detach = true })
+end, { silent = true })
+-- Remap space as leader key
 keymap("n", "<space>", "", opts)
 --keymap('v', '<leader>vc', require('osc52').copy_visual)
 keymap("t", "<Esc>", "<C-\\><C-n>", term_opts)
-
 -- insert mode
 --keymap("i", "<M-o>", "<Esc>o", opts)
 --keymap("i", "<M-n>", "<Esc>", opts)
@@ -151,20 +165,20 @@ local window_keymap = {
 }
 
 --local zen_keymap = {
-    --z = {
-        --name = "Zen Mode",
-        --n = { "<cmd>TZNarrow<cr>", "Narrow" },
-        --o = { "<cmd>TZFocus<cr>", "Focus" },
-        --m = { "<cmd>TZMinimalist<cr>", "Minimalist" },
-        --i = { "<cmd>TZAtaraxis<cr>", "Ataraxis" },
-    --},
+--z = {
+--name = "Zen Mode",
+--n = { "<cmd>TZNarrow<cr>", "Narrow" },
+--o = { "<cmd>TZFocus<cr>", "Focus" },
+--m = { "<cmd>TZMinimalist<cr>", "Minimalist" },
+--i = { "<cmd>TZAtaraxis<cr>", "Ataraxis" },
+--},
 --}
 
 --local zen_v_keymap = {
-    --z = {
-        --name = "Zen Mode",
-        --n = { "<cmd>'<,'>TZNarrow<cr>", "Narrow" },
-    --},
+--z = {
+--name = "Zen Mode",
+--n = { "<cmd>'<,'>TZNarrow<cr>", "Narrow" },
+--},
 --}
 
 local function fold_except_current()
@@ -358,4 +372,3 @@ for i = 1, 9 do
     local desc = { desc = string.format("close window%d", i) }
     vim.keymap.set("n", key, cmd, desc)
 end
-
