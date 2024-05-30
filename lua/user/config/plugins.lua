@@ -11,6 +11,7 @@ return {
 
     {
         "antosha417/nvim-lsp-file-operations",
+        event = "LspAttach",
         dependencies = {
             "nvim-lua/plenary.nvim",
             "nvim-tree/nvim-tree.lua",
@@ -23,6 +24,7 @@ return {
     -- quick move
     {
         "folke/trouble.nvim",
+        cmd = { "TroubleToggle", "Trouble" },
         config = function()
             require("user.plugins.trouble")
         end
@@ -62,6 +64,7 @@ return {
     {
         "nvim-treesitter/nvim-treesitter",
         run = ":TSUpdate",
+        event = "BufReadPre",
         config = function()
             require("user.plugins.treesitter")
         end
@@ -75,6 +78,7 @@ return {
     "hrsh7th/cmp-cmdline",
     {
         "hrsh7th/nvim-cmp",
+        event = "InsertEnter",
         config = function()
             require("user.plugins.cmp")
         end
@@ -102,6 +106,13 @@ return {
     -- file explorer
     {
         "nvim-tree/nvim-tree.lua",
+        cmd = {
+          "NvimTreeOpen",
+          "NvimTreeClose",
+          "NvimTreeToggle",
+          "NvimTreeFindFile",
+          "NvimTreeFindFileToggle",
+        },
         config = function()
             require("user.plugins.nvim-tree")
         end
@@ -134,6 +145,7 @@ return {
     -- auto pairs
     {
         "windwp/nvim-autopairs",
+        event = "InsertEnter",
         config = function()
             require("nvim-autopairs").setup()
         end,
@@ -150,7 +162,14 @@ return {
     },
 
     -- quick comment
-    "preservim/nerdcommenter",
+
+    {
+        'numToStr/Comment.nvim',
+        opts = {
+            -- add any options here
+        },
+        lazy = false,
+    },
 
     -- which key
     {
@@ -264,6 +283,7 @@ return {
     -- quickfix window
     {
         "kevinhwang91/nvim-bqf",
+        ft = "qf",
         config = function()
             require("user.plugins.bqf")
         end
@@ -326,54 +346,10 @@ return {
             require("mason").setup()
         end,
     },
-    --{
-    --'williamboman/mason-lspconfig',
-    --config = function()
-    --require("mason-lspconfig").setup({
-    ---- Automatically install LSP servers
-    --ensure_installed = { "pyright", "biome", "ruff_lsp", "clangd", "lua_ls", "taplo", "yamlls" },
-    ---- Automatically configure installed servers with nvim-lspconfig
-    --automatic_installation = true,
-    --})
-    --end
-
-    --},
-
     --chatgpt
     {
         "jackMort/ChatGPT.nvim",
         event = "VeryLazy",
-        --config = function()
-        ----require("chatgpt").setup({})
-        --require("chatgpt").setup({
-        --chat = {
-        --keymaps = {
-        --next_message = "<C-l>",
-        --},
-        --},
-        --popup_window = {
-        --border = {
-        --highlight = "CustomFloatBorder",
-        --}
-        --},
-        --popup_input = {
-        --border = {
-        --highlight = "CustomFloatBorder",
-        --},
-        --},
-        ----openai_params = {
-        ----model = "gpt-3.5-turbo",
-        ------model = "gpt-4-turbo-preview",
-        ----frequency_penalty = 0,
-        ----presence_penalty = 0,
-        ----max_tokens = 300,
-        ----temperature = 0,
-        ----top_p = 1,
-        ----n = 1,
-        ----},
-        --actions_paths = { "~/.config/nvim/lua/user/chatgpt/actions.json" },
-        --})
-        --end,
         dependencies = {
             "MunifTanjim/nui.nvim",
             "nvim-lua/plenary.nvim",
@@ -383,58 +359,6 @@ return {
     },
     -- startuptime
     "dstein64/vim-startuptime",
-    --"github/copilot.lua"
-    --{
-    --'Exafunction/codeium.vim',
-    --event = 'BufEnter'
-    --},
-    --{
-    --"Exafunction/codeium.nvim",
-    --dependencies = {
-    --"nvim-lua/plenary.nvim",
-    --"hrsh7th/nvim-cmp",
-    --},
-    ----config = function()
-    ----require("codeium").setup({
-    ----})
-    ----end
-    --},
-    --{
-    --"zbirenbaum/copilot.lua",
-    --event = "InsertEnter",
-    --config = function()
-    --require("copilot").setup({
-    --suggestion = {
-    --enabled = false,
-    ----keymap = {
-    ----next = "<M-7>",
-    ----prev = "<M-4>",
-    ----}
-    --},
-    --panel = {
-    --enabled = false,
-    --},
-    --})
-    --end,
-    --},
-    --{
-    --"zbirenbaum/copilot-cmp",
-    --config = function()
-    --require("copilot_cmp").setup()
-    --end
-    --},
-    --{
-    --"CopilotC-Nvim/CopilotChat.nvim",
-    --branch = "canary",
-    --dependencies = {
-    --{ "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
-    --{ "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
-    --},
-    --opts = {
-    --debug = true, -- Enable debugging
-    ---- See Configuration section for rest
-    --},
-    ---- See Commands section for default commands if you want to lazy load on them
     --},
     --
     -- unit test
@@ -545,6 +469,7 @@ return {
     },
     {
         'stevearc/conform.nvim',
+        event = { "BufWritePre" },
         opts = {},
         config = function()
             require("user.plugins.conform")
@@ -597,12 +522,5 @@ return {
         -- Ensure that it runs first to minimize delay when opening file from terminal
         lazy = false,
         priority = 1001,
-    },
-    {
-        'chipsenkbeil/distant.nvim',
-        branch = 'v0.3',
-        config = function()
-            require('distant'):setup()
-        end
     },
 }
