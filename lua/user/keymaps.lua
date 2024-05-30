@@ -327,7 +327,8 @@ local lsp_mappings = {
         i = { "<cmd>Lspsaga incoming_calls<CR>", "Incoming Calls" },
         a = { "<cmd>Lspsaga finder<CR>", "Finder Ref Def" },
         R = { "<cmd>lua vim.lsp.buf.references()<CR>", "References" },
-        f = { "<cmd>lua vim.lsp.buf.format { async = true }<CR>", "Format" },
+        --f = { "<cmd>lua vim.lsp.buf.format { async = true }<CR>", "Format" },
+        f = { "<cmd>lua require('conform').format()<CR>", "Format" },
         -- Note: You have 'lD' defined twice, for 'declaration' and 'type_definition'.
         -- This example keeps the 'type_definition' mapping.
         --e = { "<cmd>lua vim.diagnostic.open_float()<CR>", "Diagnostic Float" },
