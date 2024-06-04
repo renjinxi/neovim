@@ -6,19 +6,19 @@ local keymap = vim.api.nvim_set_keymap
 
 local open_command = 'xdg-open'
 if vim.fn.has('mac') == 1 then
-  open_command = 'open'
+    open_command = 'open'
 end
 
 local function url_repo()
-  local cursorword = vim.fn.expand('<cfile>')
-  if string.find(cursorword, '^[a-zA-Z0-9-_.]*/[a-zA-Z0-9-_.]*$') then
-    cursorword = 'https://github.com/' .. cursorword
-  end
-  return cursorword or ''
+    local cursorword = vim.fn.expand('<cfile>')
+    if string.find(cursorword, '^[a-zA-Z0-9-_.]*/[a-zA-Z0-9-_.]*$') then
+        cursorword = 'https://github.com/' .. cursorword
+    end
+    return cursorword or ''
 end
 
 vim.keymap.set('n', 'gx', function()
-  vim.fn.jobstart({ open_command, url_repo() }, { detach = true })
+    vim.fn.jobstart({ open_command, url_repo() }, { detach = true })
 end, { silent = true })
 -- Remap space as leader key
 keymap("n", "<space>", "", opts)
@@ -64,7 +64,7 @@ local v_opts = {
     noremap = true,
     nowait = false,
 }
-function rename_current_file()
+local function rename_current_file()
     -- 获取当前文件的完整路径
     local old_path = vim.fn.expand('%:p')
     -- 询问新文件名
@@ -84,6 +84,15 @@ function rename_current_file()
     -- 更新当前缓冲区的文件路径
     vim.api.nvim_command('e ' .. new_path)
     print("File renamed to " .. new_name)
+end
+
+local open_project_in_new_tab = function()
+    local input = vim.fn.input("Tab Name: ")
+    if input ~= "" then
+        vim.cmd("tabnew")
+        vim.cmd("Telescope projects")
+        vim.cmd("LualineRenameTab " .. input)
+    end
 end
 
 local function toggle_neovide()
@@ -116,6 +125,7 @@ local some_thing_keymap = {
         p = { ":lua vim.fn.setreg('+', vim.fn.expand('%:p'))<CR>", "Copy File Path to Clipboard" },
         l = { rename_current_file, "Rname Current File" },
         m = { ":%bd!|e#|bd#<cr>", "Remove Other Buffer File" },
+        v = { open_project_in_new_tab, "Open Project In New Tab" },
     },
 }
 
@@ -368,8 +378,8 @@ for i = 1, 9 do
     local desc = { desc = string.format("open window%d", i) }
     vim.keymap.set("n", key, cmd, desc)
 
-    local key = string.format("<leader>wc%d", i)
-    local cmd = string.format("<cmd>%dwincmd q<cr>", i)
-    local desc = { desc = string.format("close window%d", i) }
+    key = string.format("<leader>wc%d", i)
+    cmd = string.format("<cmd>%dwincmd q<cr>", i)
+    desc = { desc = string.format("close window%d", i) }
     vim.keymap.set("n", key, cmd, desc)
 end
