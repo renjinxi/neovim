@@ -1,16 +1,16 @@
 require "user.before"
+
 require "user.neovide_config"
 require "user.options"
 require "user.globals"
+require "user.diagnostics"
+
 require "user.config.lazy"
 require "user.auto_commands"
 require "user.theme"
 require "user.keymaps"
 require "user.lsp"
 require "user.dap"
-require "user.diagnostics"
 require "user.vim_cmd"
---require "user."
 
--- after
 require "user.after"

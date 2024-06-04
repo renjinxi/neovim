@@ -37,7 +37,6 @@ local function set_indent()
 end
 
 api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
-
     pattern = "*",
     group = indent_group,
     desc = "set indent for file",
@@ -50,6 +49,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI", "FocusGai
     pattern = { "*" },
 })
 
+
 local function set_relativenumber()
     vim.opt.relativenumber = true
 end
@@ -57,8 +57,6 @@ end
 local function set_norelativenumber()
     vim.opt.relativenumber = false
 end
-
-
 api.nvim_create_autocmd({ "WinEnter", "BufRead", "BufEnter", "FocusGained" }, {
     pattern = "*",
     group = relative_group,
@@ -74,23 +72,17 @@ api.nvim_create_autocmd({ "WinLeave", "BufLeave", "FocusLost" }, {
     callback = set_norelativenumber,
 })
 
-local lsp = vim.lsp
--- 创建一个自动命令组用于管理事件
-local lsp_group = api.nvim_create_augroup("lsp_group", { clear = true })
 
--- 创建一个回调函数，用于关闭所有的 LSP
+local lsp = vim.lsp
+local lsp_group = api.nvim_create_augroup("lsp_group", { clear = true })
 local function stop_all_lsp()
-    -- 停止所有的 LSP 客户端
     lsp.stop_client(lsp.get_active_clients())
 end
 
--- 创建一个回调函数，用于启动 LSP
 local function start_lsp()
-    -- 启动 LSP 客户端
     vim.cmd("LspStart")
 end
 
--- 创建一个自动命令，当切换到新的 tab 时触发
 api.nvim_create_autocmd("TabEnter", {
     group = "lsp_group", -- 使用前面创建的自动命令组
     callback = function()
