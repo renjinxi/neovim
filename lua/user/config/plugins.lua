@@ -107,11 +107,11 @@ return {
     {
         "nvim-tree/nvim-tree.lua",
         cmd = {
-          "NvimTreeOpen",
-          "NvimTreeClose",
-          "NvimTreeToggle",
-          "NvimTreeFindFile",
-          "NvimTreeFindFileToggle",
+            "NvimTreeOpen",
+            "NvimTreeClose",
+            "NvimTreeToggle",
+            "NvimTreeFindFile",
+            "NvimTreeFindFileToggle",
         },
         config = function()
             require("user.plugins.nvim-tree")
@@ -265,12 +265,17 @@ return {
 
     -- theme for neovim
     {
-        'NLKNguyen/papercolor-theme',
+        "rose-pine/neovim",
+        name = "rose-pine",
+        -- 'NLKNguyen/papercolor-theme',
         --config = function()
         --vim.o.background = "light" -- or "dark" for light mode
         --vim.cmd("colorscheme PaperColor")
         --end
     },
+    'NLKNguyen/papercolor-theme',
+    "morhetz/gruvbox",
+    "altercation/vim-colors-solarized",
 
     -- go to small window
     {
@@ -387,25 +392,6 @@ return {
         --require("coverage").setup()
         --end,
     },
-    -- todo highlight
-    --{
-    --"folke/todo-comments.nvim",
-    --dependencies = { "nvim-lua/plenary.nvim" },
-    --opts = {
-    ---- your configuration comes here
-    ---- or leave it empty to use the default settings
-    ---- refer to the configuration section below
-    --}
-    --}
-    --{
-    --'rmagatti/auto-session',
-    --config = function()
-    --require("auto-session").setup {
-    --log_level = "error",
-    --auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
-    --}
-    --end
-    --},
     {
         'norcalli/nvim-colorizer.lua',
         config = function()

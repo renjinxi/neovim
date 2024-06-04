@@ -12,15 +12,6 @@ vim.api.nvim_create_autocmd('BufEnter', {
     end,
 })
 
-vim.api.nvim_create_augroup("NoSignColumnBg", { clear = true })
-vim.api.nvim_create_autocmd("BufEnter", {
-    group = "NoSignColumnBg",
-    callback = function()
-        vim.cmd("highlight SignColumn guibg=#ffffff")
-    end
-})
-
-
 local function set_indent()
     local default_value = 4
     local indent_table = {
@@ -96,12 +87,12 @@ end
 -- 创建一个回调函数，用于启动 LSP
 local function start_lsp()
     -- 启动 LSP 客户端
-	vim.cmd("LspStart")
+    vim.cmd("LspStart")
 end
 
 -- 创建一个自动命令，当切换到新的 tab 时触发
 api.nvim_create_autocmd("TabEnter", {
-    group = "lsp_group",  -- 使用前面创建的自动命令组
+    group = "lsp_group", -- 使用前面创建的自动命令组
     callback = function()
         -- 在切换到新的 tab 时先停止所有的 LSP
         stop_all_lsp()

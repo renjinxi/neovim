@@ -1,4 +1,3 @@
-vim.cmd("highlight  CustomFloatBorder ctermfg=16 ctermbg=231 guifg=#000000 guibg=#ffffff")
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
     vim.fn.system({

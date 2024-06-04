@@ -16,5 +16,6 @@ vim.api.nvim_set_keymap('v', '<D-v>', '<C-R>+', { noremap = true, silent = true 
 vim.g.neovide_floating_shadow = false
 
 -- send alt+whatever to neovim
-vim.g.neovide_input_macos_alt_is_meta = true
+vim.g.neovide_input_macos_option_key_is_meta = "both"
+-- vim.g.neovide_input_macos_alt_is_meta = true
 --end
