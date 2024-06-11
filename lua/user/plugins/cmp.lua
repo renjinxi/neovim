@@ -4,10 +4,10 @@ local lspkind = require('lspkind')
 
 local has_words_before = function()
     if vim.api.nvim_buf_get_option(0, "buftype") == "prompt" then return false end
-    local line, col = table.unpack(vim.api.nvim_win_get_cursor(0))
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local line, col = cursor[1], cursor[2]
     return col ~= 0 and vim.api.nvim_buf_get_text(0, line - 1, 0, line - 1, col, {})[1]:match("^%s*$") == nil
 end
-
 vim.cmd([[
   let g:UltiSnipsJumpForwardTrigger='<Tab>'
   let g:UltiSnipsJumpBackwardTrigger='<S-Tab>'
@@ -57,8 +57,8 @@ cmp.setup({
         --{ name = "copilot",  group_index = 2 },
         --{ name = "codeium",  group_index = 2 },
         { name = "nvim_lsp", group_index = 2 },
-        { name = "vsnip" }, -- For vsnip users.
-        -- { name = 'luasnip' }, -- For luasnip users.
+        { name = "vsnip" },   -- For vsnip users.
+        { name = 'luasnip' }, -- For luasnip users.
         -- { name = 'ultisnips' }, -- For ultisnips users.
         -- { name = 'snippy' }, -- For snippy users.
     }, {

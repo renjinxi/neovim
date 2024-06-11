@@ -126,6 +126,7 @@ local some_thing_keymap = {
         l = { rename_current_file, "Rname Current File" },
         m = { ":%bd!|e#|bd#<cr>", "Remove Other Buffer File" },
         v = { open_project_in_new_tab, "Open Project In New Tab" },
+        z = { ":ZenMode<cr>", "Toggle Zen Mode" },
     },
 }
 

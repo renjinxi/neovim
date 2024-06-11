@@ -93,6 +93,10 @@ return {
             "saadparwaiz1/cmp_luasnip",     -- Snippets source for nvim-cmp
             "rafamadriz/friendly-snippets", --代码段合集
         },
+        config = function ()
+            local luasnip = require("luasnip")
+            require("luasnip.loaders.from_vscode").lazy_load()
+        end
     },
 
     -- status line
@@ -351,6 +355,9 @@ return {
             require("mason").setup()
         end,
     },
+    {
+        "williamboman/mason-lspconfig.nvim",
+    },
     --chatgpt
     {
         "jackMort/ChatGPT.nvim",
@@ -509,4 +516,8 @@ return {
         lazy = false,
         priority = 1001,
     },
+    -- zen
+    {
+        "folke/zen-mode.nvim",
+    }
 }
