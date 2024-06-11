@@ -1,4 +1,4 @@
-local common = require('user.common')
+local common = require('user.config.common')
 
 local function custom_python_path(file_path)
     local project_root = common.find_project_root_by_marker("pyproject.toml") or vim.fn.getcwd()
