@@ -1,4 +1,4 @@
-local common = require("user.common")
+local common = require("user.config.common")
 local opts = { noremap = true, silent = true }
 local term_opts = { silent = true }
 

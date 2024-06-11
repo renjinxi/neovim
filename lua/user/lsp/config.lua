@@ -11,7 +11,11 @@ end
 
 local config = {
     -- disable virtual text
-    virtual_text = false,
+    -- virtual_text = false,
+    virtual_text = {
+        -- source = "always",  -- Or "if_many"
+        prefix = "●", -- Could be '■', '▎', 'x'
+    },
     -- show signs
     signs = {
         active = signs,
@@ -29,4 +33,4 @@ local config = {
     },
 }
 
-vim.diagnostic.config(config)
+vim.diagnostic.config(config, vim.api.nvim_create_namespace("neotest"))

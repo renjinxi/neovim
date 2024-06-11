@@ -8,7 +8,7 @@ end
 --dap_ui.setup()
 --end
 
-local settings = require("user.settings")
+local settings = require("user.config.settings")
 local python_path = settings.debug_python_path
 dap.adapters.python = {
     type = "executable",

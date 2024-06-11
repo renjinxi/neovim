@@ -2,7 +2,7 @@ local settings = {
     debug_python_path = "/usr/local/bin/python3"
 }
 
-local state, local_settings = pcall(require, "user.local_settings")
+local state, local_settings = pcall(require, "user.config.local_settings")
 
 if state then
     for k, v in pairs(local_settings) do
