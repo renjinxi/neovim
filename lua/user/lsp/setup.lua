@@ -1,4 +1,3 @@
--- Setup installer & lsp configs
 local mason_ok, mason = pcall(require, "mason")
 local mason_lsp_ok, mason_lsp = pcall(require, "mason-lspconfig")
 
@@ -8,22 +7,13 @@ end
 
 mason_lsp.setup({
     ensure_installed = {
-        "pyright", "ruff_lsp", "clangd", "lua_ls", "html", "tsserver"
+        "lua_ls",
+        "clangd",
+        "pyright", "ruff_lsp",
+        "html", "tsserver"
     },
     automatic_installation = true,
 })
-
-local lspconfig = require("lspconfig")
-
-local function lsp_highlight_document(client)
-    -- Set autocommands conditional on server_capabilities
-    local status_ok, illuminate = pcall(require, "illuminate")
-    if not status_ok then
-        return
-    end
-    illuminate.on_attach(client)
-    -- end
-end
 
 local function get_capabilities()
     local capabilities = vim.lsp.protocol.make_client_capabilities()
@@ -41,7 +31,6 @@ local function get_capabilities()
 end
 
 local on_attach = function(client, bufnr)
-    lsp_highlight_document(client)
 end
 local capabilities = get_capabilities()
 local handlers = {
@@ -50,11 +39,9 @@ local handlers = {
     }),
     ["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { width = 60 }),
 }
+local lspconfig = require("lspconfig")
 
 require("mason-lspconfig").setup_handlers {
-    -- The first entry (without a key) will be the default handler
-    -- and will be called for each installed server that doesn't have
-    -- a dedicated handler.
     function(server_name)
         require("lspconfig")[server_name].setup {
             on_attach = on_attach,
