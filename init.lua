@@ -9,6 +9,5 @@ require "user.config.auto_commands"
 require "user.config.theme"
 require "user.config.keymaps"
 require "user.lsp"
-require "user.dap"
 
 require "user.after"

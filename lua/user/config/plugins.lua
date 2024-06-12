@@ -52,6 +52,7 @@ return {
 
     {
         "nvim-telescope/telescope.nvim",
+        -- cmd = 'Telescope',
         config = function()
             require("user.plugins.telescope")
         end
@@ -89,11 +90,12 @@ return {
     {
 
         "L3MON4D3/LuaSnip",
+        event = 'InsertEnter',
         dependencies = {
             "saadparwaiz1/cmp_luasnip",     -- Snippets source for nvim-cmp
             "rafamadriz/friendly-snippets", --代码段合集
         },
-        config = function ()
+        config = function()
             local luasnip = require("luasnip")
             require("luasnip.loaders.from_vscode").lazy_load()
         end
@@ -126,13 +128,14 @@ return {
     "tpope/vim-fugitive",
     {
         "wintermute-cell/gitignore.nvim",
+        cmd = { "Gitignore" },
         config = function()
             require('gitignore')
         end,
     },
     {
         "kdheepak/lazygit.nvim",
-        -- optional for floating window border decoration
+        cmd = 'LazyGit',
         requires = {
             "nvim-lua/plenary.nvim",
         }
@@ -141,6 +144,7 @@ return {
     -- indent line
     {
         "lukas-reineke/indent-blankline.nvim",
+        event = 'BufRead',
         config = function()
             require("user.plugins.indent_blankline")
         end
@@ -193,22 +197,32 @@ return {
     {
 
         "iamcco/markdown-preview.nvim",
+        ft = "markdown",
         config = function()
             vim.fn["mkdp#util#install"]()
         end,
     },
     {
         "simrat39/symbols-outline.nvim",
+        cmd = 'SymbolsOutline',
         config = function()
             require("symbols-outline").setup()
         end
     },
 
     --debug for python
-    "mfussenegger/nvim-dap",
-    "Pocco81/dap-buddy.nvim",
+    {
+        "mfussenegger/nvim-dap",
+        -- cmd = { "Telescope" },
+        config = function()
+            require("user.plugins.dap")
+        end
+    },
+
+    { "Pocco81/dap-buddy.nvim", cmd = 'DebugBuddy', },
     {
         "rcarriga/nvim-dap-ui",
+        cmd = 'DapUI',
         config = function()
             require("dapui").setup({
                 layouts = {
@@ -251,6 +265,7 @@ return {
     "theHamsta/nvim-dap-virtual-text",
     {
         'Weissle/persistent-breakpoints.nvim',
+        cmd = 'PersistentBreakpointsToggle',
         config = function()
             require('persistent-breakpoints').setup {
                 load_breakpoints_event = { "BufReadPost" }
@@ -284,6 +299,7 @@ return {
     -- go to small window
     {
         "rmagatti/goto-preview",
+        event = "LspAttach",
         config = function()
             require("user.plugins.goto-preview")
         end
@@ -302,6 +318,7 @@ return {
     --"junegunn/fzf",
     {
         "ibhagwan/fzf-lua",
+        cmd = { 'FzfLua' },
         -- optional for icon support
         dependencies = { "nvim-tree/nvim-web-devicons" },
         config = function()
@@ -321,7 +338,10 @@ return {
     },
 
     -- diff
-    "sindrets/diffview.nvim",
+    {
+        "sindrets/diffview.nvim",
+        cmd = { 'DiffviewOpen', 'DiffviewClose', 'DiffviewToggleFiles', 'DiffviewFocusFiles' },
+    },
     -- Lua
     --{
     --"Pocco81/true-zen.nvim",
@@ -346,6 +366,7 @@ return {
 
     {
         "nvim-telescope/telescope-file-browser.nvim",
+        -- cmd = 'Telescope',
         dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" },
     },
 
@@ -359,20 +380,17 @@ return {
         "williamboman/mason-lspconfig.nvim",
     },
     --chatgpt
-    {
-        "jackMort/ChatGPT.nvim",
-        event = "VeryLazy",
-        dependencies = {
-            "MunifTanjim/nui.nvim",
-            "nvim-lua/plenary.nvim",
-            "folke/trouble.nvim",
-            "nvim-telescope/telescope.nvim"
-        }
-    },
-    -- startuptime
-    "dstein64/vim-startuptime",
-    --},
-    --
+    -- {
+    --     "jackMort/ChatGPT.nvim",
+    --     event = "VeryLazy",
+    --     dependencies = {
+    --         "MunifTanjim/nui.nvim",
+    --         "nvim-lua/plenary.nvim",
+    --         "folke/trouble.nvim",
+    --         "nvim-telescope/telescope.nvim"
+    --     }
+    -- },
+
     -- unit test
     {
         "nvim-neotest/neotest",
@@ -382,6 +400,7 @@ return {
             "antoinemadec/FixCursorHold.nvim",
             "nvim-treesitter/nvim-treesitter"
         },
+        cmd = { 'NeotestRun', 'NeotestSummary' },
         config = function()
             require("user.plugins.neotest")
         end
@@ -389,6 +408,7 @@ return {
     "nvim-neotest/neotest-python",
     {
         "andythigpen/nvim-coverage",
+        cmd = "Coverage",
         requires = "nvim-lua/plenary.nvim",
         config = function()
             require("user.plugins.coverage")
@@ -408,6 +428,7 @@ return {
     --project manager
     {
         "ahmedkhalf/project.nvim",
+        -- cmd = "Telescope",
         config = function()
             require("project_nvim").setup {
                 scope_chdir = "tab",
@@ -415,29 +436,30 @@ return {
         end
     },
     -- gitlab
-    {
-        "harrisoncramer/gitlab.nvim",
-        dependencies = {
-            "MunifTanjim/nui.nvim",
-            "nvim-lua/plenary.nvim",
-            "sindrets/diffview.nvim",
-            "stevearc/dressing.nvim",     -- Recommended but not required. Better UI for pickers.
-            "nvim-tree/nvim-web-devicons" -- Recommended but not required. Icons in discussion tree.
-        },
-        enabled = true,
-        build = function() require("gitlab.server").build(true) end, -- Builds the Go binary
-        config = function()
-            require("gitlab").setup({
-                debug = {
-                    go_request = true,
-                    go_response = true,
-                },
-            })
-        end,
-    },
+    -- {
+    --     "harrisoncramer/gitlab.nvim",
+    --     dependencies = {
+    --         "MunifTanjim/nui.nvim",
+    --         "nvim-lua/plenary.nvim",
+    --         "sindrets/diffview.nvim",
+    --         "stevearc/dressing.nvim",     -- Recommended but not required. Better UI for pickers.
+    --         "nvim-tree/nvim-web-devicons" -- Recommended but not required. Icons in discussion tree.
+    --     },
+    --     enabled = true,
+    --     build = function() require("gitlab.server").build(true) end, -- Builds the Go binary
+    --     config = function()
+    --         require("gitlab").setup({
+    --             debug = {
+    --                 go_request = true,
+    --                 go_response = true,
+    --             },
+    --         })
+    --     end,
+    -- },
 
     {
         'nvimdev/lspsaga.nvim',
+        event = "LspAttach",
         config = function()
             require("user.plugins.lspsaga")
         end
@@ -451,6 +473,7 @@ return {
         branch = "master",
 
         build = "sh install.sh",
+        cmd = "SnipRun",
         -- do 'sh install.sh 1' if you want to force compile locally
         -- (instead of fetching a binary from the github release). Requires Rust >= 1.65
 
@@ -468,21 +491,21 @@ return {
             require("user.plugins.conform")
         end
     },
-    {
-        'pwntester/octo.nvim',
-        requires = {
-            'nvim-lua/plenary.nvim',
-            'nvim-telescope/telescope.nvim',
-            -- OR 'ibhagwan/fzf-lua',
-            'nvim-tree/nvim-web-devicons',
-        },
-        --config = function()
-        --require "octo".setup()
-        --end
-    },
+    -- {
+    --     'pwntester/octo.nvim',
+    --     requires = {
+    --         'nvim-lua/plenary.nvim',
+    --         'nvim-telescope/telescope.nvim',
+    --         -- OR 'ibhagwan/fzf-lua',
+    --         'nvim-tree/nvim-web-devicons',
+    --     },
+    --     --config = function()
+    --     --require "octo".setup()
+    --     --end
+    -- },
     -- image show
     {
-        "edluffy/hologram.nvim",
+        -- "edluffy/hologram.nvim",
         --config = function()
         --require('hologram').setup {
         --auto_display = true -- WIP automatic markdown image display, may be prone to breaking
@@ -519,5 +542,6 @@ return {
     -- zen
     {
         "folke/zen-mode.nvim",
+        cmd = 'ZenMode',
     }
 }
