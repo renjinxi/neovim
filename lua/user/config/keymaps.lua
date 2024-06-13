@@ -151,6 +151,7 @@ local tele_keymap = {
         p = { "<cmd>Telescope jumplist<cr>", "Jumplist" },
         l = { "<cmd>Telescope file_browser<cr>", "File Browser" },
         o = { "<cmd>Telescope projects<cr>", "Recent Projects" },
+        e = { "<cmd>Telescope oldfiles<cr>", "Recent Files" },
         y = { "<cmd>Telescope session-lens<cr>", "Session" },
         t = { "<cmd>Telescope git_status<cr>", "Git status" },
         d = { "<cmd>Telescope commands<cr>", "Commands" },
