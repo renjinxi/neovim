@@ -11,11 +11,11 @@ end
 
 local config = {
     -- disable virtual text
-    -- virtual_text = false,
-    virtual_text = {
-        -- source = "always",  -- Or "if_many"
-        prefix = "●", -- Could be '■', '▎', 'x'
-    },
+    virtual_text = false,
+    -- virtual_text = {
+    --     -- source = "always",  -- Or "if_many"
+    --     prefix = "●", -- Could be '■', '▎', 'x'
+    -- },
     -- show signs
     signs = {
         active = signs,
