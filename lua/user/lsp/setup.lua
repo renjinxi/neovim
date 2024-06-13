@@ -68,4 +68,20 @@ require("mason-lspconfig").setup_handlers({
 			settings = require("user.lsp.servers.lua_ls").settings,
 		})
 	end,
+	["pyright"] = function()
+		lspconfig.pyright.setup({
+			capabilities = capabilities,
+			handlers = handlers,
+			on_attach = on_attach,
+			-- settings = require("user.lsp.servers.lua_ls").settings,
+		})
+	end,
+	["ruff_lsp"] = function()
+		lspconfig["ruff_lsp"].setup({
+			capabilities = capabilities,
+			handlers = handlers,
+			on_attach = on_attach,
+			-- settings = require("user.lsp.servers.lua_ls").settings,
+		})
+	end,
 })
