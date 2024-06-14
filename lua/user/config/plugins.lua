@@ -24,9 +24,9 @@ return {
 	-- quick move
 	{
 		"folke/trouble.nvim",
-		cmd = { "TroubleToggle", "Trouble" },
 		config = function()
-			require("user.plugins.trouble")
+			-- require("user.plugins.trouble")
+			require("trouble").setup()
 		end,
 	},
 	{

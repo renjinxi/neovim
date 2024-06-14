@@ -17,7 +17,7 @@ local function open_url()
     vim.fn.jobstart({ open_command, url_repo() }, { detach = true })
 end
 
-keymap('n', 'gx', open_url,  { silent = true })
+vim.keymap.set('n', 'gx', open_url,  opts)
 -- Remap space as leader key
 keymap("n", "<space>", "", opts)
 keymap("t", "<Esc>", "<C-\\><C-n>", term_opts)
@@ -34,4 +34,5 @@ require("user.config.keymap.goto_preview")
 require("user.config.keymap.bqf")
 require("user.config.keymap.nvim_tree")
 require("user.config.keymap.terminal")
+require("user.config.keymap.trouble")
 
