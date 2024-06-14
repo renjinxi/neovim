@@ -8,8 +8,8 @@ local keymap = {
     t = {
         name = "Nvim Tree",
         n = { "<cmd>NvimTreeOpen<cr>", "Open" },
-        u = { "<cmd>NvimTreeToggle<cr>", "Toggle" },
         o = { "<cmd>NvimTreeFocus<cr>", "Focus" },
+        u = { "<cmd>NvimTreeToggle<cr>", "Toggle" },
     },
 }
 

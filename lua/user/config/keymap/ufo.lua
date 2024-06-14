@@ -27,11 +27,11 @@ end
 local keymap = {
 	z = {
 		name = "Ufo Fold",
-		o = { fold_except_current, "Only Open Current Line" },
+		h = { ":lua require('ufo').goPreviousStartFold()<cr>", "Go To Fold Start" },
 		i = { foucs_next_fold_code, "Foucs Next Fold Code" },
 		n = { ":lua require('ufo').goNextClosedFold()<cr>", "Go To Next Fold" },
+		o = { fold_except_current, "Only Open Current Line" },
 		p = { ":lua require('ufo').goPreviousClosedFold()<cr>", "Go To Pre Fold" },
-		h = { ":lua require('ufo').goPreviousStartFold()<cr>", "Go To Fold Start" },
 	},
 }
 

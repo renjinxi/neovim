@@ -13,10 +13,11 @@ local function url_repo()
     return cursorword or ''
 end
 
-vim.keymap.set('n', 'gx', function()
+local function open_url()
     vim.fn.jobstart({ open_command, url_repo() }, { detach = true })
-end, { silent = true })
+end
 
+keymap('n', 'gx', open_url,  { silent = true })
 -- Remap space as leader key
 keymap("n", "<space>", "", opts)
 keymap("t", "<Esc>", "<C-\\><C-n>", term_opts)

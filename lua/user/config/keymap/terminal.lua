@@ -64,14 +64,14 @@ local keymap = {
     g = {
         name = "Terminal",
         --l = { "<cmd>lua _LAZYGIT_TOGGLE()<CR>", "Lazygit" },
-        i = { "<cmd>lua _IPYTHON_TOGGLE()<CR>", "IPython" },
-        c = { "<cmd>lua _CLING_TOGGLE()<CR>", "IPython" },
-        n = { "<cmd>lua _NEWTERM_TOGGLE()<CR>", "New Term" },
-        h = { "<cmd>lua _HTOP_TOGGLE()<CR>", "Htop" },
-        u = { "<cmd>lua _NCDU_TOGGLE()<CR>", "Ncdu" },
         --g = { "<cmd>lua _NEWTIG_TOGGLE() <CR>", "Tig" },
-        t = { "<cmd>lua _NEWTERM() <CR>", "New Tab Term" },
         a = { "<cmd>lua __LUA_TOGGLE()<CR>", "Lua" },
+        c = { "<cmd>lua _CLING_TOGGLE()<CR>", "IPython" },
+        h = { "<cmd>lua _HTOP_TOGGLE()<CR>", "Htop" },
+        i = { "<cmd>lua _IPYTHON_TOGGLE()<CR>", "IPython" },
+        n = { "<cmd>lua _NEWTERM_TOGGLE()<CR>", "New Term" },
+        t = { "<cmd>lua _NEWTERM() <CR>", "New Tab Term" },
+        u = { "<cmd>lua _NCDU_TOGGLE()<CR>", "Ncdu" },
     },
 }
 

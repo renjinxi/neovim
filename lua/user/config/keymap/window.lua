@@ -10,18 +10,20 @@ local normal_opts = {
 local keymap = {
 	w = {
 		name = "Window",
-		h = { "<C-w>h", "Move To Left" },
-		l = { "<C-w>l", "Move To Right" },
-		j = { "<C-w>j", "Move To Blow" },
-		k = { "<C-w>k", "Move To Up" },
 		H = { "<C-w>H", "Window Move To Left" },
-		L = { "<C-w>L", "Window Move To Right" },
 		J = { "<C-w>J", "Window Move To Blow" },
 		K = { "<C-w>K", "Window Move To Up" },
+		L = { "<C-w>L", "Window Move To Right" },
 		T = { "<C-w>T", "Window Move To New Tab" },
+
+		h = { "<C-w>h", "Move To Left" },
 		i = { "<C-w>]<C-w>L", "VSplit And Jump" },
-		u = { "<C-w>]", "Split And Jump" },
+		j = { "<C-w>j", "Move To Blow" },
+		k = { "<C-w>k", "Move To Up" },
+		l = { "<C-w>l", "Move To Right" },
 		t = { "<C-w>]<C-w>T", "Split And Jump" },
+		u = { "<C-w>]", "Split And Jump" },
+		m = { ":tabmove<cr>", "Move Current Tab To Last" },
 	},
 }
 

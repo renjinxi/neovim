@@ -7,10 +7,10 @@ end
 local keymap = {
     c = {
         name = "QuickWindow",
-        n = { "<cmd>cnext<cr>", "Next item" },
-        p = { "<cmd>cprevious<cr>", "Previous item" },
-        o = { "<cmd>copen<cr>", "Open" },
         l = { "<cmd>cclose<cr>", "Close" },
+        n = { "<cmd>cnext<cr>", "Next item" },
+        o = { "<cmd>copen<cr>", "Open" },
+        p = { "<cmd>cprevious<cr>", "Previous item" },
     },
 }
 

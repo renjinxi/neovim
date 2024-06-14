@@ -7,14 +7,11 @@ end
 local keymap = {
     j = {
         name = "goto_preview",
-        d = { "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", "Go to definition" },
-        t = {
-            "<cmd>lua require('goto-preview').goto_preview_type_definition()<CR>",
-            "Go totype definition",
-        },
-        i = { "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", "Go to implemention" },
         c = { "<cmd>lua require('goto-preview').close_all_win()<CR>", "close all win" },
+        d = { "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", "Go to definition" },
+        i = { "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", "Go to implemention" },
         r = { "<cmd>lua require('goto-preview').goto_preview_references()<CR>", "Go to references" },
+        t = { "<cmd>lua require('goto-preview').goto_preview_type_definition()<CR>", "Go totype definition", },
     },
 }
 
