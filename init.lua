@@ -7,7 +7,7 @@ require "user.config.globals"
 require "user.config.lazy"
 require "user.config.auto_commands"
 require "user.config.theme"
-require "user.config.keymaps"
+require "user.config.keymap"
 require "user.lsp"
 
 require "user.after"
