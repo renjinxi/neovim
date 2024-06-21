@@ -96,8 +96,13 @@ return {
 			"rafamadriz/friendly-snippets", --代码段合集
 		},
 		config = function()
-			local luasnip = require("luasnip")
+			require("luasnip").config.set_config({
+				history = true,
+				updateevents = "TextChanged,TextChangedI",
+			})
+			-- local luasnip = require("luasnip")
 			require("luasnip.loaders.from_vscode").lazy_load()
+			require("luasnip.loaders.from_lua").load({ paths = "~/.config/nvim/lua/user/snippets/" })
 		end,
 	},
 
