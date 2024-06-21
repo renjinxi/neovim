@@ -14,6 +14,7 @@ local keymap = {
         --g = { "<cmd>Telescope live_grep<cr>", "Live Grep" },
         F = { "<cmd>lua require('telescope.builtin').find_files({no_ignore=true, hidden=true})<cr>", "Find Files" },
 
+        a = { "<cmd>Telescope neoclip<cr>", "NeoClip" },
         b = { "<cmd>Telescope buffers<cr>", "Buffers" },
         d = { "<cmd>Telescope commands<cr>", "Commands" },
         e = { "<cmd>Telescope oldfiles<cr>", "Recent Files" },
