@@ -58,6 +58,7 @@ local keymap = {
 		c = { "<cmd>DiffviewClose<cr>", "Close Diff" },
 		d = { "<cmd>DiffviewOpen<cr>", "Open Diff" },
 		e = { "<cmd>bufdo edit %<cr>", "Reload All Buffer File" },
+		f = { "<cmd>ASToggle<cr>", "Toggle Auto Save" },
 		g = { "<cmd>ToggleTermToggleAll<cr>", "ToggleAllTerm" },
 		h = { "<cmd>SymbolsOutline<cr>", "Toggle Symbols" },
 		i = { "<cmd>luafile ~/.config/nvim/init.lua<cr><cmd>Lazy restore<cr>", "reload config" },
