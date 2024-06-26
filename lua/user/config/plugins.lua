@@ -96,13 +96,7 @@ return {
 			"rafamadriz/friendly-snippets", --代码段合集
 		},
 		config = function()
-			require("luasnip").config.set_config({
-				history = true,
-				updateevents = "TextChanged,TextChangedI",
-			})
-			-- local luasnip = require("luasnip")
-			require("luasnip.loaders.from_vscode").lazy_load()
-			require("luasnip.loaders.from_lua").load({ paths = "~/.config/nvim/lua/user/snippets/" })
+            require("user.plugins.luasnip")
 		end,
 	},
 
@@ -299,7 +293,6 @@ return {
 	{
 		"m4xshen/hardtime.nvim",
 		dependencies = { "MunifTanjim/nui.nvim", "nvim-lua/plenary.nvim" },
-		config = function() end,
 		opts = {},
 	},
 
