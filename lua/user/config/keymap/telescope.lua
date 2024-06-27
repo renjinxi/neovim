@@ -13,6 +13,7 @@ local keymap = {
         --G = { "<cmd>lua require('telescope.builtin').live_grep({no_ignore=true})<cr>", "Find Files" },
         --g = { "<cmd>Telescope live_grep<cr>", "Live Grep" },
         F = { "<cmd>lua require('telescope.builtin').find_files({no_ignore=true, hidden=true})<cr>", "Find Files" },
+        G = { "<cmd>Telescope live_grep<cr>", "Builtin Live Grep" },
 
         a = { "<cmd>Telescope neoclip<cr>", "NeoClip" },
         b = { "<cmd>Telescope buffers<cr>", "Buffers" },

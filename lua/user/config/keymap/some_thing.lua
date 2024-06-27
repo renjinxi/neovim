@@ -60,7 +60,6 @@ local keymap = {
 		e = { "<cmd>bufdo edit %<cr>", "Reload All Buffer File" },
 		f = { "<cmd>ASToggle<cr>", "Toggle Auto Save" },
 		g = { "<cmd>ToggleTermToggleAll<cr>", "ToggleAllTerm" },
-		h = { "<cmd>SymbolsOutline<cr>", "Toggle Symbols" },
 		i = { "<cmd>luafile ~/.config/nvim/init.lua<cr><cmd>Lazy restore<cr>", "reload config" },
 		j = { "<cmd>set relativenumber<cr>", "Set Relative Number" },
 		k = { "<cmd>set norelativenumber<cr>", "Cancel Relative Number" },
