@@ -57,3 +57,50 @@ ls.add_snippets("all", {
 		})
 	),
 })
+
+local filter_str_fmt = [[
+import rest_framework_filters as filters
+
+from {app}.models import {model}
+
+
+class {model}Filter(filters.FilterSet):
+    class Meta:
+        model = {model}
+        fields = {fields}
+]]
+
+local filter_node = { app = i(1, "app name"), model = i(2, "model name"), fields = i(3, "fields") }
+
+ls.add_snippets("all", {
+	s(
+		"filter",
+		fmt(filter_str_fmt, filter_node, {
+			repeat_duplicates = true,
+		})
+	),
+})
+
+local serializer_str_fmt = [[
+from rest_framework import serializers
+
+from {app}.models import {model}
+
+
+class {model}Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = {model}
+        fields = {fields}
+
+]]
+
+local serializer_node = { app = i(1, "app name"), model = i(2, "model name"), fields = i(3, '"__all__"') }
+
+ls.add_snippets("all", {
+	s(
+		"serializer",
+		fmt(serializer_str_fmt, serializer_node, {
+			repeat_duplicates = true,
+		})
+	),
+})
