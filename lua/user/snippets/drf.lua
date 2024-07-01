@@ -1,18 +1,5 @@
 local ls = require("luasnip")
 local s = ls.snippet
-local i = ls.insert_node
-local t = ls.text_node
-
-ls.add_snippets("all", {
-	-- 这是一个简单的代码片段
-	s("trigger", {
-		t("This is a basic snippet "),
-		i(1, "placeholder"),
-	}),
-})
-
-local ls = require("luasnip")
-local s = ls.snippet
 local sn = ls.snippet_node
 local isn = ls.indent_snippet_node
 local t = ls.text_node
@@ -38,3 +25,35 @@ local types = require("luasnip.util.types")
 local parse = require("luasnip.util.parser").parse_snippet
 local ms = ls.multi_snippet
 local k = require("luasnip.nodes.key_indexer").new_key
+
+local viewset_str_fmt = [[
+from rest_framework.filters import SearchFilter
+from rest_framework_filters.backends import (
+    ComplexFilterBackend,
+)
+from utils.pagination import Pagination
+from utils.viewsets import ModelViewSet
+
+from {app}.filters import {model}Filter
+from {app}.models import {model}
+from {app}.serializers import {model}Serializer
+
+
+class {model}ViewSet(ModelViewSet):
+    pagination_class = Pagination
+    filter_backends = [SearchFilter, ComplexFilterBackend]
+    filter_class = {model}Filter
+    serializer_class = {model}Serializer
+    queryset = {model}.objects.all()
+]]
+
+local viewset_node = { app = i(1, "app name"), model = i(2, "model name") }
+
+ls.add_snippets("all", {
+	s(
+		"viewset",
+		fmt(viewset_str_fmt, viewset_node, {
+			repeat_duplicates = true,
+		})
+	),
+})

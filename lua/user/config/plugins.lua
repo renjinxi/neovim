@@ -121,6 +121,7 @@ return {
 
 		"L3MON4D3/LuaSnip",
 		event = "InsertEnter",
+		run = "make install_jsregexp",
 		dependencies = {
 			"saadparwaiz1/cmp_luasnip", -- Snippets source for nvim-cmp
 			"rafamadriz/friendly-snippets", --代码段合集
@@ -324,6 +325,7 @@ return {
 		"sindrets/diffview.nvim",
 		cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles" },
 		config = function()
+			-- init.lua 版本
 			require("diffview").setup({
 				view = {
 					merge_tool = {
@@ -331,6 +333,13 @@ return {
 					},
 				},
 			})
+
+			-- vim.cmd([[
+			--            hi DiffAdd    guibg=#eaffea guifg=#2e7d32 ctermbg=none ctermfg=2
+			--            hi DiffDelete guibg=#ffecec guifg=#c62828 ctermbg=none ctermfg=1
+			--            hi DiffChange guibg=#e3f7ff guifg=#0277bd ctermbg=none ctermfg=4
+			--            hi DiffText   guibg=#d9e3ff guifg=#003c8f ctermbg=none ctermfg=12
+			-- ]])
 		end,
 	},
 	-- Lua
@@ -545,5 +554,8 @@ return {
 		config = function()
 			require("neoclip").setup()
 		end,
+	},
+	{
+		"nvimtools/none-ls.nvim",
 	},
 }

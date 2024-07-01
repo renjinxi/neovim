@@ -13,6 +13,8 @@ mason_lsp.setup({
 		"ruff_lsp",
 		"html",
 		"tsserver",
+		"gopls",
+		"golangci_lint_ls",
 	},
 	automatic_installation = true,
 })
