@@ -12,6 +12,7 @@ mason_lsp.setup({
 		"pyright",
 		"ruff_lsp",
 		"html",
+		"cssls",
 		"tsserver",
 		"gopls",
 		"golangci_lint_ls",

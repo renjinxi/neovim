@@ -104,3 +104,25 @@ ls.add_snippets("all", {
 		})
 	),
 })
+
+local only_serializer_str_fmt = [[
+class Create{model}Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = {model}
+        fields = {fields}
+
+]]
+
+local only_serializer_node = {
+	model = i(1, "model name"),
+	fields = i(2, '"__all__"'),
+}
+
+ls.add_snippets("python", {
+	s(
+		"create-serializer",
+		fmt(only_serializer_str_fmt, only_serializer_node, {
+			repeat_duplicates = true,
+		})
+	),
+})
