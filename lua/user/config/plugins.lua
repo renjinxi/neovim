@@ -558,7 +558,7 @@ return {
 	{
 		"nvimtools/none-ls.nvim",
 		config = function()
-			require("user.plugins.none_ls").setup()
+			require("user.plugins.none_ls")
 		end,
 	},
 }
