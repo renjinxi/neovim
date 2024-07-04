@@ -47,6 +47,10 @@ local function toggle_neovide()
 	vim.g.neovide_fullscreen = not vim.g.neovide_fullscreen
 end
 
+local function toggle_hlsearch()
+	vim.o.hlsearch = not vim.o.hlsearch
+end
+
 local keymap = {
 	v = {
 		name = "Some Thing",
@@ -61,6 +65,7 @@ local keymap = {
 		f = { "<cmd>ASToggle<cr>", "Toggle Auto Save" },
 		g = { "<cmd>ToggleTermToggleAll<cr>", "ToggleAllTerm" },
 		i = { "<cmd>luafile ~/.config/nvim/init.lua<cr><cmd>Lazy restore<cr>", "reload config" },
+		h = { toggle_hlsearch, "Toggle Hlsearch" },
 		j = { "<cmd>set relativenumber<cr>", "Set Relative Number" },
 		k = { "<cmd>set norelativenumber<cr>", "Cancel Relative Number" },
 		l = { rename_current_file, "Rname Current File" },
