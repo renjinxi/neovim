@@ -327,32 +327,15 @@ return {
 		config = function()
 			-- init.lua 版本
 			require("diffview").setup({
+				enhanced_diff_hl = true,
 				view = {
 					merge_tool = {
 						layout = "diff3_mixed",
 					},
 				},
 			})
-
-			-- vim.cmd([[
-			--            hi DiffAdd    guibg=#eaffea guifg=#2e7d32 ctermbg=none ctermfg=2
-			--            hi DiffDelete guibg=#ffecec guifg=#c62828 ctermbg=none ctermfg=1
-			--            hi DiffChange guibg=#e3f7ff guifg=#0277bd ctermbg=none ctermfg=4
-			--            hi DiffText   guibg=#d9e3ff guifg=#003c8f ctermbg=none ctermfg=12
-			-- ]])
 		end,
 	},
-	-- Lua
-	--{
-	--"Pocco81/true-zen.nvim",
-	--config = function()
-	--require("true-zen").setup({
-	---- your config goes here
-	---- or just leave it empty :)
-	--})
-	--end,
-	--},
-
 	-- start screen
 	{
 		"goolord/alpha-nvim",
@@ -560,5 +543,10 @@ return {
 		config = function()
 			require("user.plugins.none_ls")
 		end,
+	},
+	-- ui
+	{
+		"stevearc/dressing.nvim",
+		opts = {},
 	},
 }
