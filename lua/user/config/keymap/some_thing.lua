@@ -15,11 +15,12 @@ local normal_opts = {
 local function rename_current_file()
 	-- 获取当前文件的完整路径
 	local old_path = vim.fn.expand("%:p")
+	local current_buffer_name = vim.fn.expand("%:t")
 
 	-- 使用 vim.ui.input 询问新文件名
 	vim.ui.input({
 		prompt = "New Name: ",
-		default = vim.fn.expand("%:t"),
+		default = current_buffer_name,
 	}, function(new_name)
 		if not new_name or new_name == "" then
 			print("Rename cancelled.")
@@ -42,13 +43,12 @@ local function rename_current_file()
 	end)
 end
 local open_project_in_new_tab = function()
-	vim.ui.input({ prompt = "Tab Name: " }, function(input)
-		if input ~= nil and input ~= "" then
-			vim.cmd("tabnew")
-			vim.cmd("Telescope projects")
-			vim.cmd("LualineRenameTab " .. input)
-		end
-	end)
+	local input = vim.fn.input("Tab Name: ")
+	if input ~= "" then
+		vim.cmd("tabnew")
+		vim.cmd("Telescope projects")
+		vim.cmd("LualineRenameTab " .. input)
+	end
 end
 local function toggle_neovide()
 	vim.g.neovide_fullscreen = not vim.g.neovide_fullscreen
