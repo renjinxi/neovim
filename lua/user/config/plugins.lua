@@ -397,7 +397,6 @@ return {
 	"nvim-neotest/neotest-python",
 	{
 		"andythigpen/nvim-coverage",
-		cmd = "Coverage",
 		requires = "nvim-lua/plenary.nvim",
 		config = function()
 			require("user.plugins.coverage")
