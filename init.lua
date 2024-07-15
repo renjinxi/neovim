@@ -1,14 +1,13 @@
-require "user.before"
+require("before")
 
-require "user.config.neovide_config"
-require "user.config.options"
-require "user.config.globals"
+require("config.neovide_config")
+require("config.options")
+require("config.globals")
 
-require "user.config.lazy"
-require "user.config.auto_commands"
-require "user.config.theme"
-require "user.config.keymap"
-require "user.lsp"
+require("config.lazy")
+require("config.auto_commands")
+require("config.theme")
+require("config.keymap")
+require("lsp")
 
-require "user.after"
-
+require("after")

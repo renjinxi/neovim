@@ -1,8 +1,8 @@
 local status_ok, _ = pcall(require, "lspconfig")
 
 if not status_ok then
-    return
+	return
 end
 
-require("user.lsp.config")
-require("user.lsp.setup")
+require("lsp.config")
+require("lsp.setup")

@@ -5,7 +5,7 @@ return {
 	{
 		"Pocco81/auto-save.nvim",
 		config = function()
-			require("user.plugins.autosave")
+			require("plugins.autosave")
 		end,
 	},
 
@@ -84,7 +84,7 @@ return {
 		"nvim-telescope/telescope.nvim",
 		-- cmd = 'Telescope',
 		config = function()
-			require("user.plugins.telescope")
+			require("plugins.telescope")
 		end,
 	},
 	"nvim-telescope/telescope-live-grep-args.nvim",
@@ -97,7 +97,7 @@ return {
 		run = ":TSUpdate",
 		event = "BufReadPre",
 		config = function()
-			require("user.plugins.treesitter")
+			require("plugins.treesitter")
 		end,
 	},
 	"nvim-treesitter/nvim-treesitter-context",
@@ -111,7 +111,7 @@ return {
 		"hrsh7th/nvim-cmp",
 		event = "InsertEnter",
 		config = function()
-			require("user.plugins.cmp")
+			require("plugins.cmp")
 		end,
 	},
 	"onsails/lspkind.nvim",
@@ -127,7 +127,7 @@ return {
 			"rafamadriz/friendly-snippets", --代码段合集
 		},
 		config = function()
-			require("user.plugins.luasnip")
+			require("plugins.luasnip")
 		end,
 	},
 
@@ -135,7 +135,7 @@ return {
 	{
 		"nvim-lualine/lualine.nvim",
 		config = function()
-			require("user.plugins.lualine")
+			require("plugins.lualine")
 		end,
 	},
 
@@ -150,7 +150,7 @@ return {
 			"NvimTreeFindFileToggle",
 		},
 		config = function()
-			require("user.plugins.nvim-tree")
+			require("plugins.nvim-tree")
 		end,
 	},
 
@@ -182,7 +182,7 @@ return {
 		"lukas-reineke/indent-blankline.nvim",
 		event = "BufRead",
 		config = function()
-			require("user.plugins.indent_blankline")
+			require("plugins.indent_blankline")
 		end,
 	},
 
@@ -219,14 +219,14 @@ return {
 	{
 		"folke/which-key.nvim",
 		config = function()
-			require("user.plugins.which-key")
+			require("plugins.which-key")
 		end,
 	},
 
 	{
 		"akinsho/toggleterm.nvim",
 		config = function()
-			require("user.plugins.toggleterm")
+			require("plugins.toggleterm")
 		end,
 	},
 
@@ -244,7 +244,7 @@ return {
 		"mfussenegger/nvim-dap",
 		-- cmd = { "Telescope" },
 		config = function()
-			require("user.plugins.dap")
+			require("plugins.dap")
 		end,
 	},
 	"jay-babu/mason-nvim-dap.nvim",
@@ -269,7 +269,7 @@ return {
 		"kevinhwang91/nvim-ufo",
 		dependencies = "kevinhwang91/promise-async",
 		config = function()
-			require("user.plugins.ufo")
+			require("plugins.ufo")
 		end,
 	},
 
@@ -292,7 +292,7 @@ return {
 		"rmagatti/goto-preview",
 		event = "LspAttach",
 		config = function()
-			require("user.plugins.goto-preview")
+			require("plugins.goto-preview")
 		end,
 	},
 
@@ -301,7 +301,7 @@ return {
 		"kevinhwang91/nvim-bqf",
 		ft = "qf",
 		config = function()
-			require("user.plugins.bqf")
+			require("plugins.bqf")
 		end,
 	},
 
@@ -314,7 +314,7 @@ return {
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 		config = function()
 			-- calling `setup` is optional for customization
-			require("user.plugins.fzf")
+			require("plugins.fzf")
 		end,
 	},
 	-- lazy.nvim
@@ -391,7 +391,7 @@ return {
 		},
 		cmd = { "NeotestRun", "NeotestSummary" },
 		config = function()
-			require("user.plugins.neotest")
+			require("plugins.neotest")
 		end,
 	},
 	"nvim-neotest/neotest-python",
@@ -399,7 +399,7 @@ return {
 		"andythigpen/nvim-coverage",
 		requires = "nvim-lua/plenary.nvim",
 		config = function()
-			require("user.plugins.coverage")
+			require("plugins.coverage")
 		end,
 		-- Optional: needed for PHP when using the cobertura parser
 		rocks = { "lua-xmlreader" },
@@ -449,7 +449,7 @@ return {
 		"nvimdev/lspsaga.nvim",
 		event = "LspAttach",
 		config = function()
-			require("user.plugins.lspsaga")
+			require("plugins.lspsaga")
 		end,
 		dependencies = {
 			"nvim-treesitter/nvim-treesitter", -- optional
@@ -476,7 +476,7 @@ return {
 		event = { "BufWritePre" },
 		opts = {},
 		config = function()
-			require("user.plugins.conform")
+			require("plugins.conform")
 		end,
 	},
 	-- {
@@ -546,7 +546,7 @@ return {
 	{
 		"nvimtools/none-ls.nvim",
 		config = function()
-			require("user.plugins.none_ls")
+			require("plugins.none_ls")
 		end,
 	},
 	-- ui

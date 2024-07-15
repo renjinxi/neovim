@@ -1,4 +1,4 @@
-local settings = require("user.config.settings")
+local settings = require("config.settings")
 local g = vim.g
 g.python3_host_prog = settings.python3_host_prog
 g.vista_fzf_preview = { "right:50%" }

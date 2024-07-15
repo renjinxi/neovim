@@ -1,4 +1,4 @@
-local common = require("user.config.common")
+local common = require("config.common")
 local function test_all()
 	local project_root = common.find_project_root_by_marker("pyproject.toml") or vim.loop.getcwd()
 	require("neotest").run.run(project_root)
