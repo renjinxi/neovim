@@ -1,26 +1,7 @@
-local status_ok, which_key = pcall(require, "which-key")
-
-if not status_ok then
-    return
-end
-
 local keymap = {
-    t = {
-        name = "Nvim Tree",
-        n = { "<cmd>NvimTreeOpen<cr>", "Open" },
-        o = { "<cmd>NvimTreeFocus<cr>", "Focus" },
-        u = { "<cmd>NvimTreeToggle<cr>", "Toggle" },
-    },
+	{ "<leader>t", group = "Nvim Tree", nowait = false, remap = false },
+	{ "<leader>tn", "<cmd>NvimTreeOpen<cr>", desc = "Open", nowait = false, remap = false },
+	{ "<leader>to", "<cmd>NvimTreeFocus<cr>", desc = "Focus", nowait = false, remap = false },
+	{ "<leader>tu", "<cmd>NvimTreeToggle<cr>", desc = "Toggle", nowait = false, remap = false },
 }
-
-local opts = {
-    mode = "n",
-    prefix = "<leader>",
-    buffer = nil,
-    silent = true,
-    noremap = true,
-    nowait = false,
-}
-
-which_key.register(keymap, opts)
-
+require("which-key").add(keymap)

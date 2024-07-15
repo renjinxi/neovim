@@ -1,27 +1,8 @@
-local status_ok, which_key = pcall(require, "which-key")
-
-if not status_ok then
-    return
-end
-
 local keymap = {
-    c = {
-        name = "QuickWindow",
-        l = { "<cmd>cclose<cr>", "Close" },
-        n = { "<cmd>cnext<cr>", "Next item" },
-        o = { "<cmd>copen<cr>", "Open" },
-        p = { "<cmd>cprevious<cr>", "Previous item" },
-    },
+	{ "<leader>c", group = "QuickWindow", nowait = false, remap = false },
+	{ "<leader>cl", "<cmd>cclose<cr>", desc = "Close", nowait = false, remap = false },
+	{ "<leader>cn", "<cmd>cnext<cr>", desc = "Next item", nowait = false, remap = false },
+	{ "<leader>co", "<cmd>copen<cr>", desc = "Open", nowait = false, remap = false },
+	{ "<leader>cp", "<cmd>cprevious<cr>", desc = "Previous item", nowait = false, remap = false },
 }
-
-local opts = {
-    mode = "n",
-    prefix = "<leader>",
-    buffer = nil,
-    silent = true,
-    noremap = true,
-    nowait = false,
-}
-
-which_key.register(keymap, opts)
-
+require("which-key").add(keymap)

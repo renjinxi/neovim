@@ -1,12 +1,3 @@
-local normal_opts = {
-	mode = "n",
-	prefix = "<leader>",
-	buffer = nil,
-	silent = true,
-	noremap = true,
-	nowait = false,
-}
-
 local function fold_except_current()
 	require("ufo").closeAllFolds()
 	local row = vim.api.nvim_win_get_cursor(0)[1]
@@ -25,14 +16,29 @@ local function foucs_next_fold_code()
 end
 
 local keymap = {
-	z = {
-		name = "Ufo Fold",
-		h = { ":lua require('ufo').goPreviousStartFold()<cr>", "Go To Fold Start" },
-		i = { foucs_next_fold_code, "Foucs Next Fold Code" },
-		n = { ":lua require('ufo').goNextClosedFold()<cr>", "Go To Next Fold" },
-		o = { fold_except_current, "Only Open Current Line" },
-		p = { ":lua require('ufo').goPreviousClosedFold()<cr>", "Go To Pre Fold" },
+	{ "<leader>z", group = "Ufo Fold", nowait = false, remap = false },
+	{
+		"<leader>zh",
+		":lua require('ufo').goPreviousStartFold()<cr>",
+		desc = "Go To Fold Start",
+		nowait = false,
+		remap = false,
+	},
+	{ "<leader>zi", foucs_next_fold_code, desc = "Foucs Next Fold Code", nowait = false, remap = false },
+	{
+		"<leader>zn",
+		":lua require('ufo').goNextClosedFold()<cr>",
+		desc = "Go To Next Fold",
+		nowait = false,
+		remap = false,
+	},
+	{ "<leader>zo", fold_except_current, desc = "Only Open Current Line", nowait = false, remap = false },
+	{
+		"<leader>zp",
+		":lua require('ufo').goPreviousClosedFold()<cr>",
+		desc = "Go To Pre Fold",
+		nowait = false,
+		remap = false,
 	},
 }
-
-require("which-key").register(keymap, normal_opts)
+require("which-key").add(keymap)
