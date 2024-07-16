@@ -530,7 +530,6 @@ return {
 	-- zen
 	{
 		"folke/zen-mode.nvim",
-		cmd = "ZenMode",
 	},
 	{
 		"AckslD/nvim-neoclip.lua",
