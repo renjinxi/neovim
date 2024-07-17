@@ -553,4 +553,19 @@ return {
 		"stevearc/dressing.nvim",
 		opts = {},
 	},
+	{
+		keys = {
+			{
+				"<leader>ar",
+				"<cmd>CellularAutomaton make_it_rain<cr>",
+				desc = "Rain",
+			},
+			{
+				"<leader>ag",
+				"<cmd>CellularAutomaton game_of_life<cr>",
+				desc = "Game",
+			},
+		},
+		"eandrju/cellular-automaton.nvim",
+	},
 }
