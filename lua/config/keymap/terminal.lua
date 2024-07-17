@@ -19,50 +19,50 @@ local new_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "fl
 local tig = Terminal:new({ cmd = "tig", hidden = true, direction = "float" })
 local new_tab_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab" })
 
-function _LAZYGIT_TOGGLE()
+local function lazygit_toggle()
 	lazygit:toggle()
 end
 
-function _NCDU_TOGGLE()
+local function ncdu_toggle()
 	ncdu:toggle()
 end
 
-function _HTOP_TOGGLE()
+local function htop_toggle()
 	htop:toggle()
 end
 
-function _IPYTHON_TOGGLE()
+local function ipython_toggle()
 	ipython:toggle()
 end
 
-function _CLING_TOGGLE()
+local function cling_toggle()
 	cling:toggle()
 end
 
-function _LUA_TOGGLE()
+local function lua_toggle()
 	lua:toggle()
 end
 
-function _NEWTERM_TOGGLE()
+local function newterm_toggle()
 	new_term:toggle()
 end
 
-function _NEWTIG()
+local function newtig()
 	tig:toggle()
 end
 
-function _NEWTERM()
+local function newterm()
 	new_tab_term:toggle()
 end
 
 local keymap = {
 	{ "<leader>g", group = "Terminal", nowait = false, remap = false },
-	{ "<leader>ga", "<cmd>lua __LUA_TOGGLE()<CR>", desc = "Lua", nowait = false, remap = false },
-	{ "<leader>gc", "<cmd>lua _CLING_TOGGLE()<CR>", desc = "IPython", nowait = false, remap = false },
-	{ "<leader>gh", "<cmd>lua _HTOP_TOGGLE()<CR>", desc = "Htop", nowait = false, remap = false },
-	{ "<leader>gi", "<cmd>lua _IPYTHON_TOGGLE()<CR>", desc = "IPython", nowait = false, remap = false },
-	{ "<leader>gn", "<cmd>lua _NEWTERM_TOGGLE()<CR>", desc = "New Term", nowait = false, remap = false },
-	{ "<leader>gt", "<cmd>lua _NEWTERM() <CR>", desc = "New Tab Term", nowait = false, remap = false },
-	{ "<leader>gu", "<cmd>lua _NCDU_TOGGLE()<CR>", desc = "Ncdu", nowait = false, remap = false },
+	{ "<leader>ga", lua_toggle, desc = "Lua", nowait = false, remap = false },
+	{ "<leader>gc", cling_toggle, desc = "IPython", nowait = false, remap = false },
+	{ "<leader>gh", htop_toggle, desc = "Htop", nowait = false, remap = false },
+	{ "<leader>gi", ipython_toggle, desc = "IPython", nowait = false, remap = false },
+	{ "<leader>gn", newterm_toggle, desc = "New Term", nowait = false, remap = false },
+	{ "<leader>gt", newterm, desc = "New Tab Term", nowait = false, remap = false },
+	{ "<leader>gu", ncdu_toggle, desc = "Ncdu", nowait = false, remap = false },
 }
 require("which-key").add(keymap)
