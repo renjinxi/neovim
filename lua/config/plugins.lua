@@ -277,6 +277,7 @@ return {
 	{
 		"rose-pine/neovim",
 		name = "rose-pine",
+		priority = 1000,
 		-- 'NLKNguyen/papercolor-theme',
 		--config = function()
 		--vim.o.background = "light" -- or "dark" for light mode
