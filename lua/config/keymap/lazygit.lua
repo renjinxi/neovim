@@ -8,5 +8,19 @@ local keymap = {
 	{ "<leader>si", ":Git diff .<cr>", desc = "Diff All File", nowait = false, remap = false },
 	{ "<leader>sD", ":Git diff --cached %<cr>", desc = "Diff Current File Cached", nowait = false, remap = false },
 	{ "<leader>sI", ":Git diff --cached .<cr>", desc = "Diff All File Cached", nowait = false, remap = false },
+	{
+		"<leader>sp",
+		":Git pull origin main --rebase<cr>",
+		desc = "Pull Origin Main",
+		nowait = false,
+		remap = false,
+	},
+	{
+		"<leader>sP",
+		":Git push origin main <cr>",
+		desc = "Push Origin Main",
+		nowait = false,
+		remap = false,
+	},
 }
 require("which-key").add(keymap)
