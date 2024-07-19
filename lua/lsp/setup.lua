@@ -16,6 +16,7 @@ mason_lsp.setup({
 		"tsserver",
 		"gopls",
 		"golangci_lint_ls",
+		"nginx_language_server",
 	},
 	automatic_installation = true,
 })

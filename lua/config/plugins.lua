@@ -566,6 +566,11 @@ return {
 				"<cmd>CellularAutomaton game_of_life<cr>",
 				desc = "Game",
 			},
+			{
+				"<leader>as",
+				"<cmd>CellularAutomaton scramble<cr>",
+				desc = "Game",
+			},
 		},
 		"eandrju/cellular-automaton.nvim",
 	},
