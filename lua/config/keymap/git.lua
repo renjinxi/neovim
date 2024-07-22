@@ -7,6 +7,7 @@ local keymap = {
 	{ "<leader>sd", ":Git diff %<cr>", desc = "Diff Current File", nowait = false, remap = false },
 	{ "<leader>si", ":Git diff .<cr>", desc = "Diff All File", nowait = false, remap = false },
 	{ "<leader>sD", ":Git diff --cached %<cr>", desc = "Diff Current File Cached", nowait = false, remap = false },
+	{ "<leader>so", ":Git log<cr>", desc = "Log", nowait = false, remap = false },
 	{ "<leader>sI", ":Git diff --cached .<cr>", desc = "Diff All File Cached", nowait = false, remap = false },
 	{
 		"<leader>sp",
