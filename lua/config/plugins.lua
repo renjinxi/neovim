@@ -574,4 +574,9 @@ return {
 		},
 		"eandrju/cellular-automaton.nvim",
 	},
+	-- task
+	{
+		"stevearc/overseer.nvim",
+		opts = {},
+	},
 }
