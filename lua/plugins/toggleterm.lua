@@ -11,9 +11,9 @@ require("toggleterm").setup({
 	direction = "horizontal",
 	close_on_exit = true,
 	shell = vim.o.shell,
-	on_open = function(term)
-		term:send([[acpoet]])
-	end, -- function to run when the terminal opens
+	-- on_open = function(term)
+	-- 	term:send([[acpoet]])
+	-- end, -- function to run when the terminal opens
 
 	--background = "Normal",
 	float_opts = {
