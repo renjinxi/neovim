@@ -3,7 +3,7 @@ vim.g.disable_autoformat = false
 require("conform").setup({
 	formatters_by_ft = {
 		lua = { "stylua" },
-		python = { "ruff_format", "ruff_organize_imports", "ruff_fix " },
+		python = { "ruff_format", "ruff_organize_imports", "ruff_fix" },
 	},
 	format_on_save = function(bufnr)
 		-- Disable with a global or buffer-local variable
