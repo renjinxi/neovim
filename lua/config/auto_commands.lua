@@ -1,12 +1,12 @@
 local api = vim.api
 local opt = vim.opt
 
-local indent_group = api.nvim_create_augroup("indent_group", { clear = true })
-local relative_group = api.nvim_create_augroup("relative_group", { clear = true })
+local function create_group(name)
+	return vim.api.nvim_create_augroup(name, { clear = true })
+end
 
-vim.api.nvim_create_augroup("NoHlSearch", { clear = true })
 vim.api.nvim_create_autocmd("BufEnter", {
-	group = "NoHlSearch",
+	group = create_group("NoHlSearch"),
 	callback = function()
 		vim.opt.hlsearch = false
 	end,
@@ -42,7 +42,7 @@ end
 
 api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
 	pattern = "*",
-	group = indent_group,
+	group = create_group("indent_group"),
 	desc = "set indent for file",
 	callback = set_indent,
 })
@@ -62,7 +62,7 @@ local function set_norelativenumber()
 end
 api.nvim_create_autocmd({ "WinEnter", "BufRead", "BufEnter", "FocusGained" }, {
 	pattern = "*",
-	group = relative_group,
+	group = create_group("relative_group"),
 	desc = "set relativenumber for file",
 	callback = set_relativenumber,
 })
@@ -70,13 +70,12 @@ api.nvim_create_autocmd({ "WinEnter", "BufRead", "BufEnter", "FocusGained" }, {
 api.nvim_create_autocmd({ "WinLeave", "BufLeave", "FocusLost" }, {
 	--api.nvim_create_autocmd({ "FocusLost" }, {
 	pattern = "*",
-	group = relative_group,
+	group = create_group("relative_group"),
 	desc = "set norelativenumber for file",
 	callback = set_norelativenumber,
 })
 
 local lsp = vim.lsp
-local lsp_group = api.nvim_create_augroup("lsp_group", { clear = true })
 local function stop_all_lsp()
 	lsp.stop_client(lsp.get_active_clients())
 end
@@ -86,12 +85,35 @@ local function start_lsp()
 end
 
 api.nvim_create_autocmd("TabEnter", {
-	group = "lsp_group", -- 使用前面创建的自动命令组
+	group = create_group("lsp_group"), -- 使用前面创建的自动命令组
 	callback = function()
 		-- 在切换到新的 tab 时先停止所有的 LSP
 		stop_all_lsp()
 
 		-- 等待一段时间后重新启动 LSP
 		vim.defer_fn(start_lsp, 1000)
+	end,
+})
+
+vim.api.nvim_create_autocmd("VimEnter", {
+	group = create_group("lazy_auto_update"),
+	callback = function()
+		if require("lazy.status").has_updates then
+			require("lazy").update({ show = false })
+		end
+	end,
+})
+vim.api.nvim_create_autocmd("VimEnter", {
+	group = create_group("ts_auto_update"),
+	callback = function()
+		vim.cmd("TSUpdate")
+	end,
+})
+
+-- 自动更新 Mason 插件和工具
+vim.api.nvim_create_autocmd("VimEnter", {
+	group = create_group("mason_auto_update"),
+	callback = function()
+		vim.cmd("MasonUpdate")
 	end,
 })

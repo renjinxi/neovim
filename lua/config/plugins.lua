@@ -94,8 +94,6 @@ return {
 	-- tree syntc
 	{
 		"nvim-treesitter/nvim-treesitter",
-		run = ":TSUpdate",
-		event = "BufReadPre",
 		config = function()
 			require("plugins.treesitter")
 		end,
