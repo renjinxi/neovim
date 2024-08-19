@@ -101,6 +101,7 @@ local keymap = {
 	{ "<leader>vt", toggle_neovide, desc = "Toggle Neovide", nowait = false, remap = false },
 	{ "<leader>vv", open_project_in_new_tab, desc = "Open Project In New Tab", nowait = false, remap = false },
 	{ "<leader>vw", ":DiffviewFileHistory %<cr>", desc = "File History", nowait = false, remap = false },
+	{ "<leader>vy", "viw:Translate zh-CN<cr>", desc = "Translate", nowait = false, remap = false },
 	{ "<leader>vz", ":ZenMode<cr>", desc = "Toggle Zen Mode", nowait = false, remap = false },
 }
 which_key.add(keymap)

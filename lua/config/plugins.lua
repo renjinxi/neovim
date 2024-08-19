@@ -577,4 +577,5 @@ return {
 		"stevearc/overseer.nvim",
 		opts = {},
 	},
+	"uga-rosa/translate.nvim",
 }

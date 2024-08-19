@@ -68,9 +68,8 @@ api.nvim_create_autocmd({ "WinEnter", "BufRead", "BufEnter", "FocusGained" }, {
 })
 
 api.nvim_create_autocmd({ "WinLeave", "BufLeave", "FocusLost" }, {
-	--api.nvim_create_autocmd({ "FocusLost" }, {
 	pattern = "*",
-	group = create_group("relative_group"),
+	group = create_group("no_relative_group"),
 	desc = "set norelativenumber for file",
 	callback = set_norelativenumber,
 })
