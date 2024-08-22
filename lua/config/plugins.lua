@@ -328,7 +328,6 @@ return {
 	-- diff
 	{
 		"sindrets/diffview.nvim",
-		cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles" },
 		config = function()
 			-- init.lua 版本
 			require("diffview").setup({
