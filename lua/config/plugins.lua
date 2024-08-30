@@ -577,4 +577,8 @@ return {
 		opts = {},
 	},
 	"uga-rosa/translate.nvim",
+
+	{
+		"rest-nvim/rest.nvim",
+	},
 }
