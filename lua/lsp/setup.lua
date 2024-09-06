@@ -56,11 +56,11 @@ require("mason-lspconfig").setup_handlers({
 			on_attach = on_attach,
 			capabilities = capabilities,
 			handlers = handlers,
-			on_new_config = function(new_config, new_root_dir)
-				local py = require("utils.python.lua")
-				py.env(new_root_dir)
-				new_config.settings.pylsp.plugins.jedi.environment = py.get_python_dir(new_root_dir)
-			end,
+			-- on_new_config = function(new_config, new_root_dir)
+			-- 	local py = require("utils.python.lua")
+			-- 	py.env(new_root_dir)
+			-- 	-- new_config.settings.pylsp.plugins.jedi.environment = py.get_python_dir(new_root_dir)
+			-- end,
 		})
 	end,
 
@@ -82,6 +82,14 @@ require("mason-lspconfig").setup_handlers({
 	end,
 	["ruff_lsp"] = function()
 		lspconfig["ruff_lsp"].setup({
+			capabilities = capabilities,
+			handlers = handlers,
+			on_attach = on_attach,
+			-- settings = require("lsp.servers.lua_ls").settings,
+		})
+	end,
+	["tsserver"] = function()
+		lspconfig.ts_ls.setup({
 			capabilities = capabilities,
 			handlers = handlers,
 			on_attach = on_attach,

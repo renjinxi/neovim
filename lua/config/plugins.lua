@@ -581,4 +581,10 @@ return {
 	{
 		"rest-nvim/rest.nvim",
 	},
+	{
+		"matbme/JABS.nvim",
+		config = function()
+			require("jabs").setup({})
+		end,
+	},
 }
