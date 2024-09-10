@@ -110,9 +110,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 -- 自动更新 Mason 插件和工具
-vim.api.nvim_create_autocmd("VimEnter", {
-	group = create_group("mason_auto_update"),
-	callback = function()
-		vim.cmd("MasonUpdate")
-	end,
-})
+-- vim.api.nvim_create_autocmd("VimEnter", {
+-- 	group = create_group("mason_auto_update"),
+-- 	callback = function()
+-- 		vim.cmd("MasonUpdate")
+-- 	end,
+-- })
