@@ -575,6 +575,9 @@ return {
 	{
 		"stevearc/overseer.nvim",
 		opts = {},
+		config = function()
+			require("plugins.overseer")
+		end,
 	},
 	"uga-rosa/translate.nvim",
 

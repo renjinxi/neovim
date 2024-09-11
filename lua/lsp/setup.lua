@@ -13,7 +13,7 @@ mason_lsp.setup({
 		"ruff_lsp",
 		"html",
 		"cssls",
-		"tsserver",
+		"ts_ls",
 		"gopls",
 		"golangci_lint_ls",
 		"nginx_language_server",
@@ -88,7 +88,7 @@ require("mason-lspconfig").setup_handlers({
 			-- settings = require("lsp.servers.lua_ls").settings,
 		})
 	end,
-	["tsserver"] = function()
+	["ts_ls"] = function()
 		lspconfig.ts_ls.setup({
 			capabilities = capabilities,
 			handlers = handlers,
