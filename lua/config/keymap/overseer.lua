@@ -3,6 +3,7 @@ local keymap = {
 	{ "<leader>rl", ":OverseerRestartLast<cr>", desc = "Restart Last Task", nowait = false, remap = false },
 	{ "<leader>ro", ":OverseerQuickAction<cr>", desc = "Quick Action", nowait = false, remap = false },
 	{ "<leader>rr", ":OverseerRun<cr>", desc = "Run", nowait = false, remap = false },
+	{ "<leader>rg", ":OverseerToggle<cr>", desc = "Toggle", nowait = false, remap = false },
 
 	-- { "<leader>rd", ":FzfLua commands<cr>", desc = "Commands", nowait = false, remap = false },
 	-- { "<leader>re", ":FzfLua oldfiles<cr>", desc = "Recent Files", nowait = false, remap = false },
