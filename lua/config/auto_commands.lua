@@ -97,6 +97,9 @@ api.nvim_create_autocmd("TabEnter", {
 vim.api.nvim_create_autocmd("VimEnter", {
 	group = create_group("lazy_auto_update"),
 	callback = function()
+		if vim.g.kitty_scrollback_enabled then
+			return
+		end
 		if require("lazy.status").has_updates then
 			require("lazy").update({ show = false })
 		end
@@ -105,6 +108,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
 vim.api.nvim_create_autocmd("VimEnter", {
 	group = create_group("ts_auto_update"),
 	callback = function()
+		if vim.g.kitty_scrollback_enabled then
+			return
+		end
 		vim.cmd("TSUpdate")
 	end,
 })
