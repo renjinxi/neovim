@@ -11,4 +11,7 @@ require("nvim-treesitter.configs").setup({
 
 	--indent = { enable = true, disable = { "python", "css" } },
 	indent = { enable = true },
+	matchup = {
+		enable = true, -- Enable vim-matchup integration
+	},
 })

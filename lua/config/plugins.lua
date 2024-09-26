@@ -199,6 +199,15 @@ return {
 			require("nvim-ts-autotag").setup()
 		end,
 	},
+
+	{
+		"andymass/vim-matchup",
+		config = function()
+			vim.g.matchup_matchparen_enabled = 0
+			vim.g.matchup_matchparen_offscreen = { method = "popup" }
+		end,
+	},
+	-- auto end
 	{
 		"kylechui/nvim-surround",
 		version = "*", -- Use for stability; omit to use `main` branch for the latest features

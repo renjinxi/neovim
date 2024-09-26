@@ -46,7 +46,7 @@ local function create_new_file()
 		end
 
 		-- 构建新的文件路径
-		local new_path = directory .. "/" .. new_name
+		local new_path = new_name
 
 		-- 尝试创建新文件
 		local file = io.open(new_path, "w") -- 以写入模式打开文件
