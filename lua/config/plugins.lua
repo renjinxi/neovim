@@ -192,6 +192,13 @@ return {
 			require("nvim-autopairs").setup()
 		end,
 	},
+	-- auto tag for html
+	{
+		"windwp/nvim-ts-autotag",
+		config = function()
+			require("nvim-ts-autotag").setup()
+		end,
+	},
 	{
 		"kylechui/nvim-surround",
 		version = "*", -- Use for stability; omit to use `main` branch for the latest features

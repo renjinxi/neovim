@@ -12,6 +12,60 @@ local normal_opts = {
 	nowait = false,
 }
 
+local function get_project_root()
+	-- 获取当前项目的根路径，假设使用 Git
+	local git_root = vim.fn.system("git rev-parse --show-toplevel 2>/dev/null")
+	if git_root ~= "" then
+		return git_root:gsub("%s+", "") -- 去除多余的空格和换行
+	end
+	return nil -- 如果找不到项目根路径，返回 nil
+end
+
+local function create_new_file()
+	-- 获取当前缓冲区的路径
+	local current_directory = vim.fn.expand("%:p:h")
+	local directory = current_directory
+
+	if directory == "" then
+		-- 如果没有路径，则使用项目根路径
+		directory = get_project_root()
+		if not directory then
+			print("Error: No project root found.")
+			return
+		end
+	end
+
+	-- 在输入提示中显示当前目录
+	vim.ui.input({
+		prompt = "New File Name (in " .. directory .. "): ",
+		default = directory .. "/", -- 默认以当前目录开头
+	}, function(new_name)
+		if not new_name or new_name == "" then
+			print("File creation cancelled.")
+			return
+		end
+
+		-- 构建新的文件路径
+		local new_path = directory .. "/" .. new_name
+
+		-- 尝试创建新文件
+		local file = io.open(new_path, "w") -- 以写入模式打开文件
+		if not file then
+			print("Error creating file: " .. new_path)
+			return
+		end
+		file:close() -- 关闭文件
+
+		-- 打开新创建的文件
+		vim.api.nvim_command("e " .. new_path)
+		print("File created: " .. new_name)
+	end)
+end
+
+-- 可选择将这个函数映射到一个快捷键
+-- 例如，使用 <leader>n 进行文件创建
+vim.api.nvim_set_keymap("n", "<leader>n", ":lua create_new_file()<CR>", { noremap = true, silent = true })
+
 local function rename_current_file()
 	-- 获取当前文件的完整路径
 	local old_path = vim.fn.expand("%:p")
@@ -78,7 +132,8 @@ local keymap = {
 	},
 	{ "<leader>vj", "<cmd>set relativenumber<cr>", desc = "Set Relative Number", nowait = false, remap = false },
 	{ "<leader>vk", "<cmd>set norelativenumber<cr>", desc = "Cancel Relative Number", nowait = false, remap = false },
-	{ "<leader>vl", rename_current_file, desc = "Rname Current File", nowait = false, remap = false },
+	{ "<leader>vlr", rename_current_file, desc = "Rname Current File", nowait = false, remap = false },
+	{ "<leader>vla", create_new_file, desc = "Create New File", nowait = false, remap = false },
 	{ "<leader>vm", ":%bd!|e#|bd#<cr>", desc = "Remove Other Buffer File", nowait = false, remap = false },
 	{
 		"<leader>vn",
