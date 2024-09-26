@@ -62,29 +62,25 @@ local function create_new_file()
 	end)
 end
 
--- 可选择将这个函数映射到一个快捷键
--- 例如，使用 <leader>n 进行文件创建
-vim.api.nvim_set_keymap("n", "<leader>n", ":lua create_new_file()<CR>", { noremap = true, silent = true })
-
 local function rename_current_file()
 	-- 获取当前文件的完整路径
 	local old_path = vim.fn.expand("%:p")
 	local current_buffer_name = vim.fn.expand("%:t")
+	local current_directory = vim.fn.expand("%:p:h")
 
-	-- 使用 vim.ui.input 询问新文件名
+	-- 在输入提示中显示当前目录和文件名，允许用户修改
+	local default_input = current_directory .. "/" .. current_buffer_name
+
 	vim.ui.input({
-		prompt = "New Name: ",
-		default = current_buffer_name,
-	}, function(new_name)
-		if not new_name or new_name == "" then
+		prompt = "New Path and Name: ",
+		default = default_input,
+	}, function(new_path)
+		if not new_path or new_path == "" then
 			print("Rename cancelled.")
 			return
 		end
 
-		-- 构建新的文件路径
-		local new_path = vim.fn.fnamemodify(old_path, ":h") .. "/" .. new_name
-
-		-- 重命名文件
+		-- 尝试重命名文件
 		local success, err = os.rename(old_path, new_path)
 		if not success then
 			print("Error renaming file: " .. err)
@@ -93,7 +89,7 @@ local function rename_current_file()
 
 		-- 更新当前缓冲区的文件路径
 		vim.api.nvim_command("e " .. new_path)
-		print("File renamed to " .. new_name)
+		print("File renamed to " .. new_path)
 	end)
 end
 local open_project_in_new_tab = function()
