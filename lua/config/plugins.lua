@@ -633,4 +633,6 @@ return {
 			},
 		},
 	},
+	-- undo tree
+	"mbbill/undotree",
 }

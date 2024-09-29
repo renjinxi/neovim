@@ -150,6 +150,7 @@ local keymap = {
 	{ "<leader>vr", "<cmd>LspRestart<cr>", desc = "Lsp Restart", nowait = false, remap = false },
 	{ "<leader>vs", "<cmd>only<cr><cmd>tabo<cr>", desc = "Only Window Only Tab", nowait = false, remap = false },
 	{ "<leader>vt", toggle_neovide, desc = "Toggle Neovide", nowait = false, remap = false },
+	{ "<leader>vu", ":UndotreeToggle<cr>", desc = "Undo Tree Toggle", nowait = false, remap = false },
 	{ "<leader>vv", open_project_in_new_tab, desc = "Open Project In New Tab", nowait = false, remap = false },
 	{ "<leader>vw", ":DiffviewFileHistory %<cr>", desc = "File History", nowait = false, remap = false },
 	{ "<leader>vy", "viw:Translate zh-CN<cr>", desc = "Translate", nowait = false, remap = false },
