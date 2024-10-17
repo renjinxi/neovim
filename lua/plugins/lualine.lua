@@ -52,37 +52,36 @@ require("lualine").setup({
 	sections = {
 		lualine_a = {
 			window,
-			{ "mode", cond = cond80 },
+			{ "mode" },
 		},
 		lualine_b = {
-			{ "branch", cond = cond200 },
-			{ "diff", cond = cond200 },
-			{ "diagnostics", cond = cond200 },
+			{ "branch" },
+			{ "diff" },
+			{ "diagnostics" },
 		},
 		lualine_c = {
-			{ "filename", cond = cond40 },
+			{ "filename" },
 		},
 		lualine_x = {
 			{ "copilot" },
 			--{ codeium_state,  },
-			{ "encoding", cond = cond80 },
-			{ "fileformat", cond = cond200 },
-			{ "filetype", cond = cond200 },
+			{ "encoding" },
+			{ "fileformat" },
+			{ "filetype" },
 		},
 		lualine_y = {
-			{ "progress", cond = cond80 },
-			{ "location", cond = cond200 },
+			{ "progress" },
+			{ "location" },
 		},
 		lualine_z = {
 			{
 				clock,
-				cond = cond40,
 			},
 		},
 	},
-	inactive_sections = {
-		lualine_a = { window, { "filename", cond = cond40 } },
-	},
+	-- inactive_sections = {
+	-- 	lualine_a = { window, { "filename", },
+	-- },
 	tabline = {
 		-- lualine_a = {'buffers'},
 		lualine_a = {

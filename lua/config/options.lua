@@ -30,6 +30,7 @@ local options = {
 	exrc = true,
 	termguicolors = true,
 	signcolumn = "auto",
+	laststatus = 3,
 }
 
 for k, v in pairs(options) do
