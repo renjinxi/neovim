@@ -47,6 +47,10 @@ local function create_new_file()
 
 		-- 构建新的文件路径
 		local new_path = new_name
+		local dir = new_path:match("(.*/)")
+		if not vim.loop.fs_stat(dir) then
+			os.execute("mkdir -p " .. dir)
+		end
 
 		-- 尝试创建新文件
 		local file = io.open(new_path, "w") -- 以写入模式打开文件
@@ -80,6 +84,10 @@ local function rename_current_file()
 			return
 		end
 
+		local dir = new_path:match("(.*/)")
+		if not vim.loop.fs_stat(dir) then
+			os.execute("mkdir -p " .. dir)
+		end
 		-- 尝试重命名文件
 		local success, err = os.rename(old_path, new_path)
 		if not success then
