@@ -17,8 +17,8 @@ local codeium_state = function()
 end
 
 local function clock()
-	-- return os.date('%Y-%m-%d %H:%M') -- Formats time in HH:MM:SS format
-	return os.date("%H:%M") -- Formats time in HH:MM:SS format
+	return os.date("%Y-%m-%d %H:%M") -- Formats time in HH:MM:SS format
+	-- return os.date("%H:%M") -- Formats time in HH:MM:SS format
 end
 
 local function get_project_root()

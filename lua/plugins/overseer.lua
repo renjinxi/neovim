@@ -9,5 +9,12 @@ vim.api.nvim_create_user_command("OverseerRestartLast", function()
 end, {})
 
 require("overseer").setup({
-	templates = { "builtin", "user.run_script" },
+	templates = {
+		"builtin",
+		"user.run_script",
+		["vscode"] = true, -- explicitly enable vscode tasks
+	},
+	task_list = {
+		default_detail = 1,
+	},
 })
