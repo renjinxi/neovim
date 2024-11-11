@@ -1,6 +1,16 @@
 return {
 	-- manage itself
 	"folke/lazy.nvim",
+	{
+		"williamboman/mason.nvim",
+		config = function()
+			require("mason").setup()
+		end,
+	},
+	{
+		"williamboman/mason-lspconfig.nvim",
+	},
+	"jay-babu/mason-nvim-dap.nvim",
 	"neovim/nvim-lspconfig",
 	{
 		"Pocco81/auto-save.nvim",
@@ -263,7 +273,6 @@ return {
 			require("plugins.dap")
 		end,
 	},
-	"jay-babu/mason-nvim-dap.nvim",
 	{
 		"rcarriga/nvim-dap-ui",
 	},
@@ -373,16 +382,6 @@ return {
 		"nvim-telescope/telescope-file-browser.nvim",
 		-- cmd = 'Telescope',
 		dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" },
-	},
-
-	{
-		"williamboman/mason.nvim",
-		config = function()
-			require("mason").setup()
-		end,
-	},
-	{
-		"williamboman/mason-lspconfig.nvim",
 	},
 	--chatgpt
 	-- {

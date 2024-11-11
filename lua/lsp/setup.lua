@@ -10,7 +10,7 @@ mason_lsp.setup({
 		"lua_ls",
 		"clangd",
 		"pyright",
-		"ruff_lsp",
+		"ruff",
 		"html",
 		"cssls",
 		"ts_ls",
@@ -77,11 +77,20 @@ require("mason-lspconfig").setup_handlers({
 			capabilities = capabilities,
 			handlers = handlers,
 			on_attach = on_attach,
-			-- settings = require("lsp.servers.lua_ls").settings,
+			settings = {
+				python = {
+					analysis = {
+						diagnosticSeverityOverrides = {
+							reportUnusedVariable = "none",
+							reportUnusedImport = "none",
+						},
+					},
+				},
+			},
 		})
 	end,
-	["ruff_lsp"] = function()
-		lspconfig["ruff_lsp"].setup({
+	["ruff"] = function()
+		lspconfig.ruff.setup({
 			capabilities = capabilities,
 			handlers = handlers,
 			on_attach = on_attach,

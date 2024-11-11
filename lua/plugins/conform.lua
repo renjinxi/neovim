@@ -4,6 +4,10 @@ require("conform").setup({
 	formatters_by_ft = {
 		lua = { "stylua" },
 		python = { "ruff_format", "ruff_organize_imports", "ruff_fix" },
+		javascript = { "prettier" },
+		typescript = { "prettier" },
+		javascriptreact = { "prettier" },
+		typescriptreact = { "prettier" },
 	},
 	format_on_save = function(bufnr)
 		-- Disable with a global or buffer-local variable
