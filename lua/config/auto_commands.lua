@@ -17,6 +17,10 @@ local function set_indent()
 	local indent_table = {
 		python = 4,
 		markdown = 4,
+		typescriptreact = 2,
+		css = 2,
+		typescript = 2,
+		javascript = 2,
 		--toml = 2,
 		--c = 4,
 	}
