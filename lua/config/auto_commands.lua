@@ -125,4 +125,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
 -- 	callback = function()
 -- 		vim.cmd("MasonUpdate")
 -- 	end,
--- })
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = { "json" },
+	callback = function()
+		vim.api.nvim_set_option_value("formatprg", "jq", { scope = "local" })
+	end,
+})
