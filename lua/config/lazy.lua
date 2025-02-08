@@ -24,4 +24,8 @@ local opt = {
 	},
 }
 
-return lazy.setup("config.plugins", opt)
+if vim.g.vscode then
+	return lazy.setup("config.vscode_plugins", opt)
+else
+	return lazy.setup("config.plugins", opt)
+end
