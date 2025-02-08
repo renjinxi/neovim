@@ -78,26 +78,6 @@ api.nvim_create_autocmd({ "WinLeave", "BufLeave", "FocusLost" }, {
 	callback = set_norelativenumber,
 })
 
-local lsp = vim.lsp
-local function stop_all_lsp()
-	lsp.stop_client(lsp.get_active_clients())
-end
-
-local function start_lsp()
-	vim.cmd("LspStart")
-end
-
-api.nvim_create_autocmd("TabEnter", {
-	group = create_group("lsp_group"), -- 使用前面创建的自动命令组
-	callback = function()
-		-- 在切换到新的 tab 时先停止所有的 LSP
-		stop_all_lsp()
-
-		-- 等待一段时间后重新启动 LSP
-		vim.defer_fn(start_lsp, 1000)
-	end,
-})
-
 vim.api.nvim_create_autocmd("VimEnter", {
 	group = create_group("lazy_auto_update"),
 	callback = function()
