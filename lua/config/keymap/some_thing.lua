@@ -116,52 +116,53 @@ local function toggle_hlsearch()
 	vim.o.hlsearch = not vim.o.hlsearch
 end
 
+local function copy_messages()
+	-- 获取消息历史
+	local messages = vim.fn.execute('messages')
+	-- 复制到系统剪贴板
+	vim.fn.setreg('+', messages)
+	print("Messages copied to clipboard")
+end
+
+local function copy_last_error()
+	-- 获取最后一条错误消息
+	local error_msg = vim.v.errmsg
+	-- 复制到系统剪贴板
+	vim.fn.setreg('+', error_msg)
+	print("Last error message copied to clipboard")
+end
+
 local keymap = {
-	{ "<leader>v", group = "Some Thing", nowait = false, remap = false },
-	{ "<leader>vE", "<cmd>edit %<cr>", desc = "Reload Current File", nowait = false, remap = false },
-	{ "<leader>va", "<cmd>qa<cr>", desc = "Exit", nowait = false, remap = false },
-	{ "<leader>vb", "<cmd>%bd|e#<cr>", desc = "Delete Other Buffers", nowait = false, remap = false },
-	{ "<leader>vc", "<cmd>DiffviewClose<cr>", desc = "Close Diff", nowait = false, remap = false },
-	{ "<leader>vd", "<cmd>DiffviewOpen<cr>", desc = "Open Diff", nowait = false, remap = false },
-	{ "<leader>ve", "<cmd>bufdo edit %<cr>", desc = "Reload All Buffer File", nowait = false, remap = false },
-	{ "<leader>vf", "<cmd>ASToggle<cr>", desc = "Toggle Auto Save", nowait = false, remap = false },
-	{ "<leader>vg", "<cmd>ToggleTermToggleAll<cr>", desc = "ToggleAllTerm", nowait = false, remap = false },
-	{ "<leader>vh", toggle_hlsearch, desc = "Toggle Hlsearch", nowait = false, remap = false },
-	{
-		"<leader>vi",
-		"<cmd>luafile ~/.config/nvim/init.lua<cr><cmd>Lazy restore<cr>",
-		desc = "reload config",
-		nowait = false,
-		remap = false,
-	},
-	{ "<leader>vj", "<cmd>set relativenumber<cr>", desc = "Set Relative Number", nowait = false, remap = false },
-	{ "<leader>vk", "<cmd>set norelativenumber<cr>", desc = "Cancel Relative Number", nowait = false, remap = false },
-	{ "<leader>vlr", rename_current_file, desc = "Rname Current File", nowait = false, remap = false },
-	{ "<leader>vla", create_new_file, desc = "Create New File", nowait = false, remap = false },
-	{ "<leader>vm", ":%bd!|e#|bd#<cr>", desc = "Remove Other Buffer File", nowait = false, remap = false },
-	{
-		"<leader>vn",
-		"<cmd>lua = vim.api.nvim_buf_get_name(0)<cr>",
-		desc = "Get File Abs Path",
-		nowait = false,
-		remap = false,
-	},
-	{ "<leader>vo", "<cmd>only<cr>", desc = "Only Window", nowait = false, remap = false },
-	{
-		"<leader>vp",
-		":lua vim.fn.setreg('+', vim.fn.expand('%:p'))<CR>",
-		desc = "Copy File Path to Clipboard",
-		nowait = false,
-		remap = false,
-	},
-	{ "<leader>vq", "<cmd>q<cr>", desc = "Close Current Tab", nowait = false, remap = false },
-	{ "<leader>vr", "<cmd>LspRestart<cr>", desc = "Lsp Restart", nowait = false, remap = false },
-	{ "<leader>vs", "<cmd>only<cr><cmd>tabo<cr>", desc = "Only Window Only Tab", nowait = false, remap = false },
-	{ "<leader>vt", toggle_neovide, desc = "Toggle Neovide", nowait = false, remap = false },
-	{ "<leader>vu", ":UndotreeToggle<cr>", desc = "Undo Tree Toggle", nowait = false, remap = false },
-	{ "<leader>vv", open_project_in_new_tab, desc = "Open Project In New Tab", nowait = false, remap = false },
-	{ "<leader>vw", ":DiffviewFileHistory %<cr>", desc = "File History", nowait = false, remap = false },
-	{ "<leader>vy", "viw:Translate zh-CN<cr>", desc = "Translate", nowait = false, remap = false },
-	{ "<leader>vz", ":ZenMode<cr>", desc = "Toggle Zen Mode", nowait = false, remap = false },
+	-- 消息和错误处理
+	{ "<leader>m", group = "Messages", nowait = false, remap = false },
+	{ "<leader>ms", ":messages<cr>", desc = "Show Message History", nowait = false, remap = false },
+	{ "<leader>mc", ":messages clear<cr>", desc = "Clear Message History", nowait = false, remap = false },
+	{ "<leader>me", ":echo v:errmsg<cr>", desc = "Show Last Error", nowait = false, remap = false },
+	{ "<leader>my", copy_messages, desc = "Copy All Messages", nowait = false, remap = false },
+	{ "<leader>mx", copy_last_error, desc = "Copy Last Error", nowait = false, remap = false },
+	
+	-- 配置相关
+	{ "<leader>c", group = "Config Operations", nowait = false, remap = false },
+	{ "<leader>cr", function() require("config.reload").reload_config() end, desc = "Reload Config", nowait = false, remap = false },
+	
+	-- 编辑器功能切换
+	{ "<leader>e", group = "Editor Toggles", nowait = false, remap = false },
+	{ "<leader>eh", toggle_hlsearch, desc = "Toggle Search Highlight", nowait = false, remap = false },
+	{ "<leader>en", "<cmd>set relativenumber!<cr>", desc = "Toggle Relative Number", nowait = false, remap = false },
+	{ "<leader>es", "<cmd>ASToggle<cr>", desc = "Toggle Auto Save", nowait = false, remap = false },
+	{ "<leader>et", "<cmd>ToggleTermToggleAll<cr>", desc = "Toggle All Terms", nowait = false, remap = false },
+	{ "<leader>eu", ":UndotreeToggle<cr>", desc = "Toggle Undotree", nowait = false, remap = false },
+	{ "<leader>ez", ":ZenMode<cr>", desc = "Toggle Zen Mode", nowait = false, remap = false },
+	
+	-- 版本控制
+	{ "<leader>v", group = "Version Control", nowait = false, remap = false },
+	{ "<leader>vd", "<cmd>DiffviewOpen<cr>", desc = "Open Diff View", nowait = false, remap = false },
+	{ "<leader>vc", "<cmd>DiffviewClose<cr>", desc = "Close Diff View", nowait = false, remap = false },
+	
+	-- 其他功能
+	{ "<leader>y", "viw:Translate zh-CN<cr>", desc = "Translate Word", nowait = false, remap = false },
+	{ "<leader>q", "<cmd>q<cr>", desc = "Close Window", nowait = false, remap = false },
+	{ "<leader>Q", "<cmd>qa<cr>", desc = "Exit Neovim", nowait = false, remap = false },
 }
+
 which_key.add(keymap)

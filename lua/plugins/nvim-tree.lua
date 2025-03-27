@@ -4,11 +4,10 @@ vim.g.loaded_netrwPlugin = 1
 require("nvim-tree").setup({
 	update_focused_file = {
 		enable = true,
-		update_root = {
-			enable = true,
-			ignore_list = {},
-		},
-		exclude = false,
+		update_root = false,
+		ignore_list = {},
 	},
+	sync_root_with_cwd = false,
+	respect_buf_cwd = true,
 })
 require("lsp-file-operations").setup()
