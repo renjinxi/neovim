@@ -12,6 +12,7 @@ function M.setup()
         signcolumn = "auto",    -- 自动显示标记列
         laststatus = 3,         -- 全局状态栏
         termguicolors = true,   -- 启用真彩色支持
+        background = "light",   -- 设置背景主题
     }
 
     -- 编辑器行为配置
@@ -58,10 +59,29 @@ function M.setup()
         fillchars = "eob: ,fold: ,foldopen:,foldsep: ,foldclose:",
     }
 
+    -- 高亮和差异显示配置
+    local highlight_options = {
+        -- 折叠高亮
+        ["hi Folded"] = "guifg=NONE guibg=NONE",
+        -- 差异显示高亮
+        ["hi DiffText"] = "guifg=#000000 guibg=#ffa07a blend=20",
+        ["hi DiffAdd"] = "guifg=NONE guibg=#c8e6c9",
+        ["hi DiffChange"] = "guifg=NONE guibg=#fff9c4",
+        ["hi DiffDelete"] = "guifg=#ffcdd2 guibg=#ffcdd2",
+        ["hi DiffText"] = "guifg=NONE guibg=#ffcc80",
+    }
+
     -- 应用所有配置组
     local function apply_options(options)
         for k, v in pairs(options) do
             vim.opt[k] = v
+        end
+    end
+
+    -- 应用高亮配置
+    local function apply_highlights(highlights)
+        for cmd, args in pairs(highlights) do
+            vim.cmd(cmd .. " " .. args)
         end
     end
 
@@ -70,6 +90,7 @@ function M.setup()
     apply_options(fold_options)
     apply_options(search_options)
     apply_options(fillchars_options)
+    apply_highlights(highlight_options)
 
     -- 加载环境变量（仅用于 Python 配置）
     local env = require("core.env")
