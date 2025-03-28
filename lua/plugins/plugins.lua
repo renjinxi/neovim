@@ -15,7 +15,7 @@ return {
 	{
 		"Pocco81/auto-save.nvim",
 		config = function()
-			require("plugins.autosave")
+			require("plugins.config.autosave")
 		end,
 	},
 
@@ -94,7 +94,7 @@ return {
 		"nvim-telescope/telescope.nvim",
 		-- cmd = 'Telescope',
 		config = function()
-			require("plugins.telescope")
+			require("plugins.config.telescope")
 		end,
 	},
 	"nvim-telescope/telescope-live-grep-args.nvim",
@@ -105,7 +105,7 @@ return {
 	{
 		"nvim-treesitter/nvim-treesitter",
 		config = function()
-			require("plugins.treesitter")
+			require("plugins.config.treesitter")
 		end,
 	},
 	"nvim-treesitter/nvim-treesitter-context",
@@ -119,7 +119,7 @@ return {
 		"hrsh7th/nvim-cmp",
 		event = "InsertEnter",
 		config = function()
-			require("plugins.cmp")
+			require("plugins.config.cmp")
 		end,
 	},
 	"onsails/lspkind.nvim",
@@ -135,7 +135,7 @@ return {
 			"rafamadriz/friendly-snippets", --代码段合集
 		},
 		config = function()
-			require("plugins.luasnip")
+			require("plugins.config.luasnip")
 		end,
 	},
 
@@ -143,7 +143,7 @@ return {
 	{
 		"nvim-lualine/lualine.nvim",
 		config = function()
-			require("plugins.lualine")
+			require("plugins.config.lualine")
 		end,
 	},
 
@@ -158,7 +158,7 @@ return {
 			"NvimTreeFindFileToggle",
 		},
 		config = function()
-			require("plugins.nvim-tree")
+			require("plugins.config.nvim-tree")
 		end,
 	},
 
@@ -177,6 +177,9 @@ return {
 		requires = {
 			"nvim-lua/plenary.nvim",
 		},
+		config = function()
+			require("plugins.config.lazygit").setup()
+		end,
 	},
 	{
 		"lewis6991/gitsigns.nvim",
@@ -192,7 +195,7 @@ return {
 
 		event = "BufRead",
 		config = function()
-			require("plugins.indent_blankline")
+			require("plugins.config.indent_blankline")
 		end,
 	},
 
@@ -245,14 +248,14 @@ return {
 	{
 		"folke/which-key.nvim",
 		config = function()
-			require("plugins.which-key")
+			require("plugins.config.which-key")
 		end,
 	},
 
 	{
 		"akinsho/toggleterm.nvim",
 		config = function()
-			require("plugins.toggleterm")
+			require("plugins.config.toggleterm")
 		end,
 	},
 
@@ -294,7 +297,7 @@ return {
 		"kevinhwang91/nvim-ufo",
 		dependencies = "kevinhwang91/promise-async",
 		config = function()
-			require("plugins.ufo")
+			require("plugins.config.ufo")
 		end,
 	},
 
@@ -318,7 +321,7 @@ return {
 		"rmagatti/goto-preview",
 		event = "LspAttach",
 		config = function()
-			require("plugins.goto-preview")
+			require("plugins.config.goto-preview")
 		end,
 	},
 
@@ -327,7 +330,7 @@ return {
 		"kevinhwang91/nvim-bqf",
 		ft = "qf",
 		config = function()
-			require("plugins.bqf")
+			require("plugins.config.bqf")
 		end,
 	},
 
@@ -340,7 +343,7 @@ return {
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 		config = function()
 			-- calling `setup` is optional for customization
-			require("plugins.fzf")
+			require("plugins.config.fzf")
 		end,
 	},
 	-- lazy.nvim
@@ -405,7 +408,7 @@ return {
 		},
 		cmd = { "NeotestRun", "NeotestSummary" },
 		config = function()
-			require("plugins.neotest")
+			require("plugins.config.neotest")
 		end,
 	},
 	"nvim-neotest/neotest-python",
@@ -413,7 +416,7 @@ return {
 		"andythigpen/nvim-coverage",
 		requires = "nvim-lua/plenary.nvim",
 		config = function()
-			require("plugins.coverage")
+			require("plugins.config.coverage")
 		end,
 		-- Optional: needed for PHP when using the cobertura parser
 		rocks = { "lua-xmlreader" },
@@ -463,7 +466,7 @@ return {
 		"nvimdev/lspsaga.nvim",
 		event = "LspAttach",
 		config = function()
-			require("plugins.lspsaga")
+			require("plugins.config.lspsaga")
 		end,
 		dependencies = {
 			"nvim-treesitter/nvim-treesitter", -- optional
@@ -490,7 +493,7 @@ return {
 		event = { "BufWritePre" },
 		opts = {},
 		config = function()
-			require("plugins.conform")
+			require("plugins.config.conform")
 		end,
 	},
 	-- {
@@ -563,7 +566,7 @@ return {
 	{
 		"nvimtools/none-ls.nvim",
 		config = function()
-			require("plugins.none_ls")
+			require("plugins.config.none_ls")
 		end,
 	},
 	-- ui
@@ -596,7 +599,7 @@ return {
 		"stevearc/overseer.nvim",
 		opts = {},
 		config = function()
-			require("plugins.overseer")
+			require("plugins.config.overseer")
 		end,
 	},
 	"uga-rosa/translate.nvim",

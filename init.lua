@@ -4,7 +4,7 @@ require("core.options").setup()
 require("core.autocmds").setup()
 
 -- 插件配置
-require("plugins.lazy")
+require("plugins")
 
 -- 后期配置
 if vim.g.vscode then
