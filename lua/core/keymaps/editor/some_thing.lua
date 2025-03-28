@@ -4,6 +4,12 @@ if not status_ok then
 	return
 end
 
+-- 添加reload_config模块
+local reload_status_ok, reload = pcall(require, "core.reload")
+if not reload_status_ok then
+	vim.notify("无法加载 reload 模块", vim.log.levels.ERROR)
+	return
+end
 
 local function get_project_root()
 	-- 获取当前项目的根路径，假设使用 Git
@@ -123,8 +129,8 @@ function M.setup()
 	{ "<leader>vh", toggle_hlsearch, desc = "Toggle Hlsearch", nowait = false, remap = false },
 	{
 		"<leader>vi",
-		"<cmd>luafile ~/.config/nvim/init.lua<cr><cmd>Lazy restore<cr>",
-		desc = "reload config",
+		reload.reload_config,
+		desc = "Reload Neovim Config",
 		nowait = false,
 		remap = false,
 	},
@@ -158,6 +164,7 @@ function M.setup()
 		{ "<leader>vy", "viw:Translate zh-CN<cr>", desc = "Translate", nowait = false, remap = false },
 		{ "<leader>vz", ":ZenMode<cr>", desc = "Toggle Zen Mode", nowait = false, remap = false },
 	}
+
 	which_key.add(keymap)
 end
 

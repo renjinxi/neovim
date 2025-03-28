@@ -8,14 +8,15 @@ require("plugins")
 
 -- 后期配置
 if vim.g.vscode then
-    -- VSCode 特定配置
-    require("core.keymaps").setup()
+	-- VSCode 特定配置
+	require("core.keymaps").setup()
 else
-    -- 普通 Neovim 配置
-    require("core.keymaps").setup()
-    require("config.theme")
-    require("plugins.lsp.init")
+	-- 普通 Neovim 配置
+	require("core.keymaps").setup()
+	require("core.theme")
+	require("plugins.lsp.init")
 end
 
 -- 最终配置
 require("after")
+

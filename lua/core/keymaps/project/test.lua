@@ -1,7 +1,7 @@
 local M = {}
 
 function M.setup()
-	local common = require("config.common")
+	local common = require("lua.core.common")
 	local function test_all()
 		local project_root = common.find_project_root_by_marker("pyproject.toml") or vim.loop.getcwd()
 		require("neotest").run.run(project_root)
