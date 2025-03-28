@@ -597,9 +597,11 @@ return {
 	-- task
 	{
 		"stevearc/overseer.nvim",
-		opts = {},
 		config = function()
-			require("plugins.config.overseer")
+			require("overseer").setup({
+				templates = { "builtin", "user.cpp_build" },
+				template_dir = vim.fn.stdpath("config") .. "/lua/plugins/overseer/template",
+			})
 		end,
 	},
 	"uga-rosa/translate.nvim",

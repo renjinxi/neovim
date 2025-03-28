@@ -1,0 +1,19 @@
+{
+    "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
+    "diagnostics": {
+        "globals": ["vim"],
+        "disable": ["undefined-global"]
+    },
+    "workspace": {
+        "library": [
+            "$VIMRUNTIME",
+            "${3rd}/luv/library"
+        ],
+        "checkThirdParty": false,
+        "maxPreload": 2000,
+        "preloadFileSize": 1000
+    },
+    "telemetry": {
+        "enable": false
+    }
+} 

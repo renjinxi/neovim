@@ -5,8 +5,17 @@ local signs = {
     { name = "DiagnosticSignInfo", text = "" },
 }
 
+-- 使用新的 API 定义诊断符号
 for _, sign in ipairs(signs) do
-    vim.fn.sign_define(sign.name, { texthl = sign.name, text = sign.text, numhl = "" })
+    vim.diagnostic.config({
+        signs = {
+            [sign.name] = {
+                text = sign.text,
+                texthl = sign.name,
+                numhl = "",
+            }
+        }
+    })
 end
 
 local config = {

@@ -78,6 +78,19 @@ function M.setup()
     if ok and type(custom_autocmds) == "function" then
         custom_autocmds()
     end
+
+    local augroup = vim.api.nvim_create_augroup("CustomSettings", { clear = true })
+
+    -- 确保折叠高亮设置在最后生效
+    vim.api.nvim_create_autocmd({ "ColorScheme", "VimEnter", "BufEnter" }, {
+        group = augroup,
+        callback = function()
+            vim.cmd([[
+                hi Folded guifg=NONE guibg=NONE gui=NONE cterm=NONE
+                hi FoldColumn guifg=NONE guibg=NONE gui=NONE cterm=NONE
+            ]])
+        end,
+    })
 end
 
 return M 
