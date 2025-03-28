@@ -628,4 +628,4 @@ return {
 			{ "<leader>vvu", "<cmd>VenvSelectCurrent<cr>" },
 		},
 	},
-}
+} 

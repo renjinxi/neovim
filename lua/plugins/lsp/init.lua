@@ -4,5 +4,5 @@ if not status_ok then
 	return
 end
 
-require("lsp.config")
-require("lsp.setup")
+require("plugins.lsp.config")
+require("plugins.lsp.setup")

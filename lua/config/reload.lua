@@ -13,7 +13,7 @@ function M.reload_config()
     require('config.auto_commands')
     require('config.keymap')
     require('config.theme')
-    require('lsp')
+    require('lua.plugins.lsp.init')
 
     -- 重新加载插件配置
     require('lazy').sync()

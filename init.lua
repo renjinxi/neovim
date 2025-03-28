@@ -4,7 +4,7 @@ require("core.options").setup()
 require("core.autocmds").setup()
 
 -- 插件配置
-require("config.lazy")
+require("plugins.lazy")
 
 -- 后期配置
 if vim.g.vscode then
@@ -14,7 +14,7 @@ else
     -- 普通 Neovim 配置
     require("core.keymaps").setup()
     require("config.theme")
-    require("lsp")
+    require("plugins.lsp.init")
 end
 
 -- 最终配置
