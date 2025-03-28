@@ -633,4 +633,21 @@ return {
 			{ "<leader>vvu", "<cmd>VenvSelectCurrent<cr>" },
 		},
 	},
+
+	-- icons
+	{
+		"nvim-tree/nvim-web-devicons",
+		config = function()
+			require("nvim-web-devicons").setup({
+				override = {
+					default_icon = {
+						icon = "��",
+						color = "#6d8086",
+						name = "Default",
+					}
+				},
+				strict = true,
+			})
+		end,
+	},
 } 

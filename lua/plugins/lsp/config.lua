@@ -1,20 +1,16 @@
 local signs = {
-    { name = "DiagnosticSignError", text = "" },
-    { name = "DiagnosticSignWarn", text = "" },
-    { name = "DiagnosticSignHint", text = "" },
-    { name = "DiagnosticSignInfo", text = "" },
+    { name = "DiagnosticSignError", text = "✘", texthl = "DiagnosticSignError" },
+    { name = "DiagnosticSignWarn", text = "▲", texthl = "DiagnosticSignWarn" },
+    { name = "DiagnosticSignHint", text = "⚡", texthl = "DiagnosticSignHint" },
+    { name = "DiagnosticSignInfo", text = "»", texthl = "DiagnosticSignInfo" },
 }
 
--- 使用新的 API 定义诊断符号
+-- 定义诊断符号
 for _, sign in ipairs(signs) do
-    vim.diagnostic.config({
-        signs = {
-            [sign.name] = {
-                text = sign.text,
-                texthl = sign.name,
-                numhl = "",
-            }
-        }
+    vim.fn.sign_define(sign.name, {
+        text = sign.text,
+        texthl = sign.name,
+        numhl = "",
     })
 end
 
@@ -42,4 +38,4 @@ local config = {
     },
 }
 
-vim.diagnostic.config(config, vim.api.nvim_create_namespace("neotest"))
+vim.diagnostic.config(config)
