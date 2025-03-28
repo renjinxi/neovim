@@ -1,20 +1,21 @@
 require("before")
+-- 基础配置
+require("core.options").setup()
+require("core.autocmds").setup()
 
+-- 插件配置
+require("config.lazy")
+
+-- 后期配置
 if vim.g.vscode then
-    -- VSCode模式下的配置
-    print(1)
-    require("config.vscode_options")
-    require("config.lazy")
+    -- VSCode 特定配置
+    require("core.keymaps").setup()
 else
-    -- 普通Neovim的配置
-    print(2)
-    require("config.neovide_config")
-    require("config.options")
-    require("config.lazy")
-    require("config.auto_commands")
+    -- 普通 Neovim 配置
+    require("core.keymaps").setup()
     require("config.theme")
-    require("config.keymap")
     require("lsp")
 end
 
+-- 最终配置
 require("after")

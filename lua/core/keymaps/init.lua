@@ -1,26 +1,51 @@
 local M = {}
 
-function M.setup()
-    -- 基础快捷键
-    require("core.keymaps.basic").setup()
-    
-    -- 编辑器功能快捷键
-    require("core.keymaps.editor").setup()
-    
-    -- Git 相关快捷键
-    require("core.keymaps.git").setup()
-    
-    -- LSP 相关快捷键
-    require("core.keymaps.lsp").setup()
-    
-    -- 插件快捷键
-    require("core.keymaps.plugins").setup()
-    
-    -- 用户自定义快捷键
-    local ok, custom_keymaps = pcall(require, "config.keymaps")
-    if ok and type(custom_keymaps) == "function" then
-        custom_keymaps()
-    end
+-- 基础按键设置
+local function setup_basic_keymaps()
+	local opts = { noremap = true, silent = true }
+	local term_opts = { silent = true }
+	local keymap = vim.api.nvim_set_keymap
+
+	-- 设置 leader 键
+	keymap("n", "<space>", "", opts)
+	keymap("t", "<Esc>", "<C-\\><C-n>", term_opts)
+
+	-- URL 打开功能
+	local open_command = vim.fn.has("mac") == 1 and "open" or "xdg-open"
+	
+	local function url_repo()
+		local cursorword = vim.fn.expand("<cfile>")
+		if string.find(cursorword, "^[a-zA-Z0-9-_.]*/[a-zA-Z0-9-_.]*$") then
+			cursorword = "https://github.com/" .. cursorword
+		end
+		return cursorword or ""
+	end
+
+	local function open_url()
+		vim.fn.jobstart({ open_command, url_repo() }, { detach = true })
+	end
+
+	vim.keymap.set("n", "gx", open_url, opts)
 end
 
-return M 
+-- 加载所有子模块
+local modules = {
+	"editor",    -- 编辑器基础功能
+	"tools",     -- 工具类功能
+	"git",       -- Git 相关
+	"debug",     -- 调试相关
+	"lsp",       -- LSP 相关
+	"project"    -- 项目管理
+}
+
+function M.setup()
+	-- 设置基础按键映射
+	setup_basic_keymaps()
+
+	-- 按顺序加载所有模块
+	for _, module in ipairs(modules) do
+		require("core.keymaps." .. module).setup()
+	end
+end
+
+return M
