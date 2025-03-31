@@ -62,7 +62,7 @@ function M.setup()
     -- 高亮和差异显示配置
     local highlight_options = {
         -- 差异显示高亮
-        ["hi DiffText"] = "guifg=#000000 guibg=#ffa07a blend=20",
+        -- ["hi DiffText"] = "guifg=#000000 guibg=#ffa07a blend=20",
         ["hi DiffAdd"] = "guifg=NONE guibg=#c8e6c9",
         ["hi DiffChange"] = "guifg=NONE guibg=#fff9c4",
         ["hi DiffDelete"] = "guifg=#ffcdd2 guibg=#ffcdd2",
