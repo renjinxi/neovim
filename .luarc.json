@@ -6,8 +6,11 @@
     },
     "workspace": {
         "library": [
+            "${3rd}/nvim-lspconfig/lua/lspconfig",
+            "${3rd}/nvim-lspconfig/lua/lspconfig/util",
             "$VIMRUNTIME",
-            "${3rd}/luv/library"
+            "${3rd}/luv/library",
+            "${workspace}/lua"
         ],
         "checkThirdParty": false,
         "maxPreload": 2000,

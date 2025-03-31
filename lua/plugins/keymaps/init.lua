@@ -44,7 +44,7 @@ function M.setup()
 
 	-- 按顺序加载所有模块
 	for _, module in ipairs(modules) do
-		require("core.keymaps." .. module).setup()
+		require("plugins.keymaps." .. module).setup()
 	end
 end
 
