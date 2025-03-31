@@ -3,18 +3,13 @@ local M = {}
 -- 定义需要重载的模块模式
 local MODULE_PATTERNS = {
 	"^core%.",
-	"^config%.",
 	"^plugins%.",
-	"^lsp%.",
 }
 
 -- 定义核心配置模块
 local CORE_MODULES = {
-	"core.options",
-	"core.autocmds",
-	"core.keymaps",
-	"core.theme",
-	"plugins.lsp.init",
+	"core",
+	"plugins",
 }
 
 -- 清除模块缓存
@@ -95,4 +90,3 @@ function M.reload_config()
 end
 
 return M
-

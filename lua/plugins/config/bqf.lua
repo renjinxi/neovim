@@ -10,4 +10,3 @@ vim.cmd([[
         hi default link BqfPreviewBufLabel BqfPreviewRange
         hi default BqfSign ctermfg=14 guifg=Cyan
 ]])
-

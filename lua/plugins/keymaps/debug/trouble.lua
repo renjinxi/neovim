@@ -17,7 +17,13 @@ function M.setup()
 			nowait = false,
 			remap = false,
 		},
-		{ "<leader>xm", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)", nowait = false, remap = false },
+		{
+			"<leader>xm",
+			"<cmd>Trouble qflist toggle<cr>",
+			desc = "Quickfix List (Trouble)",
+			nowait = false,
+			remap = false,
+		},
 		{
 			"<leader>xs",
 			"<cmd>Trouble symbols toggle focus=false<cr>",

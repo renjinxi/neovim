@@ -17,10 +17,10 @@ function M.setup()
 		{ "<leader>wt", "<C-w>]<C-w>T", desc = "Split And Jump", nowait = false, remap = false },
 		{ "<leader>wu", "<C-w>]", desc = "Split And Jump", nowait = false, remap = false },
 	}
-	
+
 	-- 注册 which-key 映射
 	require("which-key").add(keymap)
-	
+
 	-- 设置窗口快速跳转和关闭的快捷键
 	for i = 1, 9 do
 		local key = string.format("<leader>w%d", i)

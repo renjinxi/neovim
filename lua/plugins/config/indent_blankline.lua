@@ -1,3 +1,3 @@
 require("ibl").setup({
-    indent = { char = "¦" },
+	indent = { char = "¦" },
 })

@@ -644,10 +644,10 @@ return {
 						icon = "��",
 						color = "#6d8086",
 						name = "Default",
-					}
+					},
 				},
 				strict = true,
 			})
 		end,
 	},
-} 
+}

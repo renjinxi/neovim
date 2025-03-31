@@ -12,7 +12,7 @@ local function setup_basic_keymaps()
 
 	-- URL 打开功能
 	local open_command = vim.fn.has("mac") == 1 and "open" or "xdg-open"
-	
+
 	local function url_repo()
 		local cursorword = vim.fn.expand("<cfile>")
 		if string.find(cursorword, "^[a-zA-Z0-9-_.]*/[a-zA-Z0-9-_.]*$") then
@@ -30,12 +30,12 @@ end
 
 -- 加载所有子模块
 local modules = {
-	"editor",    -- 编辑器基础功能
-	"tools",     -- 工具类功能
-	"git",       -- Git 相关
-	"debug",     -- 调试相关
-	"lsp",       -- LSP 相关
-	"project"    -- 项目管理
+	"editor", -- 编辑器基础功能
+	"tools", -- 工具类功能
+	"git", -- Git 相关
+	"debug", -- 调试相关
+	"lsp", -- LSP 相关
+	"project", -- 项目管理
 }
 
 function M.setup()

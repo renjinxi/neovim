@@ -17,7 +17,6 @@ mason_nvim_dap.setup({
 
 local dap_text_exists, dap_virtual_text = pcall(require, "nvim-dap-virtual-text")
 if not dap_text_exists then
-    return
+	return
 end
 dap_virtual_text.setup()
-
