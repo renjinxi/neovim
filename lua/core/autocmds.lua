@@ -4,8 +4,32 @@ local function create_group(name)
 	return vim.api.nvim_create_augroup(name, { clear = true })
 end
 
+-- 创建一个异步函数来执行命令
+local function async_run(cmd)
+	local job = vim.fn.jobstart(cmd, {
+		on_stdout = function(_, data)
+			if data then
+				vim.notify(table.concat(data, "\n"), vim.log.levels.INFO, {
+					title = "Auto Update",
+				})
+			end
+		end,
+		on_stderr = function(_, data)
+			if data then
+				vim.notify(table.concat(data, "\n"), vim.log.levels.ERROR, {
+					title = "Auto Update Error",
+				})
+			end
+		end,
+	})
+	return job
+end
+
 function M.setup()
 	-- 搜索高亮
+	if vim.g.vscode then
+		return
+	end
 	vim.api.nvim_create_autocmd("BufEnter", {
 		group = create_group("NoHlSearch"),
 		callback = function()
@@ -89,6 +113,23 @@ function M.setup()
                 hi Folded guifg=NONE guibg=NONE gui=NONE cterm=NONE
                 hi FoldColumn guifg=NONE guibg=NONE gui=NONE cterm=NONE
             ]])
+		end,
+	})
+
+	-- 创建启动时自动更新的命令组
+	local auto_update_group = vim.api.nvim_create_augroup("AutoUpdate", { clear = true })
+
+	-- 在 VimEnter 事件时执行更新
+	vim.api.nvim_create_autocmd("VimEnter", {
+		group = auto_update_group,
+		callback = function()
+			-- 使用 vim.schedule 确保在 Neovim 完全启动后执行
+			vim.schedule(function()
+				-- 在后台执行更新命令
+				async_run({ "nvim", "--headless", "-c", "Lazy update", "-c", "qa" })
+				async_run({ "nvim", "--headless", "-c", "TSUpdate", "-c", "qa" })
+				async_run({ "nvim", "--headless", "-c", "Mason", "-c", "MasonUpdate", "-c", "qa" })
+			end)
 		end,
 	})
 end
