@@ -104,6 +104,32 @@ function M.setup()
 	-- 设置 Leader 键
 	g.mapleader = " "
 	g.maplocalleader = " "
+	
+	-- 定义全局终端按键映射函数
+	_G.set_terminal_keymaps = function()
+		vim.keymap.set("t", "<C-h>", "<C-\\><C-n><C-w>h", { buffer = true })
+		vim.keymap.set("t", "<C-j>", "<C-\\><C-n><C-w>j", { buffer = true })
+		vim.keymap.set("t", "<C-k>", "<C-\\><C-n><C-w>k", { buffer = true })
+		vim.keymap.set("t", "<C-l>", "<C-\\><C-n><C-w>l", { buffer = true })
+		vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], { buffer = true, noremap = true })
+	end
+
+	-- 创建自动命令组用于终端设置
+	local term_group = vim.api.nvim_create_augroup("TerminalSettings", { clear = true })
+	
+	-- 创建自动命令，对所有终端应用按键映射和设置行号
+	vim.api.nvim_create_autocmd("TermOpen", {
+		group = term_group,
+		pattern = "term://*",
+		callback = function()
+			-- 应用按键映射
+			_G.set_terminal_keymaps()
+			
+			-- 设置终端显示行号和相对行号
+			vim.opt_local.number = true
+			vim.opt_local.relativenumber = true
+		end,
+	})
 end
 
 return M
