@@ -18,7 +18,7 @@ mason_lsp.setup({
 		"golangci_lint_ls",
 		"nginx_language_server",
 	},
-	automatic_installation = true,
+	automatic_enable = true,
 })
 
 local function get_capabilities()
@@ -50,59 +50,56 @@ local handlers = {
 }
 local lspconfig = require("lspconfig")
 
-require("mason-lspconfig").setup_handlers({
-	function(server_name)
-		require("lspconfig")[server_name].setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
-			handlers = handlers,
-			-- on_new_config = function(new_config, new_root_dir)
-			-- 	local py = require("utils.python.lua")
-			-- 	py.env(new_root_dir)
-			-- 	-- new_config.settings.pylsp.plugins.jedi.environment = py.get_python_dir(new_root_dir)
-			-- end,
-		})
-	end,
+local servers = {
+	"lua_ls",
+	"clangd",
+	"pyright",
+	"ruff",
+	"html",
+	"cssls",
+	"ts_ls",
+	"gopls",
+	"golangci_lint_ls",
+	"nginx_language_server",
+}
 
-	["lua_ls"] = function()
-		lspconfig.lua_ls.setup({
-			capabilities = capabilities,
-			handlers = handlers,
-			on_attach = on_attach,
-			settings = require("plugins.lsp.servers.lua_ls").settings,
-		})
-	end,
-	["pyright"] = function()
-		lspconfig.pyright.setup({
-			capabilities = capabilities,
-			handlers = handlers,
-			on_attach = on_attach,
-			settings = {
-				python = {
-					analysis = {
-						diagnosticSeverityOverrides = {
-							reportUnusedVariable = "none",
-							reportUnusedImport = "none",
-						},
-					},
+for _, server in ipairs(servers) do
+	lspconfig[server].setup({
+		on_attach = on_attach,
+		capabilities = capabilities,
+		handlers = handlers,
+	})
+end
+
+-- 针对特殊 server 的自定义配置
+lspconfig.lua_ls.setup({
+	capabilities = capabilities,
+	handlers = handlers,
+	on_attach = on_attach,
+	settings = require("plugins.lsp.servers.lua_ls").settings,
+})
+lspconfig.pyright.setup({
+	capabilities = capabilities,
+	handlers = handlers,
+	on_attach = on_attach,
+	settings = {
+		python = {
+			analysis = {
+				diagnosticSeverityOverrides = {
+					reportUnusedVariable = "none",
+					reportUnusedImport = "none",
 				},
 			},
-		})
-	end,
-	["ruff"] = function()
-		lspconfig.ruff.setup({
-			capabilities = capabilities,
-			handlers = handlers,
-			on_attach = on_attach,
-			-- settings = require("lsp.servers.lua_ls").settings,
-		})
-	end,
-	["ts_ls"] = function()
-		lspconfig.ts_ls.setup({
-			capabilities = capabilities,
-			handlers = handlers,
-			on_attach = on_attach,
-			-- settings = require("lsp.servers.lua_ls").settings,
-		})
-	end,
+		},
+	},
+})
+lspconfig.ruff.setup({
+	capabilities = capabilities,
+	handlers = handlers,
+	on_attach = on_attach,
+})
+lspconfig.ts_ls.setup({
+	capabilities = capabilities,
+	handlers = handlers,
+	on_attach = on_attach,
 })

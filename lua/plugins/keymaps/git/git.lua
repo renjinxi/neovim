@@ -26,6 +26,17 @@ function M.setup()
 			nowait = false,
 			remap = false,
 		},
+		{ "<leader>sn", function() require('gitsigns').next_hunk() end, desc = "下一个变更块", nowait = false, remap = false },
+		{ "<leader>sp", function() require('gitsigns').prev_hunk() end, desc = "上一个变更块", nowait = false, remap = false },
+		{ "<leader>ss", function() require('gitsigns').stage_hunk() end, desc = "暂存变更块", nowait = false, remap = false },
+		{ "<leader>sr", function() require('gitsigns').reset_hunk() end, desc = "撤销变更块", nowait = false, remap = false },
+		{ "<leader>su", function() require('gitsigns').undo_stage_hunk() end, desc = "撤销暂存变更块", nowait = false, remap = false },
+		{ "<leader>sh", function() require('gitsigns').preview_hunk() end, desc = "预览变更块", nowait = false, remap = false },
+		{ "<leader>sb", function() require('gitsigns').blame_line{full=true} end, desc = "当前行 blame", nowait = false, remap = false },
+		{ "<leader>sd", function() require('gitsigns').diffthis() end, desc = "当前文件 diff", nowait = false, remap = false },
+		{ "<leader>sD", function() require('gitsigns').diffthis('~') end, desc = "与上次提交 diff", nowait = false, remap = false },
+		{ "<leader>st", function() require('gitsigns').toggle_current_line_blame() end, desc = "切换行 blame", nowait = false, remap = false },
+		{ "<leader>sT", function() require('gitsigns').toggle_deleted() end, desc = "切换显示已删除行", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
 end
