@@ -12,7 +12,7 @@ function M.setup()
 	-- 禁用所有可能影响浮动窗口的特效
 	vim.g.neovide_floating_blur_amount_x = 0
 	vim.g.neovide_floating_blur_amount_y = 0
-	vim.g.neovide_transparency = 1.0
+	vim.g.neovide_opacity = 1.0
 	vim.g.neovide_floating_z_height = 0
 	vim.g.neovide_window_floating_opacity = 1.0
 	vim.g.neovide_window_floating_blur = false

@@ -7,7 +7,7 @@ function M.setup()
 		cmdheight = 1, -- 命令行高度
 		hlsearch = false, -- 禁用搜索高亮保持
 		cursorline = true, -- 高亮当前行
-		mouse = "a", -- 启用所有模式下的鼠标支持
+		mouse = "", -- 启用所有模式下的鼠标支持
 		showtabline = 2, -- 总是显示标签栏
 		signcolumn = "auto", -- 自动显示标记列
 		laststatus = 3, -- 全局状态栏
@@ -104,7 +104,7 @@ function M.setup()
 	-- 设置 Leader 键
 	g.mapleader = " "
 	g.maplocalleader = " "
-	
+
 	-- 定义全局终端按键映射函数
 	_G.set_terminal_keymaps = function()
 		vim.keymap.set("t", "<C-h>", "<C-\\><C-n><C-w>h", { buffer = true })
@@ -116,7 +116,7 @@ function M.setup()
 
 	-- 创建自动命令组用于终端设置
 	local term_group = vim.api.nvim_create_augroup("TerminalSettings", { clear = true })
-	
+
 	-- 创建自动命令，对所有终端应用按键映射和设置行号
 	vim.api.nvim_create_autocmd("TermOpen", {
 		group = term_group,
@@ -124,7 +124,7 @@ function M.setup()
 		callback = function()
 			-- 应用按键映射
 			_G.set_terminal_keymaps()
-			
+
 			-- 设置终端显示行号和相对行号
 			vim.opt_local.number = true
 			vim.opt_local.relativenumber = true
