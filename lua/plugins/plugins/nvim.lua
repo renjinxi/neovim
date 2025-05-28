@@ -655,31 +655,54 @@ return {
 		"amitds1997/remote-nvim.nvim",
 		version = "*",
 		dependencies = {
-		  "nvim-lua/plenary.nvim",
-		  "MunifTanjim/nui.nvim",
-		  "nvim-telescope/telescope.nvim",
+			"nvim-lua/plenary.nvim",
+			"MunifTanjim/nui.nvim",
+			"nvim-telescope/telescope.nvim",
 		},
 		config = function()
-		  require("remote-nvim").setup({
-			remote = {
-			  copy_dirs = {
-				config = {
-				  base = vim.fn.stdpath("config"),
-				  dirs = "*",
-				  compression = { enabled = false },
+			require("remote-nvim").setup({
+				remote = {
+					copy_dirs = {
+						config = {
+							base = vim.fn.stdpath("config"),
+							dirs = "*",
+							compression = { enabled = false },
+						},
+						data = {
+							base = vim.fn.stdpath("data"),
+							dirs = { "lazy" },
+							compression = { enabled = true },
+						},
+					},
 				},
-				data = {
-				  base = vim.fn.stdpath("data"),
-				  dirs = { "lazy" },
-				  compression = { enabled = true },
+				offline_mode = {
+					enabled = false,
+					no_github = false,
 				},
-			  },
-			},
-			offline_mode = {
-			  enabled = false,
-			  no_github = false,
-			},
-		  })
+			})
 		end,
+	},
+	-- csv viewer
+	{
+		"hat0uma/csvview.nvim",
+		---@module "csvview"
+		---@type CsvView.Options
+		opts = {
+			parser = { comments = { "#", "//" } },
+			keymaps = {
+				-- Text objects for selecting fields
+				textobject_field_inner = { "if", mode = { "o", "x" } },
+				textobject_field_outer = { "af", mode = { "o", "x" } },
+				-- Excel-like navigation:
+				-- Use <Tab> and <S-Tab> to move horizontally between fields.
+				-- Use <Enter> and <S-Enter> to move vertically between rows and place the cursor at the end of the field.
+				-- Note: In terminals, you may need to enable CSI-u mode to use <S-Tab> and <S-Enter>.
+				jump_next_field_end = { "<Tab>", mode = { "n", "v" } },
+				jump_prev_field_end = { "<S-Tab>", mode = { "n", "v" } },
+				jump_next_row = { "<Enter>", mode = { "n", "v" } },
+				jump_prev_row = { "<S-Enter>", mode = { "n", "v" } },
+			},
+		},
+		cmd = { "CsvViewEnable", "CsvViewDisable", "CsvViewToggle" },
 	},
 }

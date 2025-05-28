@@ -16,6 +16,12 @@ function M.setup()
 		end,
 	})
 
+	-- CSV文件自动启用CsvView - 使用专门的CSV配置模块
+	local csv_config_ok, csv_config = pcall(require, "core.csv-config")
+	if csv_config_ok then
+		csv_config.setup()
+	end
+
 	-- 相对行号
 	local relative_group = create_group("RelativeNumber")
 	vim.api.nvim_create_autocmd({ "WinEnter", "BufRead", "BufEnter", "FocusGained" }, {
