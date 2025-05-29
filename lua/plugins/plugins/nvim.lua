@@ -99,7 +99,6 @@ return {
 	},
 	"nvim-telescope/telescope-live-grep-args.nvim",
 	"nvim-telescope/telescope-ui-select.nvim",
-	--"nvim-lua/plenary.nvim",
 
 	-- tree syntc
 	{
@@ -430,12 +429,7 @@ return {
 		--require("coverage").setup()
 		--end,
 	},
-	{
-		"norcalli/nvim-colorizer.lua",
-		config = function()
-			require("colorizer").setup()
-		end,
-	},
+	-- 移除了 nvim-colorizer.lua (已停止维护且使用废弃API)
 	--project manager
 	{
 		"ahmedkhalf/project.nvim",
@@ -604,7 +598,7 @@ return {
 			})
 		end,
 	},
-	"uga-rosa/translate.nvim",
+	-- "uga-rosa/translate.nvim",
 
 	{
 		"rest-nvim/rest.nvim",
@@ -704,5 +698,15 @@ return {
 			},
 		},
 		cmd = { "CsvViewEnable", "CsvViewDisable", "CsvViewToggle" },
+	},
+	{
+		"brenoprata10/nvim-highlight-colors",
+		config = function()
+			require("nvim-highlight-colors").setup({
+				render = "background", -- or 'foreground' or 'virtual'
+				enable_named_colors = true,
+				enable_tailwind = true,
+			})
+		end,
 	},
 }
