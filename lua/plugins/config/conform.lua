@@ -9,6 +9,7 @@ require("conform").setup({
 		typescript = { "prettier" },
 		javascriptreact = { "prettier" },
 		typescriptreact = { "prettier" },
+		go = { "gofmt", "goimports" },
 	},
 	format_on_save = function(bufnr)
 		-- Disable with a global or buffer-local variable

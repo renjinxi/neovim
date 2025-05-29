@@ -410,7 +410,7 @@ return {
 			"nvim-neotest/nvim-nio",
 			"nvim-lua/plenary.nvim",
 			"antoinemadec/FixCursorHold.nvim",
-			"nvim-treesitter/nvim-treesitter",
+			-- "nvim-treesitter/nvim-treesitter",
 		},
 		cmd = { "NeotestRun", "NeotestSummary" },
 		config = function()
@@ -475,7 +475,7 @@ return {
 			require("plugins.config.lspsaga")
 		end,
 		dependencies = {
-			"nvim-treesitter/nvim-treesitter", -- optional
+			-- "nvim-treesitter/nvim-treesitter", -- optional
 			"nvim-tree/nvim-web-devicons", -- optional
 		},
 	},
@@ -567,12 +567,6 @@ return {
 		},
 		config = function()
 			require("neoclip").setup()
-		end,
-	},
-	{
-		"nvimtools/none-ls.nvim",
-		config = function()
-			require("plugins.config.none_ls")
 		end,
 	},
 	-- ui
