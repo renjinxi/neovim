@@ -100,6 +100,16 @@ function M.setup()
             ]])
 		end,
 	})
+
+	-- 启动时自动监听 /tmp/nvimtex 作为 Neovim server，方便 Skim 反向同步
+	vim.api.nvim_create_autocmd("VimEnter", {
+		group = augroup,
+		callback = function()
+			pcall(function()
+				vim.fn.serverstart("/tmp/nvimtex")
+			end)
+		end,
+	})
 end
 
 return M

@@ -90,6 +90,17 @@ cmp.setup.filetype("gitcommit", {
 	}),
 })
 
+-- 为 tex 文件类型添加 latex_symbols 补全源
+cmp.setup.filetype("tex", {
+  sources = cmp.config.sources({
+    { name = "latex_symbols" },
+    { name = "nvim_lsp" },
+    { name = "luasnip" },
+    { name = "buffer" },
+    { name = "path" },
+  })
+})
+
 -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
 cmp.setup.cmdline({ "/", "?" }, {
 	mapping = cmp.mapping.preset.cmdline(),
