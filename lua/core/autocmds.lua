@@ -101,14 +101,26 @@ function M.setup()
 		end,
 	})
 
-	-- 启动时自动监听 /tmp/nvimtex 作为 Neovim server，方便 Skim 反向同步
+	-- 动态将当前 servername 写入文件，供 Skim 反向搜索使用
+	local function set_server_name()
+		local nvim_server_file = "/tmp/curnvimserver.txt"
+		if vim.v.servername and vim.v.servername ~= "" then
+			local cmd = string.format("echo '%s' > %s", vim.v.servername, nvim_server_file)
+			vim.fn.system(cmd)
+		end
+	end
+
+	-- 多个时机更新 servername 文件，确保同步
+	vim.api.nvim_create_autocmd({"FileType", "BufEnter", "BufRead"}, {
+		group = augroup,
+		pattern = "tex",
+		callback = set_server_name,
+	})
+
+	-- 启动时也更新一次
 	vim.api.nvim_create_autocmd("VimEnter", {
 		group = augroup,
-		callback = function()
-			pcall(function()
-				vim.fn.serverstart("/tmp/nvimtex")
-			end)
-		end,
+		callback = set_server_name,
 	})
 end
 
