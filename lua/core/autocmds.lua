@@ -79,7 +79,12 @@ function M.setup()
 	vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI", "FocusGained" }, {
 		group = create_group("AutoReload"),
 		pattern = "*",
-		command = "if mode() != 'c' | checktime | endif",
+		-- command = "if mode() != 'c' | checktime | endif",
+		callback = function()
+			if vim.bo.buftype == "" and vim.api.nvim_get_mode().mode ~= "c" then
+				vim.cmd("checktime")
+			end
+		end,
 	})
 
 	-- 用户自定义自动命令
@@ -111,7 +116,7 @@ function M.setup()
 	end
 
 	-- 多个时机更新 servername 文件，确保同步
-	vim.api.nvim_create_autocmd({"FileType", "BufEnter", "BufRead"}, {
+	vim.api.nvim_create_autocmd({ "FileType", "BufEnter", "BufRead" }, {
 		group = augroup,
 		pattern = "tex",
 		callback = set_server_name,
