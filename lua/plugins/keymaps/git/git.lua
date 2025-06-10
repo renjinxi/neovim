@@ -37,6 +37,31 @@ function M.setup()
 		{ "<leader>sD", function() require('gitsigns').diffthis('~') end, desc = "与上次提交 diff", nowait = false, remap = false },
 		{ "<leader>st", function() require('gitsigns').toggle_current_line_blame() end, desc = "切换行 blame", nowait = false, remap = false },
 		{ "<leader>sT", function() require('gitsigns').toggle_deleted() end, desc = "切换显示已删除行", nowait = false, remap = false },
+		{ "<leader>se", function()
+			local file = vim.api.nvim_buf_get_name(0)
+			if file == "" then
+				vim.notify("当前 buffer 没有关联文件", vim.log.levels.WARN)
+				return
+			end
+			-- 获取 git 根目录
+			local git_root = vim.fn.systemlist("git -C " .. vim.fn.fnameescape(vim.fn.expand("%:p:h")) .. " rev-parse --show-toplevel")[1]
+			if not git_root or git_root == "" then
+				vim.notify("未找到 git 仓库根目录", vim.log.levels.ERROR)
+				return
+			end
+			-- 计算相对路径
+			local relpath = file:sub(#git_root + 2)
+			if relpath == "" then
+				vim.notify("文件路径解析失败", vim.log.levels.ERROR)
+				return
+			end
+			vim.cmd("tabnew")
+			vim.cmd("edit " .. file)
+			vim.cmd("vsplit")
+			vim.cmd("wincmd j")
+			vim.cmd("Gedit HEAD:" .. relpath)
+			vim.cmd("wincmd k")
+		end, desc = "新 tab split 并对比 HEAD", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
 end
