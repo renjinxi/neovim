@@ -13,7 +13,7 @@ vim.diagnostic.config({
 			[vim.diagnostic.severity.INFO] = "●",
 		},
 	},
-	update_in_insert = true,
+	update_in_insert = false,
 	underline = true,
 	severity_sort = true,
 	float = {
@@ -279,10 +279,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
 			})
 		end
 		
-		-- 打印服务器连接信息
-		if client then
-			print(string.format("LSP [%s] attached to buffer %d", client.name, args.buf))
-		end
+		-- 服务器连接信息 (静默模式，不显示提示)
+		-- if client then
+		-- 	print(string.format("LSP [%s] attached to buffer %d", client.name, args.buf))
+		-- end
 	end,
 })
 
