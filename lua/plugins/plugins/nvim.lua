@@ -453,16 +453,21 @@ return {
 		end,
 	},
 
-	-- theme for neovim
+	-- 主题配置 (简化版)
 	{
 		"rose-pine/neovim",
 		name = "rose-pine",
 		priority = 1000,
-		-- 'NLKNguyen/papercolor-theme',
-		--config = function()
-		--vim.o.background = "light" -- or "dark" for light mode
-		--vim.cmd("colorscheme PaperColor")
-		--end
+		config = function()
+			require('rose-pine').setup({
+				variant = 'auto', -- auto会根据background自动选择dawn或main
+				disable_background = false,
+				disable_float_background = false,
+				disable_italics = false,
+			})
+			-- 直接设置主题
+			vim.cmd("colorscheme rose-pine")
+		end
 	},
 	"NLKNguyen/papercolor-theme",
 	"morhetz/gruvbox",
