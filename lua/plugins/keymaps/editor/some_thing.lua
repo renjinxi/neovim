@@ -60,7 +60,7 @@ local function create_new_file()
 		file:close() -- 关闭文件
 
 		-- 打开新创建的文件
-		vim.api.nvim_command("e " .. new_path)
+		vim.cmd("e " .. new_path)
 		print("File created: " .. new_name)
 	end)
 end
@@ -95,7 +95,7 @@ local function rename_current_file()
 		end
 
 		-- 更新当前缓冲区的文件路径
-		vim.api.nvim_command("e " .. new_path)
+		vim.cmd("e " .. new_path)
 		print("File renamed to " .. new_path)
 	end)
 end

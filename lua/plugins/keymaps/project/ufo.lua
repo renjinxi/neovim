@@ -6,7 +6,7 @@ local function fold_except_current()
 	--require('ufo').openFold(row)
 	local is_foled = vim.fn.foldclosed(row) ~= -1
 	if is_foled then
-		vim.api.nvim_command(row .. "foldopen")
+		vim.cmd(row .. "foldopen")
 	end
 end
 

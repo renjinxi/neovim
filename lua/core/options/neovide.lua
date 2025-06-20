@@ -35,15 +35,13 @@ function M.setup()
 	keymap("c", "<D-v>", "<C-R>+") -- Paste command mode
 	keymap("i", "<D-v>", '<ESC>l"+Pli') -- Paste insert mode
 
-	-- 剪贴板集成
-	local function set_keymap(mode, lhs, rhs, opts)
-		vim.api.nvim_set_keymap(mode, lhs, rhs, opts or { noremap = true, silent = true })
-	end
-
-	set_keymap("", "<D-v>", "+p<CR>")
-	set_keymap("!", "<D-v>", "<C-R>+")
-	set_keymap("t", "<D-v>", "<C-o>p")
-	set_keymap("v", "<D-v>", "<C-R>+")
+	-- 剪贴板集成 (使用现代化API)
+	local opts = { noremap = true, silent = true }
+	
+	keymap("", "<D-v>", "+p<CR>", opts)
+	keymap("!", "<D-v>", "<C-R>+", opts)
+	keymap("t", "<D-v>", "<C-o>p", opts)
+	keymap("v", "<D-v>", "<C-R>+", opts)
 end
 
 return M

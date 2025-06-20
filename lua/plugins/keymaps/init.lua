@@ -4,11 +4,10 @@ local M = {}
 local function setup_basic_keymaps()
 	local opts = { noremap = true, silent = true }
 	local term_opts = { silent = true }
-	local keymap = vim.api.nvim_set_keymap
 
-	-- 设置 leader 键
-	keymap("n", "<space>", "", opts)
-	keymap("t", "<Esc>", "<C-\\><C-n>", term_opts)
+	-- 设置 leader 键 (使用现代化API)
+	vim.keymap.set("n", "<space>", "", opts)
+	vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", term_opts)
 
 	-- URL 打开功能
 	local open_command = vim.fn.has("mac") == 1 and "open" or "xdg-open"
