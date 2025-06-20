@@ -299,8 +299,23 @@ return {
 		end,
 	},
 
-	-- git
-	"tpope/vim-fugitive",
+	-- Git 工具 (保留两个选择)
+	"tpope/vim-fugitive", -- 传统Git命令行界面
+	{
+		"NeogitOrg/neogit", -- 现代化Git界面
+		dependencies = {
+			"nvim-lua/plenary.nvim",         -- required
+			"sindrets/diffview.nvim",        -- optional - Diff integration
+			"nvim-telescope/telescope.nvim", -- optional
+		},
+		cmd = "Neogit",
+		keys = {
+			{ "<leader>gg", "<cmd>Neogit<cr>", desc = "Neogit" },
+		},
+		config = function()
+			require("plugins.config.neogit")
+		end,
+	},
 	{
 		"wintermute-cell/gitignore.nvim",
 		cmd = { "Gitignore" },
