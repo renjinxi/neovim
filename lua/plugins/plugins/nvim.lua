@@ -1,17 +1,64 @@
 return {
 	-- manage itself
 	"folke/lazy.nvim",
+	-- ================================
+	-- LSP 和代码服务器管理 (2025年现代化配置)
+	-- ================================
 	{
 		"williamboman/mason.nvim",
+		cmd = "Mason",
+		build = ":MasonUpdate",
 		config = function()
-			require("mason").setup()
+			require("mason").setup({
+				ui = {
+					border = "rounded",
+					icons = {
+						package_installed = "✓",
+						package_pending = "➜",
+						package_uninstalled = "✗"
+					}
+				},
+				max_concurrent_installers = 4,
+			})
 		end,
 	},
 	{
 		"williamboman/mason-lspconfig.nvim",
+		dependencies = { "williamboman/mason.nvim" },
+		opts = {
+			ensure_installed = {
+				"lua_ls",
+				"clangd",
+				"pyright",
+				"ruff",
+				"html",
+				"cssls",
+				"ts_ls",
+				"gopls",
+				"nginx_language_server",
+				"jsonls",
+			},
+		},
 	},
 	"jay-babu/mason-nvim-dap.nvim",
-	"neovim/nvim-lspconfig",
+	{
+		"neovim/nvim-lspconfig",
+		event = { "BufReadPre", "BufNewFile" },
+		dependencies = {
+			"williamboman/mason.nvim",
+			"williamboman/mason-lspconfig.nvim",
+			"hrsh7th/cmp-nvim-lsp",
+		},
+		config = function()
+			require("plugins.lsp")
+		end,
+	},
+	
+	-- JSON schema 支持 (2025年推荐)
+	{
+		"b0o/schemastore.nvim",
+		lazy = true,
+	},
 	{
 		"Pocco81/auto-save.nvim",
 		config = function()
@@ -467,17 +514,17 @@ return {
 	--     end,
 	-- },
 
-	{
-		"nvimdev/lspsaga.nvim",
-		event = "LspAttach",
-		config = function()
-			require("plugins.config.lspsaga")
-		end,
-		dependencies = {
-			-- "nvim-treesitter/nvim-treesitter", -- optional
-			"nvim-tree/nvim-web-devicons", -- optional
-		},
-	},
+	-- {
+	-- 	"nvimdev/lspsaga.nvim",
+	-- 	event = "LspAttach",
+	-- 	config = function()
+	-- 		require("plugins.config.lspsaga")
+	-- 	end,
+	-- 	dependencies = {
+	-- 		-- "nvim-treesitter/nvim-treesitter", -- optional
+	-- 		"nvim-tree/nvim-web-devicons", -- optional
+	-- 	},
+	-- },
 	{
 		"michaelb/sniprun",
 		branch = "master",
@@ -493,12 +540,44 @@ return {
 			})
 		end,
 	},
+	-- 代码格式化 (2025年现代化配置)
 	{
-		"stevearc/conform.nvim",
+		'stevearc/conform.nvim',
 		event = { "BufWritePre" },
-		opts = {},
-		config = function()
-			require("plugins.config.conform")
+		cmd = { "ConformInfo" },
+		opts = {
+			formatters_by_ft = {
+				lua = { "stylua" },
+				python = { "isort", "black" },
+				javascript = { { "prettierd", "prettier" } },
+				typescript = { { "prettierd", "prettier" } },
+				javascriptreact = { { "prettierd", "prettier" } },
+				typescriptreact = { { "prettierd", "prettier" } },
+				vue = { { "prettierd", "prettier" } },
+				css = { { "prettierd", "prettier" } },
+				scss = { { "prettierd", "prettier" } },
+				html = { { "prettierd", "prettier" } },
+				json = { { "prettierd", "prettier" } },
+				jsonc = { { "prettierd", "prettier" } },
+				yaml = { { "prettierd", "prettier" } },
+				markdown = { { "prettierd", "prettier" } },
+				go = { "goimports", "gofmt" },
+				rust = { "rustfmt" },
+				c = { "clang-format" },
+				cpp = { "clang-format" },
+			},
+			default_format_opts = {
+				lsp_format = "fallback",
+			},
+			format_on_save = {
+				timeout_ms = 500,
+				lsp_fallback = true,
+			},
+		},
+		config = function(_, opts)
+			require("conform").setup(opts)
+			-- 设置格式化表达式
+			vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
 		end,
 	},
 	-- {
