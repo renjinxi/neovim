@@ -298,4 +298,4 @@ vim.lsp.enable({
 	'gopls',
 	'nginx_language_server',
 	'jsonls',
-})
+}) 

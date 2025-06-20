@@ -32,9 +32,6 @@ function M.setup()
 		require("plugins.theme").setup()
 	end
 	require("plugins.keymaps").setup()
-	if not vim.g.vscode then
-		require("plugins.lsp")
-	end
 end
 
 return M
