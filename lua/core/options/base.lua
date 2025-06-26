@@ -30,7 +30,7 @@ function M.setup()
 		splitbelow = true, -- 水平分割时新窗口在下边
 		swapfile = false, -- 禁用交换文件
 		clipboard = "unnamedplus", -- 使用系统剪贴板
-		scrolloff = 8, -- 光标距离顶部/底部保持的行数
+		scrolloff = 0, -- 光标距离顶部/底部保持的行数
 		sidescrolloff = 8, -- 光标距离左/右保持的列数
 		wrap = false, -- 不自动换行
 		writebackup = false, -- 不创建备份文件
@@ -130,6 +130,8 @@ function M.setup()
 			vim.opt_local.relativenumber = true
 		end,
 	})
+
+
 end
 
 return M
