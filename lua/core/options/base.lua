@@ -29,7 +29,6 @@ function M.setup()
 		splitright = true, -- 垂直分割时新窗口在右边
 		splitbelow = true, -- 水平分割时新窗口在下边
 		swapfile = false, -- 禁用交换文件
-		clipboard = "unnamedplus", -- 使用系统剪贴板
 		scrolloff = 0, -- 光标距离顶部/底部保持的行数
 		sidescrolloff = 8, -- 光标距离左/右保持的列数
 		wrap = false, -- 不自动换行
@@ -69,6 +68,28 @@ function M.setup()
 		["hi DiffText"] = "guifg=NONE guibg=#ffcc80",
 	}
 
+	-- 剪贴板配置 - 根据环境智能设置
+	local function setup_clipboard()
+		-- 检测是否在SSH或WSL环境
+		if vim.fn.has('wsl') == 1 or os.getenv('SSH_CLIENT') then
+			-- SSH/WSL环境下使用系统剪贴板工具
+			vim.g.clipboard = {
+				name = 'xclip',
+				copy = {
+					['+'] = 'xclip -selection clipboard',
+					['*'] = 'xclip -selection primary',
+				},
+				paste = {
+					['+'] = 'xclip -selection clipboard -o',
+					['*'] = 'xclip -selection primary -o',
+				},
+				cache_enabled = 1,
+			}
+		end
+		-- 启用系统剪贴板
+		vim.opt.clipboard = 'unnamedplus'
+	end
+
 	-- 应用所有配置组
 	local function apply_options(options)
 		for k, v in pairs(options) do
@@ -82,6 +103,9 @@ function M.setup()
 			vim.cmd(cmd .. " " .. args)
 		end
 	end
+
+	-- 首先设置剪贴板
+	setup_clipboard()
 
 	apply_options(ui_options)
 	apply_options(editor_options)
