@@ -18,24 +18,7 @@ function M.copy_to_clipboard(text)
     io.stdout:flush()
 end
 
--- 获取当前选中内容并复制到剪贴板
-function M.copy_selection()
-    local mode = vim.fn.mode()
-    local text = ""
-    
-    if mode == 'v' or mode == 'V' or mode == '\22' then
-        -- 可视模式：获取选中的文本
-        vim.cmd('normal! "zy')
-        text = vim.fn.getreg('z')
-    else
-        -- 普通模式：获取当前行
-        text = vim.fn.getline('.')
-    end
-    
-    if text and text ~= "" then
-        M.copy_to_clipboard(text)
-    end
-end
+
 
 -- 复制整个缓冲区内容
 function M.copy_buffer()
@@ -44,58 +27,39 @@ function M.copy_buffer()
     M.copy_to_clipboard(text)
 end
 
--- 设置OSC52剪贴板provider
-function M.setup_osc52_clipboard()
-    vim.g.clipboard = {
-        name = 'OSC52',
-        copy = {
-            ['+'] = function(lines, regtype)
-                local text = table.concat(lines, '\n')
-                M.copy_to_clipboard(text)
-            end,
-            ['*'] = function(lines, regtype)
-                local text = table.concat(lines, '\n')
-                M.copy_to_clipboard(text)
-            end,
-        },
-        paste = {
-            ['+'] = function()
-                -- OSC52不支持粘贴，使用终端的粘贴功能
-                return {''}
-            end,
-            ['*'] = function()
-                return {''}
-            end,
-        },
-    }
-end
+
 
 -- 创建用户命令
 function M.setup_commands()
-    vim.api.nvim_create_user_command('OSC52CopySelection', M.copy_selection, {
-        desc = '通过OSC52复制选中内容到本地剪贴板'
-    })
-    
     vim.api.nvim_create_user_command('OSC52CopyBuffer', M.copy_buffer, {
         desc = '通过OSC52复制整个缓冲区到本地剪贴板'
     })
 end
 
+-- 自动复制到本地剪贴板的功能
+function M.setup_auto_copy()
+    -- 创建自动命令组
+    local group = vim.api.nvim_create_augroup('OSC52AutoCopy', { clear = true })
+    
+    -- 监听TextYankPost事件，当复制文本时自动发送到本地剪贴板
+    vim.api.nvim_create_autocmd('TextYankPost', {
+        group = group,
+        callback = function()
+            -- 获取复制的内容
+            local content = vim.v.event.regcontents
+            if content and #content > 0 then
+                local text = table.concat(content, '\n')
+                M.copy_to_clipboard(text)
+            end
+        end,
+    })
+end
+
 -- 设置快捷键
 function M.setup_keymaps()
-    -- 在可视模式下复制选中内容
-    vim.keymap.set('v', '<leader>cy', M.copy_selection, { 
-        desc = 'OSC52复制选中内容到本地剪贴板' 
-    })
-    
-    -- 在普通模式下复制当前行
-    vim.keymap.set('n', '<leader>cyy', M.copy_selection, { 
-        desc = 'OSC52复制当前行到本地剪贴板' 
-    })
-    
-    -- 复制整个缓冲区
-    vim.keymap.set('n', '<leader>cya', M.copy_buffer, { 
-        desc = 'OSC52复制整个文件到本地剪贴板' 
+    -- 复制整个缓冲区到本地剪贴板
+    vim.keymap.set('n', '<leader>ya', M.copy_buffer, { 
+        desc = '复制整个文件到本地剪贴板(OSC52)' 
     })
 end
 

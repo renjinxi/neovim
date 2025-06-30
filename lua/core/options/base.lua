@@ -72,11 +72,11 @@ function M.setup()
 	local function setup_clipboard()
 		-- 检测是否在SSH环境
 		if os.getenv('SSH_CLIENT') or os.getenv('SSH_TTY') then
-			-- SSH环境下优先使用OSC52 (特别适合Kitty等现代终端)
+			-- SSH环境下使用OSC52自动复制，yy既复制到寄存器也复制到本地剪贴板
 			local osc52 = require('core.clipboard-osc52')
-			osc52.setup_osc52_clipboard()
 			osc52.setup_commands()
 			osc52.setup_keymaps()
+			osc52.setup_auto_copy()  -- 自动复制功能
 		elseif vim.fn.has('wsl') == 1 then
 			-- WSL环境使用clip.exe
 			vim.g.clipboard = {
@@ -91,9 +91,12 @@ function M.setup()
 				},
 				cache_enabled = 0,
 			}
+			-- WSL环境启用系统剪贴板
+			vim.opt.clipboard = 'unnamedplus'
+		else
+			-- 本地环境启用系统剪贴板
+			vim.opt.clipboard = 'unnamedplus'
 		end
-		-- 启用系统剪贴板
-		vim.opt.clipboard = 'unnamedplus'
 	end
 
 	-- 应用所有配置组
