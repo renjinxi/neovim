@@ -77,7 +77,6 @@ function M.setup()
 			osc52.setup_osc52_clipboard()
 			osc52.setup_commands()
 			osc52.setup_keymaps()
-			print("剪贴板：使用OSC52 (推荐用于Kitty终端)")
 		elseif vim.fn.has('wsl') == 1 then
 			-- WSL环境使用clip.exe
 			vim.g.clipboard = {
@@ -92,9 +91,6 @@ function M.setup()
 				},
 				cache_enabled = 0,
 			}
-			print("剪贴板：使用WSL剪贴板")
-		else
-			print("剪贴板：使用系统默认")
 		end
 		-- 启用系统剪贴板
 		vim.opt.clipboard = 'unnamedplus'

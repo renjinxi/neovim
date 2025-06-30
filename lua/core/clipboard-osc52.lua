@@ -16,8 +16,6 @@ function M.copy_to_clipboard(text)
     -- 输出到stdout，让终端处理剪贴板
     io.stdout:write(osc52)
     io.stdout:flush()
-    
-    print(string.format("✓ 已通过OSC52复制 %d 个字符到本地剪贴板", #text))
 end
 
 -- 获取当前选中内容并复制到剪贴板
@@ -63,11 +61,9 @@ function M.setup_osc52_clipboard()
         paste = {
             ['+'] = function()
                 -- OSC52不支持粘贴，使用终端的粘贴功能
-                vim.notify("请使用终端的粘贴快捷键 (Cmd+V 或 Ctrl+Shift+V)", vim.log.levels.INFO)
                 return {''}
             end,
             ['*'] = function()
-                vim.notify("请使用终端的粘贴快捷键 (Cmd+V 或 Ctrl+Shift+V)", vim.log.levels.INFO)
                 return {''}
             end,
         },
