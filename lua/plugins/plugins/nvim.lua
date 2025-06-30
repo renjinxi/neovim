@@ -12,36 +12,14 @@ return {
 		cmd = "Mason",
 		build = ":MasonUpdate",
 		config = function()
-			require("mason").setup({
-				ui = {
-					border = "rounded",
-					icons = {
-						package_installed = "✓",
-						package_pending = "➜",
-						package_uninstalled = "✗",
-					},
-				},
-				max_concurrent_installers = 4,
-			})
+			require("plugins.config.mason").setup()
 		end,
 	},
 	{
 		"williamboman/mason-lspconfig.nvim",
 		dependencies = { "williamboman/mason.nvim" },
-		opts = {
-			ensure_installed = {
-				"lua_ls",
-				"clangd",
-				"pyright",
-				"ruff",
-				"html",
-				"cssls",
-				"ts_ls",
-				"gopls",
-				"nginx_language_server",
-				"jsonls",
-			},
-		},
+		-- 2025年版本：配置移动到独立文件，支持新的 automatic_enable 特性
+		config = false, -- 在mason配置中统一处理
 	},
 	{
 		"neovim/nvim-lspconfig",

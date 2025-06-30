@@ -286,16 +286,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	end,
 })
 
--- 启用所有配置的语言服务器
-vim.lsp.enable({
-	'lua_ls',
-	'clangd',
-	'pyright',
-	'ruff',
-	'html',
-	'cssls',    
-	'ts_ls',
-	'gopls',
-	'nginx_language_server',
-	'jsonls',
-}) 
+-- 注意：由于 mason-lspconfig.nvim 配置了 automatic_enable = true，
+-- 已安装的服务器会自动启用，无需手动调用 vim.lsp.enable()
+-- 这些 vim.lsp.config() 配置会在服务器启动时自动应用
