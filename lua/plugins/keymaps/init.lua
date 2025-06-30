@@ -27,21 +27,33 @@ local function setup_basic_keymaps()
 	vim.keymap.set("n", "gx", open_url, opts)
 end
 
--- 加载所有子模块
-local modules = {
-	"editor", -- 编辑器基础功能
-	"tools", -- 工具类功能
-	"git", -- Git 相关
-	"debug", -- 调试相关
-	"lsp", -- LSP 相关
-	"project", -- 项目管理
-}
+-- 根据环境加载不同的模块
+local function get_modules()
+	if vim.g.vscode then
+		-- VSCode/Cursor 环境：只加载基础编辑功能
+		return {
+			"editor", -- 编辑器基础功能
+		}
+	else
+		-- 原生 Neovim 环境：加载完整功能
+		return {
+			"editor", -- 编辑器基础功能
+			"tools", -- 工具类功能
+			"git", -- Git 相关
+			"debug", -- 调试相关
+			"lsp", -- LSP 相关
+			"project", -- 项目管理
+		}
+	end
+end
 
 function M.setup()
 	-- 设置基础按键映射
 	setup_basic_keymaps()
 
-	-- 按顺序加载所有模块
+	-- 根据环境加载对应的模块
+	local modules = get_modules()
+	
 	for _, module in ipairs(modules) do
 		require("plugins.keymaps." .. module).setup()
 	end

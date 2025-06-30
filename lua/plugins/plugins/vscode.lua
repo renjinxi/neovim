@@ -1,10 +1,29 @@
 return {
-	-- 快速移动
+	-- 快速移动 (现代化的移动插件)
 	{
-		"ggandor/leap.nvim",
-		config = function()
-			require("leap").add_default_mappings()
+		"folke/flash.nvim",
+		event = "VeryLazy",
+		opts = function()
+			return require("plugins.config.flash")
 		end,
+		keys = {
+			{
+				"s",
+				mode = { "n", "x", "o" },
+				function()
+					require("flash").jump()
+				end,
+				desc = "Flash 跳转",
+			},
+			{
+				"S",
+				mode = { "n", "x", "o" },
+				function()
+					require("flash").treesitter()
+				end,
+				desc = "Flash Treesitter 选择",
+			},
+		},
 	},
 	-- 快速环绕
 	{

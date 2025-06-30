@@ -65,29 +65,8 @@ function M.setup()
 		-- automatic_enable = { "lua_ls", "pyright" }
 	})
 
-	-- 创建自动更新功能
-	M.setup_auto_update()
-	
-	-- 创建有用的用户命令
+	-- 创建有用的用户命令（移除自动更新功能）
 	M.setup_commands()
-end
-
--- 自动更新功能（简化版，避免频繁重装）
-function M.setup_auto_update()
-	-- 只定期更新注册表，让用户手动决定是否更新包
-	local function update_registry()
-		vim.cmd("MasonUpdate")
-		vim.notify("📋 Mason 注册表已更新", vim.log.levels.INFO, { title = "Mason" })
-	end
-	
-	-- 启动后更新一次注册表
-	vim.defer_fn(update_registry, 30000) -- 30秒后
-	
-	-- 每周更新一次注册表（不重装包）
-	local timer = vim.loop.new_timer()
-	if timer then
-		timer:start(604800000, 604800000, vim.schedule_wrap(update_registry)) -- 7天
-	end
 end
 
 -- 创建用户命令
