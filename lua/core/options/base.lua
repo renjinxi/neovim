@@ -70,21 +70,31 @@ function M.setup()
 
 	-- 剪贴板配置 - 根据环境智能设置
 	local function setup_clipboard()
-		-- 检测是否在SSH或WSL环境
-		if vim.fn.has('wsl') == 1 or os.getenv('SSH_CLIENT') then
-			-- SSH/WSL环境下使用系统剪贴板工具
+		-- 检测是否在SSH环境
+		if os.getenv('SSH_CLIENT') or os.getenv('SSH_TTY') then
+			-- SSH环境下优先使用OSC52 (特别适合Kitty等现代终端)
+			local osc52 = require('core.clipboard-osc52')
+			osc52.setup_osc52_clipboard()
+			osc52.setup_commands()
+			osc52.setup_keymaps()
+			print("剪贴板：使用OSC52 (推荐用于Kitty终端)")
+		elseif vim.fn.has('wsl') == 1 then
+			-- WSL环境使用clip.exe
 			vim.g.clipboard = {
-				name = 'xclip',
+				name = 'WSL Clipboard',
 				copy = {
-					['+'] = 'xclip -selection clipboard',
-					['*'] = 'xclip -selection primary',
+					['+'] = 'clip.exe',
+					['*'] = 'clip.exe',
 				},
 				paste = {
-					['+'] = 'xclip -selection clipboard -o',
-					['*'] = 'xclip -selection primary -o',
+					['+'] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+					['*'] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
 				},
-				cache_enabled = 1,
+				cache_enabled = 0,
 			}
+			print("剪贴板：使用WSL剪贴板")
+		else
+			print("剪贴板：使用系统默认")
 		end
 		-- 启用系统剪贴板
 		vim.opt.clipboard = 'unnamedplus'
