@@ -18,8 +18,6 @@ function M.copy_to_clipboard(text)
     io.stdout:flush()
 end
 
-
-
 -- 复制整个缓冲区内容
 function M.copy_buffer()
     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
