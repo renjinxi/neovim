@@ -15,10 +15,8 @@ function M.setup()
 	local new_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "float" })
 	local tig = Terminal:new({ cmd = "tig", hidden = true, direction = "float" })
 	local new_tab_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab" })
+	local newsboat = Terminal:new({ cmd = "newsboat", hidden = true, direction = "tab" })
 
-	local function lazygit_toggle()
-		lazygit:toggle()
-	end
 
 	local function ncdu_toggle()
 		ncdu:toggle()
@@ -44,10 +42,9 @@ function M.setup()
 		new_term:toggle()
 	end
 
-	local function newtig()
-		tig:toggle()
+	local function newsboat_toggle()
+		newsboat:toggle()
 	end
-
 	local function newterm()
 		new_tab_term:toggle()
 	end
@@ -61,6 +58,7 @@ function M.setup()
 		{ "<leader>gn", newterm_toggle, desc = "New Term", nowait = false, remap = false },
 		{ "<leader>gt", newterm, desc = "New Tab Term", nowait = false, remap = false },
 		{ "<leader>gu", ncdu_toggle, desc = "Ncdu", nowait = false, remap = false },
+		{ "<leader>gr", newsboat_toggle, desc = "Newsboat", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
 end

@@ -28,20 +28,18 @@ function M.setup()
 
 	-- macOS 特定快捷键
 	local keymap = vim.keymap.set
-	keymap("n", "<D-s>", ":w<CR>") -- Save
-	keymap("v", "<D-c>", '"+y') -- Copy
-	keymap("n", "<D-v>", '"+P') -- Paste normal mode
-	keymap("v", "<D-v>", '"+P') -- Paste visual mode
-	keymap("c", "<D-v>", "<C-R>+") -- Paste command mode
-	keymap("i", "<D-v>", '<ESC>l"+Pli') -- Paste insert mode
-
-	-- 剪贴板集成 (使用现代化API)
 	local opts = { noremap = true, silent = true }
 	
-	keymap("", "<D-v>", "+p<CR>", opts)
-	keymap("!", "<D-v>", "<C-R>+", opts)
-	keymap("t", "<D-v>", "<C-o>p", opts)
-	keymap("v", "<D-v>", "<C-R>+", opts)
+	-- 基本快捷键
+	keymap("n", "<D-s>", ":w<CR>", opts) -- Save
+	keymap("v", "<D-c>", '"+y', opts) -- Copy
+	keymap("n", "<D-v>", '"+P', opts) -- Paste normal mode
+	keymap("v", "<D-v>", '"+P', opts) -- Paste visual mode
+	keymap("c", "<D-v>", "<C-R>+", opts) -- Paste command mode
+	keymap("i", "<D-v>", '<ESC>l"+Pli', opts) -- Paste insert mode
+	
+	-- 终端模式特殊处理 - CMD+V 退出终端模式粘贴后重新进入
+	keymap("t", "<D-v>", '<C-\\><C-n>"+pi', opts) -- Terminal paste with CMD+V
 end
 
 return M
