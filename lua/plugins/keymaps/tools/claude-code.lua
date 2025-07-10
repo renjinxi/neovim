@@ -4,75 +4,131 @@
 local M = {}
 
 function M.setup()
-	-- 基本快捷键映射
-	vim.keymap.set("n", "<leader>cc", "<cmd>ClaudeCode<CR>", { 
-		desc = "切换 Claude Code 终端" 
-	})
+	local keymap = {
+		{ "<leader>c", group = "Claude Code", nowait = false, remap = false },
+		{
+			"<leader>cc",
+			"<cmd>ClaudeCode<CR>",
+			desc = "切换 Claude Code 终端",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>cC",
+			"<cmd>ClaudeCodeContinue<CR>",
+			desc = "恢复最近的 Claude Code 对话",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>cr",
+			"<cmd>ClaudeCodeResume<CR>",
+			desc = "显示 Claude Code 对话选择器",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>cV",
+			"<cmd>ClaudeCodeVerbose<CR>",
+			desc = "启用详细日志的 Claude Code",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>cx",
+			"<cmd>ClaudeCodeCancel<CR>",
+			desc = "取消当前 Claude Code 请求",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>cn",
+			"<cmd>ClaudeCodeRecallNotification<CR>",
+			desc = "重新显示上次 Claude Code 通知",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>ci",
+			"<cmd>ClaudeCodeImport<CR>",
+			desc = "导入 Claude Workbench 对话",
+			nowait = false,
+			remap = false,
+		},
+		-- 日志管理子组
+		{ "<leader>ce", group = "日志管理", nowait = false, remap = false },
+		{
+			"<leader>cel",
+			"<cmd>ClaudeCodeEnableLogging<CR>",
+			desc = "启用 Claude Code 日志记录",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>cdl",
+			"<cmd>ClaudeCodeDisableLogging<CR>",
+			desc = "禁用 Claude Code 日志记录",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>col",
+			"<cmd>ClaudeCodeOpenLog<CR>",
+			desc = "打开 Claude Code 日志文件",
+			nowait = false,
+			remap = false,
+		},
+	}
 	
-	-- 对话管理命令
-	vim.keymap.set("n", "<leader>cC", "<cmd>ClaudeCodeContinue<CR>", { 
-		desc = "恢复最近的 Claude Code 对话" 
-	})
+	-- 消息导航键映射
+	local navigation_keymap = {
+		{
+			"]c",
+			"<cmd>ClaudeCodeNextMessage<CR>",
+			desc = "跳转到下一条 Claude Code 消息",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"[c",
+			"<cmd>ClaudeCodePrevMessage<CR>",
+			desc = "跳转到上一条 Claude Code 消息",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<C-,>",
+			"<cmd>ClaudeCode<CR>",
+			desc = "切换 Claude Code 终端",
+			nowait = false,
+			remap = false,
+			mode = "n",
+		},
+		{
+			"<C-,>",
+			"<cmd>ClaudeCode<CR>",
+			desc = "切换 Claude Code 终端",
+			nowait = false,
+			remap = false,
+			mode = "t",
+		},
+	}
 	
-	vim.keymap.set("n", "<leader>cr", "<cmd>ClaudeCodeResume<CR>", { 
-		desc = "显示 Claude Code 对话选择器" 
-	})
+	-- 插入模式键映射
+	local insert_keymap = {
+		{
+			"<C-s>",
+			"<cmd>ClaudeCodeSendAndInsert<CR>",
+			desc = "发送到 Claude Code 并返回插入模式",
+			nowait = false,
+			remap = false,
+			mode = "i",
+		},
+	}
 	
-	-- 输出选项
-	vim.keymap.set("n", "<leader>cV", "<cmd>ClaudeCodeVerbose<CR>", { 
-		desc = "启用详细日志的 Claude Code" 
-	})
-	
-	-- 快速发送并返回插入模式
-	vim.keymap.set("i", "<C-s>", "<cmd>ClaudeCodeSendAndInsert<CR>", { 
-		desc = "发送到 Claude Code 并返回插入模式" 
-	})
-	
-	-- 消息导航
-	vim.keymap.set("n", "]c", "<cmd>ClaudeCodeNextMessage<CR>", { 
-		desc = "跳转到下一条 Claude Code 消息" 
-	})
-	
-	vim.keymap.set("n", "[c", "<cmd>ClaudeCodePrevMessage<CR>", { 
-		desc = "跳转到上一条 Claude Code 消息" 
-	})
-	
-	-- 取消当前请求
-	vim.keymap.set("n", "<leader>cx", "<cmd>ClaudeCodeCancel<CR>", { 
-		desc = "取消当前 Claude Code 请求" 
-	})
-	
-	-- 重新显示上次通知
-	vim.keymap.set("n", "<leader>cn", "<cmd>ClaudeCodeRecallNotification<CR>", { 
-		desc = "重新显示上次 Claude Code 通知" 
-	})
-	
-	-- 日志管理
-	vim.keymap.set("n", "<leader>cel", "<cmd>ClaudeCodeEnableLogging<CR>", { 
-		desc = "启用 Claude Code 日志记录" 
-	})
-	
-	vim.keymap.set("n", "<leader>cdl", "<cmd>ClaudeCodeDisableLogging<CR>", { 
-		desc = "禁用 Claude Code 日志记录" 
-	})
-	
-	vim.keymap.set("n", "<leader>col", "<cmd>ClaudeCodeOpenLog<CR>", { 
-		desc = "打开 Claude Code 日志文件" 
-	})
-	
-	-- 导入命令
-	vim.keymap.set("n", "<leader>ci", "<cmd>ClaudeCodeImport<CR>", { 
-		desc = "导入 Claude Workbench 对话" 
-	})
-	
-	-- 替代快捷键（与配置文件中的快捷键保持一致）
-	vim.keymap.set("n", "<C-,>", "<cmd>ClaudeCode<CR>", { 
-		desc = "切换 Claude Code 终端" 
-	})
-	
-	vim.keymap.set("t", "<C-,>", "<cmd>ClaudeCode<CR>", { 
-		desc = "切换 Claude Code 终端" 
-	})
+	require("which-key").add(keymap)
+	require("which-key").add(navigation_keymap)
+	require("which-key").add(insert_keymap)
 end
 
 return M 
