@@ -2,7 +2,7 @@
 -- Flash 现代化移动插件配置 (2025年推荐，替代leap+flit)
 -- ================================
 
-return {
+local config = {
 	-- 搜索配置
 	search = {
 		-- 搜索时向前和向后查找
@@ -38,7 +38,7 @@ return {
 			shade = 5,
 		},
 	},
-	-- 高亮配置
+	-- 高亮配置 (针对 light 主题优化)
 	highlight = {
 		-- 高亮匹配
 		matches = true,
@@ -94,3 +94,72 @@ return {
 		},
 	},
 }
+
+-- 为 light 主题设置优化的高亮组
+local function setup_light_theme_highlights()
+	-- 检查当前背景色
+	local bg = vim.o.background
+	
+	-- 为 light 主题设置高亮组
+	if bg == "light" then
+		-- Flash 标签: 深色背景, 白色前景
+		vim.api.nvim_set_hl(0, "FlashLabel", {
+			fg = "#ffffff",
+			bg = "#2563eb", -- 蓝色背景
+			bold = true,
+		})
+		
+		-- Flash 匹配: 深色背景, 浅色前景
+		vim.api.nvim_set_hl(0, "FlashMatch", {
+			fg = "#1f2937", -- 深灰色
+			bg = "#fef3c7", -- 浅黄色背景
+			bold = true,
+		})
+		
+		-- Flash 当前项: 橙色背景
+		vim.api.nvim_set_hl(0, "FlashCurrent", {
+			fg = "#ffffff",
+			bg = "#ea580c", -- 橙色背景
+			bold = true,
+		})
+		
+		-- Flash 背景: 轻微变暗
+		vim.api.nvim_set_hl(0, "FlashBackdrop", {
+			fg = "#6b7280", -- 灰色
+		})
+	else
+		-- 保持深色主题的默认设置
+		vim.api.nvim_set_hl(0, "FlashLabel", {
+			fg = "#ffffff",
+			bg = "#ff007c",
+			bold = true,
+		})
+		
+		vim.api.nvim_set_hl(0, "FlashMatch", {
+			fg = "#c0caf5",
+			bg = "#3d59a1",
+			bold = true,
+		})
+		
+		vim.api.nvim_set_hl(0, "FlashCurrent", {
+			fg = "#ffffff",
+			bg = "#ff9e64",
+			bold = true,
+		})
+		
+		vim.api.nvim_set_hl(0, "FlashBackdrop", {
+			fg = "#545c7e",
+		})
+	end
+end
+
+-- 设置自动命令，在主题切换时重新设置高亮
+vim.api.nvim_create_autocmd("ColorScheme", {
+	pattern = "*",
+	callback = setup_light_theme_highlights,
+})
+
+-- 初始化时设置高亮
+setup_light_theme_highlights()
+
+return config

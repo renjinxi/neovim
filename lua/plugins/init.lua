@@ -26,6 +26,9 @@ function M.setup()
 			missing = true,
 			--colorscheme = { "PaperColor" },
 		},
+		checker = {
+			enabled = false, -- 禁用自动检查更新
+		},
 	}
 	lazy.setup("plugins.plugins", opt)
 	if not vim.g.vscode then

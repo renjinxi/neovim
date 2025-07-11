@@ -7,6 +7,10 @@ function M.setup()
 		{ "<leader>ro", ":OverseerQuickAction<cr>", desc = "Quick Action", nowait = false, remap = false },
 		{ "<leader>rr", ":OverseerRun<cr>", desc = "Run", nowait = false, remap = false },
 		{ "<leader>rg", ":OverseerToggle<cr>", desc = "Toggle", nowait = false, remap = false },
+		{ "<leader>rb", function()
+			local overseer = require("overseer")
+			overseer.run_template({ name = "Go Build" })
+		end, desc = "Go Build", nowait = false, remap = false },
 
 		-- { "<leader>rd", ":FzfLua commands<cr>", desc = "Commands", nowait = false, remap = false },
 		-- { "<leader>re", ":FzfLua oldfiles<cr>", desc = "Recent Files", nowait = false, remap = false },
