@@ -67,4 +67,21 @@ require("claude-code").setup({
 		window_navigation = true, -- 启用窗口导航按键映射（<C-h/j/k/l>）
 		scrolling = true, -- 启用滚动按键映射（<C-f/b>）用于翻页
 	},
+})
+
+-- 为Claude Code终端设置特殊的键映射
+-- 让Esc键在Claude Code终端中正常工作
+vim.api.nvim_create_autocmd("TermOpen", {
+	callback = function(event)
+		-- 检查是否是Claude Code终端
+		if vim.bo[event.buf].buftype == "terminal" then
+			local term_name = vim.api.nvim_buf_get_name(event.buf)
+			if term_name:match("claude") then
+				-- 在Claude Code终端中，取消Esc键的映射，让它直接传递给终端程序
+				vim.keymap.set("t", "<Esc>", "<Esc>", { buffer = event.buf, noremap = true, silent = true })
+				-- 设置Ctrl+\ Ctrl+n作为退出终端模式的快捷键
+				vim.keymap.set("t", "<C-\\><C-n>", "<C-\\><C-n>", { buffer = event.buf, noremap = true, silent = true })
+			end
+		end
+	end,
 }) 

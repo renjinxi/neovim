@@ -11,6 +11,14 @@ function M.setup()
 			local overseer = require("overseer")
 			overseer.run_template({ name = "Go Build" })
 		end, desc = "Go Build", nowait = false, remap = false },
+		{ "<leader>rs", function()
+			local overseer = require("overseer")
+			overseer.run_template({ name = "run script" })
+		end, desc = "Run Script", nowait = false, remap = false },
+		{ "<leader>ra", function()
+			local overseer = require("overseer")
+			overseer.run_template({ name = "run script with args" })
+		end, desc = "Run Script with Args", nowait = false, remap = false },
 
 		-- { "<leader>rd", ":FzfLua commands<cr>", desc = "Commands", nowait = false, remap = false },
 		-- { "<leader>re", ":FzfLua oldfiles<cr>", desc = "Recent Files", nowait = false, remap = false },
