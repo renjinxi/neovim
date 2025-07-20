@@ -79,7 +79,9 @@ vim.api.nvim_create_autocmd("TermOpen", {
 			if term_name:match("claude") then
 				-- 在Claude Code终端中，取消Esc键的映射，让它直接传递给终端程序
 				vim.keymap.set("t", "<Esc>", "<Esc>", { buffer = event.buf, noremap = true, silent = true })
-				-- 设置Ctrl+\ Ctrl+n作为退出终端模式的快捷键
+				-- 设置简单的退出终端模式快捷键
+				vim.keymap.set("t", "jj", "<C-\\><C-n>", { buffer = event.buf, noremap = true, silent = true })
+				-- 保留原有的 Ctrl+\ Ctrl+n 快捷键
 				vim.keymap.set("t", "<C-\\><C-n>", "<C-\\><C-n>", { buffer = event.buf, noremap = true, silent = true })
 			end
 		end
