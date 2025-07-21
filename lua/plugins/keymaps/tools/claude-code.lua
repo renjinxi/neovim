@@ -55,6 +55,22 @@ function M.setup()
 			nowait = false,
 			remap = false,
 		},
+		{
+			"<leader>cs",
+			function() _G.claude_code_utils.send_selection_to_claude() end,
+			desc = "发送选中文本到 Claude Code",
+			nowait = false,
+			remap = false,
+			mode = "v",
+		},
+		{
+			"<leader>cp",
+			function() _G.claude_code_utils.simple_send_to_claude() end,
+			desc = "复制选中文本并打开 Claude Code",
+			nowait = false,
+			remap = false,
+			mode = "v",
+		},
 		-- 日志管理子组
 		{ "<leader>ce", group = "日志管理", nowait = false, remap = false },
 		{

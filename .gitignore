@@ -4,3 +4,4 @@ local_*
 lazy-lock.json
 .env
 .specstory
+settings.local.json

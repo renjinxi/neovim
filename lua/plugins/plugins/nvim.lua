@@ -622,6 +622,31 @@ return {
 	},
 
 	-- ================================
+	-- 算法练习
+	-- ================================
+	{
+		"kawre/leetcode.nvim",
+		build = ":TSUpdate html",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"MunifTanjim/nui.nvim",
+			"nvim-treesitter/nvim-treesitter",
+			"nvim-telescope/telescope.nvim",
+		},
+		opts = {
+			lang = "python3",
+			cn = { enabled = true },
+			storage = {
+				home = vim.fn.stdpath("data") .. "/leetcode",
+				cache = vim.fn.stdpath("cache") .. "/leetcode",
+			},
+		},
+		config = function(_, opts)
+			require("leetcode").setup(opts)
+		end,
+	},
+
+	-- ================================
 	-- 娱乐和其他
 	-- ================================
 	{
@@ -653,4 +678,3 @@ return {
 		},
 	},
 }
-

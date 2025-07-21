@@ -69,6 +69,74 @@ require("claude-code").setup({
 	},
 })
 
+-- 导出函数供键映射使用
+_G.claude_code_utils = {
+	send_selection_to_claude = function()
+		-- 获取当前选中的文本
+		vim.cmd('normal! "vy')
+		local selected_text = vim.fn.getreg('v')
+		
+		if selected_text == "" then
+			vim.notify("没有选中任何文本", vim.log.levels.WARN)
+			return
+		end
+		
+		-- 先打开Claude Code（如果没打开的话）
+		local claude_bufnr = nil
+		for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+			local name = vim.api.nvim_buf_get_name(bufnr)
+			if name:match("claude") and vim.bo[bufnr].buftype == "terminal" then
+				claude_bufnr = bufnr
+				break
+			end
+		end
+		
+		-- 如果没有找到Claude Code终端，先创建一个
+		if not claude_bufnr then
+			require("claude-code").toggle()
+			vim.defer_fn(function()
+				_G.claude_code_utils.send_selection_to_claude()
+			end, 500)
+			return
+		end
+		
+		-- 找到Claude Code终端窗口
+		local claude_winid = nil
+		for _, winid in ipairs(vim.api.nvim_list_wins()) do
+			if vim.api.nvim_win_get_buf(winid) == claude_bufnr then
+				claude_winid = winid
+				break
+			end
+		end
+		
+		-- 如果终端buffer存在但窗口不存在，打开它
+		if not claude_winid then
+			require("claude-code").toggle()
+			vim.defer_fn(function()
+				_G.claude_code_utils.send_selection_to_claude()
+			end, 200)
+			return
+		end
+		
+		-- 切换到Claude Code窗口并发送文本
+		vim.api.nvim_set_current_win(claude_winid)
+		vim.cmd('startinsert')
+		
+		-- 发送文本到终端
+		vim.defer_fn(function()
+			vim.api.nvim_chan_send(vim.bo[claude_bufnr].channel, selected_text)
+		end, 50)
+	end,
+
+	simple_send_to_claude = function()
+		vim.cmd('normal! "vy')
+		local text = vim.fn.getreg('v')
+		vim.fn.setreg('+', text)  -- 复制到系统剪贴板
+		require("claude-code").toggle()
+		vim.notify("已复制选中文本到剪贴板，在Claude Code中手动粘贴", vim.log.levels.INFO)
+	end
+}
+
 -- 为Claude Code终端设置特殊的键映射
 -- 让Esc键在Claude Code终端中正常工作
 vim.api.nvim_create_autocmd("TermOpen", {
@@ -86,4 +154,4 @@ vim.api.nvim_create_autocmd("TermOpen", {
 			end
 		end
 	end,
-}) 
+})
