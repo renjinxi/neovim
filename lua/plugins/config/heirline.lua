@@ -37,68 +37,68 @@ local function get_project_root()
 	return "[No Project]"
 end
 
--- Rose Pine Dawn color palette (official)
+-- Rose Pine Dark color palette (official)
 local colors = {
-	-- Rose Pine Dawn base colors
-	base = "#faf4ed",        -- main background (light)
-	surface = "#fffaf3",     -- slightly lighter background
-	overlay = "#f2e9e1",     -- overlay background (custom calculated)
-	muted = "#9893a5",       -- muted text (official)
-	subtle = "#797593",      -- subtle text (official)
-	text = "#464261",        -- main text (official)
+	-- Rose Pine Dark base colors
+	base = "#191724",        -- main background (dark)
+	surface = "#1f1d2e",     -- slightly lighter background
+	overlay = "#26233a",     -- overlay background
+	muted = "#6e6a86",       -- muted text
+	subtle = "#908caa",      -- subtle text
+	text = "#e0def4",        -- main text
 	
-	-- Rose Pine Dawn accent colors (official)
-	love = "#b4637a",        -- pink/red
-	gold = "#ea9d34",        -- yellow
-	rose = "#d7827e",        -- rose
-	pine = "#286983",        -- teal
-	foam = "#56949f",        -- cyan
-	iris = "#907aa9",        -- purple
-	leaf = "#6d8f89",        -- leaf green
+	-- Rose Pine Dark accent colors
+	love = "#eb6f92",        -- pink/red
+	gold = "#f6c177",        -- yellow
+	rose = "#ebbcba",        -- rose
+	pine = "#31748f",        -- teal
+	foam = "#9ccfd8",        -- cyan
+	iris = "#c4a7e7",        -- purple
+	leaf = "#56949f",        -- leaf green
 	
-	-- Deep theme backgrounds for statusline
-	light_bg = "#1e1e2e",    -- main statusline background (deep gray)
-	bright_bg = "#313244",   -- grouped sections background (light gray) 
-	clock_bg = "#45475a",    -- clock background (highlight color)
-	subtle_bg = "#f7f1ea",   -- subtle sections (kept for tabline)
+	-- Rose Pine Dark backgrounds for statusline
+	light_bg = "#191724",    -- main statusline background
+	bright_bg = "#26233a",   -- grouped sections background
+	clock_bg = "#403d52",    -- clock background
+	subtle_bg = "#1f1d2e",   -- subtle sections
 	
-	-- Tab colors using Dawn palette
+	-- Tab colors using Dawn palette (kept original)
 	tab_active_bg = "#ede4dd",   -- active tab (darker for contrast)
 	tab_inactive_bg = "#f4ede8", -- inactive tab (between base and surface)
 	tab_border_bg = "#faf4ed",   -- border using base color
 	
-	-- Dawn text colors
+	-- Dawn text colors (kept original)
 	tab_active_text = "#464261",   -- active tab text (main text color)
 	tab_inactive_text = "#797593", -- inactive tab text (subtle)
-	statusline_text = "#4A3C3C",   -- statusline text (original deeper brown)
+	statusline_text = "#e0def4",   -- statusline text
 	
-	-- Mode-specific backgrounds - colorful for deep theme
+	-- Mode-specific backgrounds using Rose Pine Dark colors
 	mode_bg = {
-		n = "#f38ba8",       -- normal (red)
-		i = "#a6e3a1",       -- insert (green)  
-		v = "#89b4fa",       -- visual (blue)
-		c = "#fab387",       -- command (orange)
-		s = "#94e2d5",       -- select (cyan)
-		r = "#f9e2af",       -- replace (yellow)
-		t = "#f38ba8",       -- terminal (red)
+		n = "#eb6f92",       -- normal (love)
+		i = "#31748f",       -- insert (pine)
+		v = "#c4a7e7",       -- visual (iris)
+		c = "#f6c177",       -- command (gold)
+		s = "#9ccfd8",       -- select (foam)
+		r = "#ebbcba",       -- replace (rose)
+		t = "#eb6f92",       -- terminal (love)
 	},
 	
-	-- Text colors for deep theme
-	mode_fg = "#1e1e2e",     -- dark text for colorful mode backgrounds
-	bright_fg = "#cdd6f4",   -- bright text for dark backgrounds
-	statusline_text = "#cdd6f4", -- bright text for statusline
-	gray = "#9893a5",        -- Dawn muted (kept for tabline)
+	-- Text colors for Rose Pine Dark theme
+	mode_fg = "#191724",     -- base dark for mode backgrounds
+	bright_fg = "#e0def4",   -- main text color
+	statusline_text = "#e0def4", -- main text for statusline
+	gray = "#6e6a86",        -- muted color
 	
-	-- Diagnostic colors using Dawn palette
-	diag_error = "#b4637a",  -- love (Dawn)
-	diag_warn = "#ea9d34",   -- gold (Dawn)
-	diag_info = "#286983",   -- pine (Dawn)
-	diag_hint = "#56949f",   -- foam (Dawn)
+	-- Diagnostic colors using Rose Pine Dark palette
+	diag_error = "#eb6f92",  -- love
+	diag_warn = "#f6c177",   -- gold
+	diag_info = "#31748f",   -- pine
+	diag_hint = "#9ccfd8",   -- foam
 	
-	-- Git colors using Dawn palette
-	git_add = "#286983",     -- pine (Dawn)
-	git_del = "#b4637a",     -- love (Dawn)
-	git_change = "#ea9d34",  -- gold (Dawn)
+	-- Git colors using Rose Pine Dark palette
+	git_add = "#31748f",     -- pine
+	git_del = "#eb6f92",     -- love
+	git_change = "#f6c177",  -- gold
 }
 
 -- Window number and Mode component
