@@ -376,10 +376,17 @@ return {
 	-- ================================
 	-- UI 和主题
 	-- ================================
+	-- {
+	-- 	"nvim-lualine/lualine.nvim", -- 状态栏
+	-- 	config = function()
+	-- 		require("plugins.config.lualine")
+	-- 	end,
+	-- },
 	{
-		"nvim-lualine/lualine.nvim", -- 状态栏
+		"rebelot/heirline.nvim", -- 状态栏
+		dependencies = { "nvim-tree/nvim-web-devicons" },
 		config = function()
-			require("plugins.config.lualine")
+			require("plugins.config.heirline")
 		end,
 	},
 	{
