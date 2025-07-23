@@ -6,7 +6,7 @@ require("claude-code").setup({
 	window = {
 		split_ratio = 0.4, -- 终端窗口占屏幕的百分比（水平分割为高度，垂直分割为宽度）
 		position = "vertical", -- 窗口位置："botright", "topleft", "vertical", "float" 等
-		enter_insert = true, -- 打开 Claude Code 时是否进入插入模式
+		enter_insert = false, -- 打开 Claude Code 时是否进入插入模式
 		hide_numbers = true, -- 在终端窗口中隐藏行号
 		hide_signcolumn = true, -- 在终端窗口中隐藏符号列
 
