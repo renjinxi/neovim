@@ -625,18 +625,6 @@ return {
 		end,
 	},
 
-	-- ================================
-	-- AI 助手集成
-	-- ================================
-	{
-		"greggh/claude-code.nvim",
-		dependencies = {
-			"nvim-lua/plenary.nvim", -- 必需的依赖，用于 git 操作
-		},
-		config = function()
-			require("plugins.config.claude-code")
-		end,
-	},
 
 	-- ================================
 	-- 算法练习
