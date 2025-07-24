@@ -18,7 +18,7 @@ require("remote-nvim").setup({
 		},
 	},
 	offline_mode = {
-		enabled = false,
+		enabled = false,  -- 先尝试在线模式，现在脚本支持代理了
 		no_github = false,
 	},
 }) 
