@@ -22,6 +22,26 @@ function M.setup()
 			vim.opt_local.number = false
 		end,
 	})
+	local qwen = Terminal:new({
+		cmd = "qwen",
+		hidden = true,
+		direction = "vertical",
+		size = math.floor(vim.o.columns * 0.4),
+		on_open = function(term)
+			vim.opt_local.relativenumber = false
+			vim.opt_local.number = false
+		end,
+	})
+	local gemini = Terminal:new({
+		cmd = "gemini",
+		hidden = true,
+		direction = "vertical",
+		size = math.floor(vim.o.columns * 0.4),
+		on_open = function(term)
+			vim.opt_local.relativenumber = false
+			vim.opt_local.number = false
+		end,
+	})
 
 	local function ncdu_toggle()
 		ncdu:toggle()
@@ -57,6 +77,12 @@ function M.setup()
 	local function claude_code_toggle()
 		claude_code:toggle()
 	end
+	local function qwen_toggle()
+		qwen:toggle()
+	end
+	local function gemini_toggle()
+		gemini:toggle()
+	end
 
 	local keymap = {
 		{ "<leader>g", group = "Terminal", nowait = false, remap = false },
@@ -68,31 +94,10 @@ function M.setup()
 		{ "<leader>gt", newterm, desc = "New Tab Term", nowait = false, remap = false },
 		{ "<leader>gu", ncdu_toggle, desc = "Ncdu", nowait = false, remap = false },
 		{ "<leader>gr", newsboat_toggle, desc = "Newsboat", nowait = false, remap = false },
+		{ "<leader>gq", qwen_toggle, desc = "Newsboat", nowait = false, remap = false },
+		{ "<leader>gl", gemini_toggle, desc = "Newsboat", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
-
-	-- 为Claude Code终端设置特殊的键映射
-	vim.api.nvim_create_autocmd("TermOpen", {
-		callback = function(event)
-			-- 检查是否是Claude Code终端
-			if vim.bo[event.buf].buftype == "terminal" then
-				local term_name = vim.api.nvim_buf_get_name(event.buf)
-				if term_name:match("claude") then
-					-- 在Claude Code终端中，让Esc键直接传递给终端程序
-					vim.keymap.set("t", "<Esc>", "<Esc>", { buffer = event.buf, noremap = true, silent = true })
-					-- 设置简单的退出终端模式快捷键
-					vim.keymap.set("t", "jj", "<C-\\><C-n>", { buffer = event.buf, noremap = true, silent = true })
-					-- 保留原有的 Ctrl+\ Ctrl+n 快捷键
-					vim.keymap.set(
-						"t",
-						"<C-\\><C-n>",
-						"<C-\\><C-n>",
-						{ buffer = event.buf, noremap = true, silent = true }
-					)
-				end
-			end
-		end,
-	})
 end
 
 return M
