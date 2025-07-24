@@ -40,7 +40,7 @@ function M.setup()
 		{ "<leader>fp", "<cmd>Telescope jumplist<cr>", desc = "Jumplist", nowait = false, remap = false },
 		{
 			"<leader>fr",
-			"<cmd>lua require'telescope'.extensions.project.project{} <cr>",
+			"<cmd>Telescope projects<cr>",
 			desc = "Recent Project History",
 			nowait = false,
 			remap = false,
