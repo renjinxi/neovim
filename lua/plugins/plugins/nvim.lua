@@ -445,13 +445,7 @@ return {
 		name = "rose-pine",
 		priority = 1000,
 		config = function()
-			require("rose-pine").setup({
-				variant = "auto", -- auto会根据background自动选择dawn或main
-				disable_background = false,
-				disable_float_background = false,
-				disable_italics = false,
-			})
-			vim.cmd("colorscheme rose-pine")
+			require("plugins.config.rose-pine")
 		end,
 	},
 	"NLKNguyen/papercolor-theme",
