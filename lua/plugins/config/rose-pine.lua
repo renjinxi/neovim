@@ -59,8 +59,8 @@ require("rose-pine").setup({
 	-- NOTE: Highlight groups are extended (merged) by default. Disable this
 	-- per group via `inherit = false`
 	highlight_groups = {
-		-- 让所有窗口都使用 inactive 的颜色效果
-		Normal = { fg = "muted", bg = "base" }, -- 所有窗口使用柔和的文本颜色
+		-- 让非活动窗口使用柔和颜色，活动窗口使用正常颜色
+		NormalNC = { fg = "muted", bg = "base" }, -- 非活动窗口使用柔和的文本颜色
 		-- Comment = { fg = "foam" },
 		-- StatusLine = { fg = "love", bg = "love", blend = 15 },
 		-- VertSplit = { fg = "muted", bg = "muted" },
