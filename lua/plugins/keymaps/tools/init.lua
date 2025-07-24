@@ -6,7 +6,6 @@ function M.setup()
 	require("plugins.keymaps.tools.fzf").setup()
 	require("plugins.keymaps.tools.nvim_tree").setup()
 	require("plugins.keymaps.tools.bqf").setup()
-	require("plugins.keymaps.tools.claude-code").setup()
 	require("plugins.keymaps.tools.leetcode").setup()
 end
 
