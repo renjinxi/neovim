@@ -31,10 +31,6 @@ function M.setup()
 		},
 	}
 	lazy.setup("plugins.plugins", opt)
-	if not vim.g.vscode then
-		-- 主题已在lazy插件配置中设置，这里只需要加载自定义高亮（如果有的话）
-		require("plugins.theme").setup()
-	end
 	require("plugins.keymaps").setup()
 end
 
