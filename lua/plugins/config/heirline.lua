@@ -62,14 +62,14 @@ local colors = {
 	clock_bg = "#403d52",    -- clock background
 	subtle_bg = "#1f1d2e",   -- subtle sections
 	
-	-- Tab colors using Dawn palette (kept original)
-	tab_active_bg = "#ede4dd",   -- active tab (darker for contrast)
-	tab_inactive_bg = "#f4ede8", -- inactive tab (between base and surface)
-	tab_border_bg = "#faf4ed",   -- border using base color
+	-- Tab colors using lighter Rose Pine colors
+	tab_active_bg = "#f2e9e1",   -- Rose Pine Dawn base - light
+	tab_inactive_bg = "#f2e9e1", -- Rose Pine Dawn base - light
+	tab_border_bg = "#f2e9e1",   -- Rose Pine Dawn base - light (entire tabline bg)
 	
-	-- Dawn text colors (kept original)
-	tab_active_text = "#464261",   -- active tab text (main text color)
-	tab_inactive_text = "#797593", -- inactive tab text (subtle)
+	-- Text colors for light background
+	tab_active_text = "#575279",   -- Rose Pine Dawn text - dark on light
+	tab_inactive_text = "#797593", -- Rose Pine Dawn subtle - muted on light
 	statusline_text = "#e0def4",   -- statusline text
 	
 	-- Mode-specific backgrounds using Rose Pine Dark colors
@@ -604,8 +604,10 @@ local TabLineOffset = {
 }
 
 local TabLine = { 
-	hl = { bg = colors.tab_border_bg, fg = colors.tab_active_text },  -- subtle border background
-	TabLineOffset, BufferLine, TabPages 
+	hl = { bg = colors.tab_border_bg, fg = colors.tab_active_text },  -- black background for entire tabline
+	TabLineOffset, BufferLine, TabPages,
+	-- Fill remaining space with black background
+	{ provider = "%=", hl = { bg = colors.tab_border_bg } }
 }
 
 -- Setup
