@@ -239,22 +239,7 @@ return {
 		"lewis6991/gitsigns.nvim",
 		event = { "BufReadPre", "BufNewFile" },
 		config = function()
-			require("gitsigns").setup({
-				-- 基本配置
-				signs = {
-					add = { text = "+" },
-					change = { text = "~" },
-					delete = { text = "_" },
-					topdelete = { text = "‾" },
-					changedelete = { text = "~" },
-				},
-				on_attach = function(bufnr)
-					-- 避免在非git仓库中出错
-					if not vim.b[bufnr].gitsigns_status_dict then
-						return false
-					end
-				end,
-			})
+			require("plugins.config.gitsigns")
 		end,
 	},
 	{
