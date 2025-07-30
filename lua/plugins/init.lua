@@ -29,6 +29,9 @@ function M.setup()
 		checker = {
 			enabled = false, -- 禁用自动检查更新
 		},
+		change_detection = {
+			enabled = false, -- 禁用自动检测配置变化
+		},
 	}
 	lazy.setup("plugins.plugins", opt)
 	require("plugins.keymaps").setup()

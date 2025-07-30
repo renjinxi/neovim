@@ -7,7 +7,7 @@ local function setup_basic_keymaps()
 
 	-- 设置 leader 键 (使用现代化API)
 	vim.keymap.set("n", "<space>", "", opts)
-	vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", term_opts)
+	-- vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", term_opts) -- 注释掉让ESC发送给终端
 
 	-- URL 打开功能
 	local open_command = vim.fn.has("mac") == 1 and "open" or "xdg-open"

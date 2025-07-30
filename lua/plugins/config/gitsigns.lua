@@ -4,34 +4,40 @@ function M.setup()
 	require("gitsigns").setup({
 		signs = {
 			add = {
-				text = "▎",
+				text = "┃",
 				hl = "GitSignsAdd",
 				linehl = "GitSignsAddLn",
 				numhl = "GitSignsAddNr",
 			},
 			change = {
-				text = "▎",
+				text = "┃",
 				hl = "GitSignsChange",
 				linehl = "GitSignsChangeLn",
 				numhl = "GitSignsChangeNr",
 			},
 			delete = {
-				text = "▎",
+				text = "▁",
 				hl = "GitSignsDelete",
 				linehl = "GitSignsDeleteLn",
 				numhl = "GitSignsDeleteNr",
 			},
 			topdelete = {
-				text = "▎",
+				text = "▔",
 				hl = "GitSignsDelete",
 				linehl = "GitSignsDeleteLn",
 				numhl = "GitSignsDeleteNr",
 			},
 			changedelete = {
-				text = "▎",
+				text = "~",
 				hl = "GitSignsChangeDelete",
 				linehl = "GitSignsChangeDeleteLn",
 				numhl = "GitSignsChangeDeleteNr",
+			},
+			untracked = {
+				text = "┆",
+				hl = "GitSignsAdd",
+				linehl = "GitSignsAddLn",
+				numhl = "GitSignsAddNr",
 			},
 		},
 

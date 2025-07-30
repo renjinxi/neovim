@@ -610,7 +610,6 @@ return {
 		end,
 	},
 
-
 	-- ================================
 	-- 算法练习
 	-- ================================
@@ -625,7 +624,6 @@ return {
 		},
 		opts = {
 			lang = "python3",
-			cn = { enabled = true },
 			storage = {
 				home = vim.fn.stdpath("data") .. "/leetcode",
 				cache = vim.fn.stdpath("cache") .. "/leetcode",
