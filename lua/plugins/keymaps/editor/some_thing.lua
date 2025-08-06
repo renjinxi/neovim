@@ -121,6 +121,28 @@ local function copy_message()
 	vim.notify("已复制消息内容到剪贴板", vim.log.levels.INFO)
 end
 
+local function copy_file_path()
+	local file_path = vim.fn.expand('%:p')
+	
+	-- 检查是否在SSH环境中
+	if os.getenv('SSH_CLIENT') or os.getenv('SSH_TTY') then
+		-- SSH环境下使用OSC52
+		local osc52_ok, osc52 = pcall(require, 'core.clipboard-osc52')
+		if osc52_ok then
+			osc52.copy_to_clipboard(file_path)
+			vim.notify("已通过OSC52复制文件路径到本地剪贴板: " .. file_path, vim.log.levels.INFO)
+		else
+			-- 备选方案：使用标准寄存器
+			vim.fn.setreg('+', file_path)
+			vim.notify("已复制文件路径到剪贴板: " .. file_path, vim.log.levels.INFO)
+		end
+	else
+		-- 本地环境使用标准剪贴板
+		vim.fn.setreg('+', file_path)
+		vim.notify("已复制文件路径到剪贴板: " .. file_path, vim.log.levels.INFO)
+	end
+end
+
 function M.setup()
 	local keymap = {
 		{ "<leader>v", group = "Some Thing", nowait = false, remap = false },
@@ -161,7 +183,7 @@ function M.setup()
 		{ "<leader>vo", "<cmd>only<cr>", desc = "Only Window", nowait = false, remap = false },
 		{
 			"<leader>vp",
-			":lua vim.fn.setreg('+', vim.fn.expand('%:p'))<CR>",
+			copy_file_path,
 			desc = "Copy File Path to Clipboard",
 			nowait = false,
 			remap = false,
