@@ -22,6 +22,20 @@ return {
 		config = false, -- 在mason配置中统一处理
 	},
 	{
+		"WhoIsSethDaniel/mason-tool-installer.nvim",
+		dependencies = { "williamboman/mason.nvim" },
+		config = function()
+			require("mason-tool-installer").setup({
+				ensure_installed = {
+					"prettierd",
+					"goimports",
+				},
+				auto_update = false,
+				run_on_start = true,
+			})
+		end,
+	},
+	{
 		"neovim/nvim-lspconfig",
 		event = { "BufReadPre", "BufNewFile" },
 		dependencies = {
