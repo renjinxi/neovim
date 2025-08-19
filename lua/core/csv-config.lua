@@ -53,8 +53,8 @@ function M.auto_enable_csv_view(bufnr)
 				vim.cmd("CsvViewEnable display_mode=border header_lnum=1")
 				
 				-- 可选：设置一些CSV友好的选项
-				vim.bo[bufnr].wrap = false
-				vim.bo[bufnr].scrollopt = 'hor'
+				vim.wo.wrap = false
+				vim.o.scrollopt = 'hor'
 			end
 		end, 150)
 	end
