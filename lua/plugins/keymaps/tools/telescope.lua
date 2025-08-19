@@ -49,6 +49,7 @@ function M.setup()
 		{ "<leader>ft", "<cmd>Telescope git_status<cr>", desc = "Git status", nowait = false, remap = false },
 		{ "<leader>fu", "<cmd>Telescope dir find_files<cr>", desc = "Dir Find Files", nowait = false, remap = false },
 		{ "<leader>fy", "<cmd>Telescope session-lens<cr>", desc = "Session", nowait = false, remap = false },
+		{ "<leader>fz", "<cmd>Telescope keymaps<cr>", desc = "Search Keymaps", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
 end

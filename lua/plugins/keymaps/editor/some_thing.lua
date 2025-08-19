@@ -115,28 +115,61 @@ local function toggle_hlsearch()
 	vim.o.hlsearch = not vim.o.hlsearch
 end
 
+-- 通用复制函数
+local function copy_to_clipboard(content, notify_message)
+	if not content or content == "" then
+		vim.notify("没有内容可复制", vim.log.levels.WARN)
+		return
+	end
+	
+	-- 检查是否在SSH环境中
+	if os.getenv('SSH_CLIENT') or os.getenv('SSH_TTY') then
+		-- SSH环境下直接使用OSC52
+		local text = content:gsub('\n$', '')
+		local osc52 = string.format('\027]52;c;%s\007', vim.base64.encode(text))
+		io.stdout:write(osc52)
+		io.stdout:flush()
+		vim.notify("已通过OSC52" .. notify_message, vim.log.levels.INFO)
+	else
+		-- 本地环境使用标准剪贴板
+		vim.fn.setreg('+', content)
+		vim.notify("已" .. notify_message, vim.log.levels.INFO)
+	end
+end
+
 local function copy_message()
 	local message = vim.fn.getreg("+")
-	vim.fn.setreg("+", message)
-	vim.notify("已复制消息内容到剪贴板", vim.log.levels.INFO)
+	copy_to_clipboard(message, "复制消息内容到剪贴板")
+end
+
+local function copy_last_message()
+	-- 获取最后一条消息
+	local messages = vim.api.nvim_exec2("messages", {output = true})
+	local lines = vim.split(messages.output, "\n")
+	local last_message = ""
+	
+	-- 找到最后一条非空消息
+	for i = #lines, 1, -1 do
+		if lines[i] ~= "" then
+			last_message = lines[i]
+			break
+		end
+	end
+	
+	copy_to_clipboard(last_message, "复制最后一条消息到剪贴板")
+end
+
+local function copy_all_messages()
+	-- 获取所有消息
+	local messages = vim.api.nvim_exec2("messages", {output = true})
+	local all_messages = messages.output
+	
+	copy_to_clipboard(all_messages, "复制所有消息到剪贴板")
 end
 
 local function copy_file_path()
 	local file_path = vim.fn.expand('%:p')
-	
-	-- 检查是否在SSH环境中
-	if os.getenv('SSH_CLIENT') or os.getenv('SSH_TTY') then
-		-- SSH环境下直接使用OSC52，避免vim寄存器确认
-		local text = file_path:gsub('\n$', '')
-		local osc52 = string.format('\027]52;c;%s\007', vim.base64.encode(text))
-		io.stdout:write(osc52)
-		io.stdout:flush()
-		vim.notify("已通过OSC52复制文件路径: " .. file_path, vim.log.levels.INFO)
-	else
-		-- 本地环境使用标准剪贴板
-		vim.fn.setreg('+', file_path)
-		vim.notify("已复制文件路径: " .. file_path, vim.log.levels.INFO)
-	end
+	copy_to_clipboard(file_path, "复制文件路径到剪贴板: " .. file_path)
 end
 
 function M.setup()
@@ -194,6 +227,8 @@ function M.setup()
 		{ "<leader>vy", "viw:Translate zh-CN<cr>", desc = "Translate", nowait = false, remap = false },
 		{ "<leader>vz", ":ZenMode<cr>", desc = "Toggle Zen Mode", nowait = false, remap = false },
 		{ "<leader>vx", copy_message, desc = "Copy Message Content", nowait = false, remap = false },
+		{ "<leader>vxl", copy_last_message, desc = "Copy Last Message", nowait = false, remap = false },
+		{ "<leader>vxa", copy_all_messages, desc = "Copy All Messages", nowait = false, remap = false },
 	}
 
 	which_key.add(keymap)

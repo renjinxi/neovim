@@ -543,11 +543,28 @@ local TablineBufferBlock = utils.surround({ "", "" }, function(self)
 		return colors.tab_inactive_bg  -- lighter rose tint for inactive tab
 	end
 end, {
+	-- 添加条件过滤：只显示当前标签页中可见的buffer
+	condition = function(self)
+		local current_tabpage = vim.api.nvim_get_current_tabpage()
+		local windows = vim.api.nvim_tabpage_list_wins(current_tabpage)
+		
+		-- 检查这个buffer是否在当前标签页的某个窗口中显示
+		for _, win in ipairs(windows) do
+			if vim.api.nvim_win_get_buf(win) == self.bufnr then
+				-- 同时检查buffer类型
+				local buftype = vim.api.nvim_buf_get_option(self.bufnr, "buftype")
+				return buftype == "" or buftype == "acwrite"
+			end
+		end
+		return false
+	end,
+	
 	TablinePicker,
 	TablineFileNameBlock,
 	TablineCloseButton,
 })
 
+-- 简单回退到原来的实现，但添加条件过滤
 local BufferLine = utils.make_buflist(
 	TablineBufferBlock,
 	{ provider = "", hl = { fg = colors.tab_border_bg } },  -- subtle border separators

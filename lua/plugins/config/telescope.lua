@@ -2,6 +2,7 @@ require("telescope").load_extension("file_browser")
 require("telescope").load_extension("dap")
 require("telescope").load_extension("ui-select")
 require("telescope").load_extension("projects")
+require("telescope").load_extension("dir")
 local lga_actions = require("telescope-live-grep-args.actions")
 
 --local project_actions = require("telescope._extensions.project.actions")
