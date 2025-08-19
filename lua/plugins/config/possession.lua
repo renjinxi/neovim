@@ -5,20 +5,17 @@ require("possession").setup({
   -- 会话保存目录
   session_dir = vim.fn.stdpath("data") .. "/possession",
   
-  -- 自动保存设置
+  -- 基本设置
   silent = false,
   load_silent = true,
   debug = false,
-  logfile = false,
   
-  -- 会话命名策略
-  prompt_no_cr = false,
+  -- 自动保存设置（简化配置）
   autosave = {
     current = false,  -- 不自动保存当前会话
-    tmp = false,      -- 不保存临时会话
-    tmp_name = "tmp", -- 临时会话名称
-    on_load = true,   -- 加载时自动保存
-    on_quit = true,   -- 退出时自动保存
+    cwd = false,      -- 不基于目录自动保存
+    on_load = false,  -- 不在加载时自动保存
+    on_quit = false,  -- 不在退出时自动保存
   },
   
   -- 会话内容配置
@@ -36,16 +33,7 @@ require("possession").setup({
   -- 钩子配置
   hooks = {
     before_save = function(name)
-      -- 保存会话前的清理工作
-      -- 关闭所有浮动窗口
-      for _, win in ipairs(vim.api.nvim_list_wins()) do
-        local config = vim.api.nvim_win_get_config(win)
-        if config.relative ~= "" then
-          pcall(vim.api.nvim_win_close, win, false)
-        end
-      end
-      
-      -- 保存工作区项目列表到会话数据
+      -- 保存工作区项目列表到会话数据（移除窗口清理，避免干扰）
       local workspaces_config = require("plugins.config.workspaces")
       return {
         workspace_projects = vim.deepcopy(workspaces_config.get_current_projects())
@@ -87,43 +75,16 @@ require("possession").setup({
     end,
   },
   
-  -- 自动检测项目会话配置
+  -- 插件配置（最小化，避免干扰）
   plugins = {
-    close_windows = {
-      hooks = {"before_save", "before_load"},
-      preserve_layout = true, -- 保持窗口布局
-      match = {
-        floating = true,
-        buftype = {
-          "",
-          "acwrite",
-          "help",
-          "nofile",
-          "nowrite",
-          "quickfix",
-          "terminal",
-          "prompt",
-        },
-        filetype = {},
-        custom = false, -- 自定义匹配函数
-      },
-    },
+    -- 完全禁用自动窗口关闭
+    close_windows = false,
     
-    delete_hidden_buffers = {
-      hooks = {
-        "before_load",
-        vim.o.sessionoptions:match("buffer") and "before_save",
-      },
-      force = false, -- 强制删除修改过的缓冲区
-    },
+    -- 完全禁用缓冲区删除
+    delete_hidden_buffers = false,
     
-    nvim_tree = true,       -- 自动保存/恢复 nvim-tree 状态
-    neo_tree = true,        -- 自动保存/恢复 neo-tree 状态
-    symbols_outline = true, -- 保存 symbols-outline 状态
-    tabby = true,           -- 保存标签页状态
-    dap = true,             -- 保存调试器状态
-    dapui = true,           -- 保存调试器 UI 状态
-    neotest = true,         -- 保存测试状态
+    -- 只启用必要的插件支持
+    nvim_tree = true,       -- 支持 nvim-tree 状态
     delete_buffers = false, -- 不自动删除缓冲区
   },
 })
