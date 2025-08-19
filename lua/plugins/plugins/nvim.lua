@@ -205,12 +205,35 @@ return {
 			"NvimTreeFindFile",
 			"NvimTreeFindFileToggle",
 		},
+		keys = {
+			{ "<leader>tt", "<cmd>NvimTreeToggle<cr>", desc = "Toggle file tree" },
+			{ "<leader>tf", "<cmd>NvimTreeFocus<cr>", desc = "Focus file tree" },
+			{ "<leader>tr", "<cmd>NvimTreeFindFile<cr>", desc = "Find current file" },
+		},
 		config = function()
 			require("plugins.config.nvim-tree")
 		end,
 	},
+	
+	-- 多项目工作区管理
 	{
-		"ahmedkhalf/project.nvim", -- 项目管理
+		"natecraddock/workspaces.nvim",
+		config = function()
+			require("plugins.config.workspaces")
+		end,
+	},
+	
+	-- 会话持久化管理 - 专门为多项目设计
+	{
+		"jedrzejboczar/possession.nvim",
+		dependencies = { "nvim-lua/plenary.nvim" },
+		config = function()
+			require("plugins.config.possession")
+		end,
+	},
+	
+	{
+		"ahmedkhalf/project.nvim", -- 项目管理 (保留，与 workspaces 配合使用)
 		config = function()
 			require("project_nvim").setup({
 				manual_mode = true,

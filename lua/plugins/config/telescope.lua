@@ -3,6 +3,10 @@ require("telescope").load_extension("dap")
 require("telescope").load_extension("ui-select")
 require("telescope").load_extension("projects")
 require("telescope").load_extension("dir")
+
+-- 加载工作区和会话管理扩展
+pcall(require("telescope").load_extension, "workspaces")
+pcall(require("telescope").load_extension, "possession")
 local lga_actions = require("telescope-live-grep-args.actions")
 
 --local project_actions = require("telescope._extensions.project.actions")
