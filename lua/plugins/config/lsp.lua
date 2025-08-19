@@ -83,7 +83,7 @@ vim.lsp.config('clangd', {
 
 vim.lsp.config('pyright', {
 	cmd = { 'pyright-langserver', '--stdio' },
-	root_markers = { 'pyrightconfig.json', 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', 'pytest.ini', '.git' },
+	root_markers = { 'pyrightconfig.json', 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', 'pytest.ini' },
 	filetypes = { 'python' },
 	settings = {
 		python = {
@@ -98,7 +98,7 @@ vim.lsp.config('pyright', {
 
 vim.lsp.config('ruff', {
 	cmd = { 'ruff', 'server', '--preview' },
-	root_markers = { 'pyproject.toml', 'ruff.toml', '.ruff.toml', '.git' },
+	root_markers = { 'pyproject.toml', 'ruff.toml', '.ruff.toml' },
 	filetypes = { 'python' },
 	init_options = {
 		settings = {
@@ -154,7 +154,7 @@ vim.lsp.config('cssls', {
 
 vim.lsp.config('ts_ls', {
 	cmd = { 'typescript-language-server', '--stdio' },
-	root_markers = { 'package.json', 'tsconfig.json', 'jsconfig.json', '.git' },
+	root_markers = { 'package.json', 'tsconfig.json', 'jsconfig.json' },
 	filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
 	init_options = {
 		preferences = {
