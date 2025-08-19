@@ -50,13 +50,24 @@ require("workspaces").setup({
 -- 多项目工作区管理
 local M = {}
 
--- 当前工作区中的项目列表
+-- 当前工作区中的项目列表（全局访问）
 M.current_projects = {}
+
+-- 设置项目列表（用于会话恢复）
+function M.set_current_projects(projects)
+  M.current_projects = projects or {}
+end
+
+-- 获取当前项目列表（用于会话保存）
+function M.get_current_projects()
+  return M.current_projects
+end
 
 -- 添加项目到当前工作区
 function M.add_project_to_workspace(path)
   path = path or vim.fn.getcwd()
-  path = vim.fn.fnamemodify(path, ":p:h") -- 规范化路径
+  path = vim.fn.fnamemodify(path, ":p") -- 规范化路径，移除末尾斜杠
+  path = path:gsub("/$", "") -- 确保移除末尾斜杠
   
   -- 检查是否已存在
   for _, existing in ipairs(M.current_projects) do
@@ -69,7 +80,8 @@ function M.add_project_to_workspace(path)
   table.insert(M.current_projects, path)
   
   -- 添加到 LSP workspace folders
-  if vim.lsp.get_active_clients()[1] then
+  local clients = vim.lsp.get_clients()
+  if #clients > 0 then
     vim.lsp.buf.add_workspace_folder(path)
   end
   
@@ -79,14 +91,16 @@ end
 -- 从工作区移除项目
 function M.remove_project_from_workspace(path)
   path = path or vim.fn.getcwd()
-  path = vim.fn.fnamemodify(path, ":p:h")
+  path = vim.fn.fnamemodify(path, ":p") -- 规范化路径
+  path = path:gsub("/$", "") -- 确保移除末尾斜杠
   
   for i, existing in ipairs(M.current_projects) do
     if existing == path then
       table.remove(M.current_projects, i)
       
       -- 从 LSP workspace folders 移除
-      if vim.lsp.get_active_clients()[1] then
+      local clients = vim.lsp.get_clients()
+      if #clients > 0 then
         vim.lsp.buf.remove_workspace_folder(path)
       end
       
@@ -198,52 +212,11 @@ function M.switch_project_root()
   end)
 end
 
--- 工作区管理快捷键
-local keymap = vim.keymap.set
-local opts = { noremap = true, silent = true }
-
--- 多项目工作区管理 (使用 <leader>c 前缀)
-keymap("n", "<leader>ca", function()
-  M.add_project_to_workspace()
-end, vim.tbl_extend("force", opts, { desc = "Add project to workspace" }))
-
-keymap("n", "<leader>cA", function()
-  vim.ui.input({ prompt = "Project path: ", completion = "dir" }, function(path)
-    if path then
-      M.add_project_to_workspace(vim.fn.expand(path))
-    end
-  end)
-end, vim.tbl_extend("force", opts, { desc = "Add project (specify path)" }))
-
-keymap("n", "<leader>cr", function()
-  M.remove_project_from_workspace()
-end, vim.tbl_extend("force", opts, { desc = "Remove project from workspace" }))
-
-keymap("n", "<leader>cl", M.list_workspace_projects, vim.tbl_extend("force", opts, { desc = "List workspace projects" }))
-keymap("n", "<leader>cs", M.switch_project_root, vim.tbl_extend("force", opts, { desc = "Switch project root" }))
-
--- 跨项目搜索
-keymap("n", "<leader>cf", M.search_all_projects, vim.tbl_extend("force", opts, { desc = "Find files (all projects)" }))
-keymap("n", "<leader>cF", M.search_all_projects_with_hidden, vim.tbl_extend("force", opts, { desc = "Find files (all projects + hidden)" }))
-keymap("n", "<leader>cg", M.grep_all_projects, vim.tbl_extend("force", opts, { desc = "Grep (all projects)" }))
-keymap("n", "<leader>cG", M.grep_all_projects_with_hidden, vim.tbl_extend("force", opts, { desc = "Grep (all projects + hidden)" }))
-
--- LSP workspace folders 管理
-keymap("n", "<leader>caf", vim.lsp.buf.add_workspace_folder, vim.tbl_extend("force", opts, { desc = "Add LSP workspace folder" }))
-keymap("n", "<leader>crf", vim.lsp.buf.remove_workspace_folder, vim.tbl_extend("force", opts, { desc = "Remove LSP workspace folder" }))
-keymap("n", "<leader>clf", function()
-  print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-end, vim.tbl_extend("force", opts, { desc = "List LSP workspace folders" }))
-
 -- Telescope 集成（如果可用）
 local function setup_telescope_integration()
   local ok, telescope = pcall(require, "telescope")
   if ok then
     telescope.load_extension("workspaces")
-    
-    -- 工作区选择的更好界面 (已改为 <leader>c 前缀)
-    keymap("n", "<leader>cc", "<cmd>Telescope workspaces<cr>", opts) -- 使用 Telescope 选择工作区
-    keymap("n", "<leader>cp", "<cmd>Telescope workspaces<cr>", opts) -- 项目切换的别名
   end
 end
 

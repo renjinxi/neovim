@@ -3,6 +3,8 @@ local M = {}
 function M.setup()
 	-- 加载项目管理相关的子模块
 	require("plugins.keymaps.project.project").setup()
+	require("plugins.keymaps.project.workspaces").setup()
+	require("plugins.keymaps.project.sessions").setup()
 	require("plugins.keymaps.project.test").setup()
 	require("plugins.keymaps.project.overseer").setup()
 	require("plugins.keymaps.project.rest").setup()

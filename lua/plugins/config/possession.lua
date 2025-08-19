@@ -35,19 +35,22 @@ require("possession").setup({
   
   -- 钩子配置
   hooks = {
-    before_save = {
+    before_save = function(name)
       -- 保存会话前的清理工作
-      function(name)
-        -- 关闭所有浮动窗口
-        for _, win in ipairs(vim.api.nvim_list_wins()) do
-          local config = vim.api.nvim_win_get_config(win)
-          if config.relative ~= "" then
-            pcall(vim.api.nvim_win_close, win, false)
-          end
+      -- 关闭所有浮动窗口
+      for _, win in ipairs(vim.api.nvim_list_wins()) do
+        local config = vim.api.nvim_win_get_config(win)
+        if config.relative ~= "" then
+          pcall(vim.api.nvim_win_close, win, false)
         end
-        return {}
-      end,
-    },
+      end
+      
+      -- 保存工作区项目列表到会话数据
+      local workspaces_config = require("plugins.config.workspaces")
+      return {
+        workspace_projects = vim.deepcopy(workspaces_config.get_current_projects())
+      }
+    end,
     after_save = function(name, user_data, aborted)
       if not aborted then
         vim.notify("Session saved: " .. name, vim.log.levels.INFO)
@@ -64,10 +67,20 @@ require("possession").setup({
       if not aborted then
         vim.notify("Session loaded: " .. name, vim.log.levels.INFO)
         
-        -- 刷新 neo-tree 以显示正确的项目根
+        -- 恢复工作区项目列表和刷新文件树
         vim.defer_fn(function()
-          if pcall(require, "neo-tree") then
-            vim.cmd("Neotree filesystem reveal left")
+          local workspaces_config = require("plugins.config.workspaces")
+          
+          -- 从会话数据中恢复项目列表
+          if user_data and user_data.workspace_projects then
+            workspaces_config.set_current_projects(user_data.workspace_projects)
+            vim.notify("Restored " .. #user_data.workspace_projects .. " projects to workspace", vim.log.levels.INFO)
+          end
+          
+          -- 刷新文件树
+          if vim.fn.exists(":NvimTreeOpen") then
+            vim.cmd("NvimTreeClose")
+            vim.cmd("NvimTreeOpen")
           end
         end, 200)
       end
@@ -208,21 +221,7 @@ function M.setup_telescope_integration()
   end
 end
 
--- 设置快捷键
-local keymap = vim.keymap.set
-local opts = { noremap = true, silent = true }
-
--- 基本会话操作
-keymap("n", "<leader>ss", "<cmd>PossessionSave<cr>", vim.tbl_extend("force", opts, { desc = "Save session" }))
-keymap("n", "<leader>sl", "<cmd>PossessionLoad<cr>", vim.tbl_extend("force", opts, { desc = "Load session" }))
-keymap("n", "<leader>sd", "<cmd>PossessionDelete<cr>", vim.tbl_extend("force", opts, { desc = "Delete session" }))
-keymap("n", "<leader>sc", "<cmd>PossessionClose<cr>", vim.tbl_extend("force", opts, { desc = "Close session" }))
-keymap("n", "<leader>sh", "<cmd>PossessionList<cr>", vim.tbl_extend("force", opts, { desc = "List sessions" }))
-
--- 工作区特定的会话操作
-keymap("n", "<leader>sw", M.save_workspace_session, vim.tbl_extend("force", opts, { desc = "Save workspace session" }))
-keymap("n", "<leader>lw", M.load_workspace_session, vim.tbl_extend("force", opts, { desc = "Load workspace session" }))
-keymap("n", "<leader>dw", M.delete_workspace_session, vim.tbl_extend("force", opts, { desc = "Delete workspace session" }))
+-- 快捷键已迁移到 /lua/plugins/keymaps/project/sessions.lua
 
 -- 增强命令
 vim.api.nvim_create_user_command("SessionSaveWorkspace", M.save_workspace_session, {
