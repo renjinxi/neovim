@@ -2,7 +2,6 @@ local M = {}
 
 function M.setup()
 	local Terminal = require("toggleterm.terminal").Terminal
-	local lazygit = Terminal:new({ cmd = "lazygit", hidden = true, direction = "float" })
 	local ncdu = Terminal:new({ cmd = "ncdu --color dark", hidden = true, direction = "float" })
 	local htop = Terminal:new({ cmd = "htop", hidden = true, direction = "float" })
 	local ipython = Terminal:new({ cmd = "ipython", hidden = true })
@@ -14,6 +13,16 @@ function M.setup()
 	local newsboat = Terminal:new({ cmd = "newsboat", hidden = true, direction = "tab" })
 	local claude_code = Terminal:new({
 		cmd = "claude",
+		hidden = true,
+		direction = "vertical",
+		size = math.floor(vim.o.columns * 0.4),
+		on_open = function(term)
+			vim.opt_local.relativenumber = false
+			vim.opt_local.number = false
+		end,
+	})
+	local kimi_claude_code = Terminal:new({
+		cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude",
 		hidden = true,
 		direction = "vertical",
 		size = math.floor(vim.o.columns * 0.4),
@@ -74,6 +83,9 @@ function M.setup()
 		new_tab_term:toggle()
 	end
 
+	local function kimi_claude_code_toggle()
+		kimi_claude_code:toggle()
+	end
 	local function claude_code_toggle()
 		claude_code:toggle()
 	end
@@ -96,6 +108,7 @@ function M.setup()
 		{ "<leader>gr", newsboat_toggle, desc = "Newsboat", nowait = false, remap = false },
 		{ "<leader>gq", qwen_toggle, desc = "Newsboat", nowait = false, remap = false },
 		{ "<leader>gl", gemini_toggle, desc = "Newsboat", nowait = false, remap = false },
+		{ "<leader>gk", kimi_claude_code_toggle, desc = "Kimi Claude Code", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
 end
