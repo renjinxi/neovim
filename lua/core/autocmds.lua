@@ -127,6 +127,12 @@ function M.setup()
 		group = augroup,
 		callback = set_server_name,
 	})
+	
+	-- 输入法自动切换
+	local im_switch_ok, im_switch = pcall(require, "core.im-switch")
+	if im_switch_ok then
+		im_switch.setup()
+	end
 end
 
 return M

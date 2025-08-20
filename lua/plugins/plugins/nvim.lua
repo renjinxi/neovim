@@ -214,7 +214,7 @@ return {
 			require("plugins.config.nvim-tree")
 		end,
 	},
-	
+
 	-- 多项目工作区管理
 	{
 		"natecraddock/workspaces.nvim",
@@ -222,7 +222,7 @@ return {
 			require("plugins.config.workspaces")
 		end,
 	},
-	
+
 	-- 会话持久化管理 - 专门为多项目设计
 	{
 		"jedrzejboczar/possession.nvim",
@@ -231,7 +231,7 @@ return {
 			require("plugins.config.possession")
 		end,
 	},
-	
+
 	{
 		"ahmedkhalf/project.nvim", -- 项目管理 (保留，与 workspaces 配合使用)
 		config = function()
@@ -547,6 +547,7 @@ return {
 	-- ================================
 	-- 工作流和生产力
 	-- ================================
+	-- 移除有问题的 im-select 插件，使用自定义输入法切换
 	{
 		"Pocco81/auto-save.nvim", -- 自动保存
 		config = function()
