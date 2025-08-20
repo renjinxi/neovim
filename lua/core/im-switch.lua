@@ -49,7 +49,7 @@ function M.on_insert_leave()
 	if current and current ~= config.default_im then
 		config.saved_im = current
 	end
-	
+
 	-- 切换到默认输入法
 	set_im(config.default_im)
 end
@@ -63,28 +63,28 @@ end
 function M.setup()
 	-- 如果是远程环境，跳过设置
 	if is_remote() then
-		print("检测到远程环境，跳过输入法自动切换")
+		-- print("检测到远程环境，跳过输入法自动切换")
 		-- 可选：在远程环境设置手动切换快捷键
-		-- vim.keymap.set('n', '<leader>ie', function() 
+		-- vim.keymap.set('n', '<leader>ie', function()
 		--   vim.fn.system('ssh local-host "~/.config/nvim/scripts/ssh-im.sh set com.apple.keylayout.ABC"')
 		-- end, {desc = "切换到英文输入法"})
 		return
 	end
-	
+
 	local augroup = vim.api.nvim_create_augroup("InputMethodSwitch", { clear = true })
-	
+
 	-- 进入插入模式时恢复输入法
 	vim.api.nvim_create_autocmd("InsertEnter", {
 		group = augroup,
 		callback = M.on_insert_enter,
 	})
-	
+
 	-- 离开插入模式时保存输入法并切换到默认
 	vim.api.nvim_create_autocmd("InsertLeave", {
 		group = augroup,
 		callback = M.on_insert_leave,
 	})
-	
+
 	-- 在普通模式下用户可能手动切换输入法，用 CursorMoved 检测
 	vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
 		group = augroup,
@@ -95,7 +95,7 @@ function M.setup()
 			end
 		end,
 	})
-	
+
 	-- 只在启动时设置默认输入法
 	vim.api.nvim_create_autocmd("VimEnter", {
 		group = augroup,
@@ -106,3 +106,4 @@ function M.setup()
 end
 
 return M
+
