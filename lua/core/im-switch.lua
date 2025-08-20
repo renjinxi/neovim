@@ -32,19 +32,13 @@ function M.record_current_im()
 	local current = get_current_im()
 	if current and current ~= config.default_im then
 		config.saved_im = current
-		print("Recorded current IM:", config.saved_im)
 	end
 end
 
 -- 进入插入模式时，恢复之前保存的输入法
 function M.on_insert_enter()
-	print("InsertEnter - saved_im:", config.saved_im)
-	
 	if config.saved_im and config.saved_im ~= config.default_im then
-		print("Restoring IM to:", config.saved_im)
 		set_im(config.saved_im)
-	else
-		print("Using default IM")
 	end
 end
 
@@ -54,16 +48,29 @@ function M.on_insert_leave()
 	local current = get_current_im()
 	if current and current ~= config.default_im then
 		config.saved_im = current
-		print("Saving current IM:", config.saved_im)
 	end
 	
 	-- 切换到默认输入法
 	set_im(config.default_im)
-	print("Switched to default IM")
+end
+
+-- 检测是否在远程环境
+local function is_remote()
+	return vim.env.SSH_CLIENT ~= nil or vim.env.SSH_TTY ~= nil or vim.env.SSH_CONNECTION ~= nil
 end
 
 -- 设置自动命令
 function M.setup()
+	-- 如果是远程环境，跳过设置
+	if is_remote() then
+		print("检测到远程环境，跳过输入法自动切换")
+		-- 可选：在远程环境设置手动切换快捷键
+		-- vim.keymap.set('n', '<leader>ie', function() 
+		--   vim.fn.system('ssh local-host "~/.config/nvim/scripts/ssh-im.sh set com.apple.keylayout.ABC"')
+		-- end, {desc = "切换到英文输入法"})
+		return
+	end
+	
 	local augroup = vim.api.nvim_create_augroup("InputMethodSwitch", { clear = true })
 	
 	-- 进入插入模式时恢复输入法
