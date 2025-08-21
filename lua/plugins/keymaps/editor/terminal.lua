@@ -51,6 +51,16 @@ function M.setup()
 			vim.opt_local.number = false
 		end,
 	})
+	local cursor_agent = Terminal:new({
+		cmd = "cursor_agent",
+		hidden = true,
+		direction = "vertical",
+		size = math.floor(vim.o.columns * 0.4),
+		on_open = function(term)
+			vim.opt_local.relativenumber = false
+			vim.opt_local.number = false
+		end,
+	})
 
 	local function ncdu_toggle()
 		ncdu:toggle()
@@ -95,20 +105,24 @@ function M.setup()
 	local function gemini_toggle()
 		gemini:toggle()
 	end
+	local function cursor_agent_toggle()
+		cursor_agent:toggle()
+	end
 
 	local keymap = {
 		{ "<leader>g", group = "Terminal", nowait = false, remap = false },
 		{ "<leader>ga", lua_toggle, desc = "Lua", nowait = false, remap = false },
 		{ "<leader>gc", claude_code_toggle, desc = "Claude Code", nowait = false, remap = false },
+		{ "<leader>gg", cursor_agent_toggle, desc = "Cursor Agent", nowait = false, remap = false },
 		{ "<leader>gh", htop_toggle, desc = "Htop", nowait = false, remap = false },
 		{ "<leader>gi", ipython_toggle, desc = "IPython", nowait = false, remap = false },
+		{ "<leader>gk", kimi_claude_code_toggle, desc = "Kimi Claude Code", nowait = false, remap = false },
+		{ "<leader>gl", gemini_toggle, desc = "Newsboat", nowait = false, remap = false },
 		{ "<leader>gn", newterm_toggle, desc = "New Term", nowait = false, remap = false },
+		{ "<leader>gq", qwen_toggle, desc = "Newsboat", nowait = false, remap = false },
+		{ "<leader>gr", newsboat_toggle, desc = "Newsboat", nowait = false, remap = false },
 		{ "<leader>gt", newterm, desc = "New Tab Term", nowait = false, remap = false },
 		{ "<leader>gu", ncdu_toggle, desc = "Ncdu", nowait = false, remap = false },
-		{ "<leader>gr", newsboat_toggle, desc = "Newsboat", nowait = false, remap = false },
-		{ "<leader>gq", qwen_toggle, desc = "Newsboat", nowait = false, remap = false },
-		{ "<leader>gl", gemini_toggle, desc = "Newsboat", nowait = false, remap = false },
-		{ "<leader>gk", kimi_claude_code_toggle, desc = "Kimi Claude Code", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
 end
