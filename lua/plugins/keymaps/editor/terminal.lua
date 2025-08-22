@@ -52,7 +52,7 @@ function M.setup()
 		end,
 	})
 	local cursor_agent = Terminal:new({
-		cmd = "cursor_agent",
+		cmd = "cursor-agent",
 		hidden = true,
 		direction = "vertical",
 		size = math.floor(vim.o.columns * 0.4),

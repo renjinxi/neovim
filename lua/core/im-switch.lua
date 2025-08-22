@@ -85,6 +85,18 @@ function M.setup()
 		callback = M.on_insert_leave,
 	})
 
+	-- 进入终端模式时恢复输入法
+	vim.api.nvim_create_autocmd("TermEnter", {
+		group = augroup,
+		callback = M.on_insert_enter,
+	})
+
+	-- 离开终端模式时保存输入法并切换到默认
+	vim.api.nvim_create_autocmd("TermLeave", {
+		group = augroup,
+		callback = M.on_insert_leave,
+	})
+
 	-- 在普通模式下用户可能手动切换输入法，用 CursorMoved 检测
 	vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
 		group = augroup,
@@ -106,4 +118,3 @@ function M.setup()
 end
 
 return M
-

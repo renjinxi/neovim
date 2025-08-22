@@ -72,11 +72,19 @@ function M.setup()
 	local function setup_clipboard()
 		-- 检测是否在SSH环境
 		if os.getenv('SSH_CLIENT') or os.getenv('SSH_TTY') then
-			-- SSH环境下使用OSC52自动复制，yy既复制到寄存器也复制到本地剪贴板
-			local osc52 = require('core.clipboard-osc52')
-			osc52.setup_commands()
-			osc52.setup_keymaps()
-			osc52.setup_auto_copy()  -- 自动复制功能
+			-- SSH环境下使用Neovim内置的OSC52支持
+			vim.g.clipboard = {
+				name = 'OSC 52',
+				copy = {
+					['+'] = require('vim.ui.clipboard.osc52').copy('+'),
+					['*'] = require('vim.ui.clipboard.osc52').copy('*'),
+				},
+				paste = {
+					['+'] = require('vim.ui.clipboard.osc52').paste('+'),
+					['*'] = require('vim.ui.clipboard.osc52').paste('*'),
+				},
+			}
+			vim.opt.clipboard = 'unnamedplus'
 		elseif vim.fn.has('wsl') == 1 then
 			-- WSL环境使用clip.exe
 			vim.g.clipboard = {
@@ -138,19 +146,6 @@ function M.setup()
 	g.mapleader = " "
 	g.maplocalleader = " "
 
-	-- 创建自动命令组用于终端设置
-	local term_group = vim.api.nvim_create_augroup("TerminalSettings", { clear = true })
-
-	-- 创建自动命令，对所有终端设置行号
-	vim.api.nvim_create_autocmd("TermOpen", {
-		group = term_group,
-		pattern = "term://*",
-		callback = function()
-			-- 设置终端显示行号和相对行号
-			vim.opt_local.number = true
-			vim.opt_local.relativenumber = true
-		end,
-	})
 
 
 end
