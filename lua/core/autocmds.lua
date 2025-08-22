@@ -75,17 +75,7 @@ function M.setup()
 		end,
 	})
 
-	-- 自动重载文件
-	vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI", "FocusGained" }, {
-		group = create_group("AutoReload"),
-		pattern = "*",
-		-- command = "if mode() != 'c' | checktime | endif",
-		callback = function()
-			if vim.bo.buftype == "" and vim.api.nvim_get_mode().mode ~= "c" then
-				vim.cmd("checktime")
-			end
-		end,
-	})
+	-- 自动重载文件 - 现在由 vim-autoread 插件处理
 
 	-- 用户自定义自动命令
 	local ok, custom_autocmds = pcall(require, "config.autocmds")

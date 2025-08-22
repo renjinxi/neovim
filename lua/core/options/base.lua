@@ -37,6 +37,7 @@ function M.setup()
 		updatetime = 300, -- 更新时间
 		timeoutlen = 500, -- 键盘序列超时时间
 		completeopt = "menuone,noselect", -- 补全设置
+		autoread = true, -- 自动读取外部更改的文件
 	}
 
 	-- 代码折叠配置

@@ -1,7 +1,7 @@
 local M = {}
 
 function M.setup()
-	vim.o.background = "light" -- or "dark" for light mode
+	vim.o.background = "light"
 	local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 	if not vim.loop.fs_stat(lazypath) then
 		vim.fn.system({

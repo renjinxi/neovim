@@ -549,6 +549,13 @@ return {
 	-- ================================
 	-- 移除有问题的 im-select 插件，使用自定义输入法切换
 	{
+		"djoshea/vim-autoread", -- 文件自动重载 - 更及时的外部变化检测
+		config = function()
+			-- 启用更频繁的检查
+			vim.g.autoread_debounce_time = 100 -- 100ms 延迟
+		end,
+	},
+	{
 		"Pocco81/auto-save.nvim", -- 自动保存
 		config = function()
 			require("plugins.config.autosave")
