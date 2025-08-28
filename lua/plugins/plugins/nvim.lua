@@ -206,7 +206,7 @@ return {
 			"NvimTreeFindFileToggle",
 		},
 		keys = {
-			{ "<leader>tt", "<cmd>NvimTreeToggle<cr>", desc = "Toggle file tree" },
+			{ "<leader>tu", "<cmd>NvimTreeToggle<cr>", desc = "Toggle file tree" },
 			{ "<leader>tf", "<cmd>NvimTreeFocus<cr>", desc = "Focus file tree" },
 			{ "<leader>tr", "<cmd>NvimTreeFindFile<cr>", desc = "Find current file" },
 		},
