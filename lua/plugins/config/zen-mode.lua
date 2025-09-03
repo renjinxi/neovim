@@ -39,12 +39,20 @@ return {
 	end,
 	-- 退出zen模式时的回调
 	on_close = function()
-		-- 恢复诊断显示
+		-- 恢复诊断显示，包括图标配置
 		vim.diagnostic.config({
-			virtual_text = true,
-			signs = true,
+			virtual_text = false, -- 保持与 LSP 配置一致
+			signs = {
+				text = {
+					[vim.diagnostic.severity.ERROR] = "󰅚",
+					[vim.diagnostic.severity.WARN] = "󰀪",
+					[vim.diagnostic.severity.HINT] = "󰌶", 
+					[vim.diagnostic.severity.INFO] = "●",
+				},
+			},
 			underline = true,
 			update_in_insert = false,
+			severity_sort = true,
 		})
 	end,
 }

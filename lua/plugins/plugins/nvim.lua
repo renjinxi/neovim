@@ -691,9 +691,6 @@ return {
 		config = function()
 			require("zen-mode").setup(require("plugins.config.zen-mode"))
 		end,
-		keys = {
-			{ "<leader>zm", "<cmd>ZenMode<cr>", desc = "Zen Mode" },
-		},
 	},
 	{
 		"m4xshen/hardtime.nvim", -- 习惯培养
