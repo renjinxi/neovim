@@ -64,7 +64,8 @@ return {
 		event = "LspAttach",
 		config = function()
 			local post_open_hook = function(_, win)
-				vim.api.nvim_win_set_option(win, "winhighlight", "Normal:")
+				-- vim.api.nvim_win_set_option(win, "winhighlight", "Normal:")
+				vim.api.nvim_set_option_value("winhighlight", "Normal:", { win = win })
 			end
 
 			require("goto-preview").setup({
