@@ -46,7 +46,7 @@ end
 function M.on_insert_leave()
 	-- 在切换前记录当前状态
 	local current = get_current_im()
-	if current and current ~= config.default_im then
+	if current then
 		config.saved_im = current
 	end
 
