@@ -3,6 +3,27 @@ if not dapui_exists then
 	return
 end
 
+-- 保存原始鼠标设置
+local original_mouse = vim.o.mouse
+
+-- DAP UI 事件监听
+local dap = require("dap")
+dap.listeners.after.event_initialized["dapui_config"] = function()
+	dapui.open()
+	-- 启用鼠标
+	vim.o.mouse = "a"
+end
+dap.listeners.before.event_terminated["dapui_config"] = function()
+	dapui.close()
+	-- 恢复原始鼠标设置
+	vim.o.mouse = original_mouse
+end
+dap.listeners.before.event_exited["dapui_config"] = function()
+	dapui.close()
+	-- 恢复原始鼠标设置
+	vim.o.mouse = original_mouse
+end
+
 dapui.setup({
 	layouts = {
 		{

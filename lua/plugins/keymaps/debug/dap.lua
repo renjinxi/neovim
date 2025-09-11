@@ -51,7 +51,36 @@ function M.setup()
 			nowait = false,
 			remap = false,
 		},
-		{ "<leader>dU", "<cmd> lua require'dapui'.toggle()<cr>", desc = "Toggle UI", nowait = false, remap = false },
+		{ 
+			"<leader>dU", 
+			function()
+				local dapui = require("dapui")
+				local is_open = false
+				
+				-- 检查 DAP UI 是否已打开（简单检测方法）
+				for _, win in ipairs(vim.api.nvim_list_wins()) do
+					local buf = vim.api.nvim_win_get_buf(win)
+					local name = vim.api.nvim_buf_get_name(buf)
+					if name:match("DAP") then
+						is_open = true
+						break
+					end
+				end
+				
+				if is_open then
+					dapui.close()
+					-- 恢复禁用鼠标
+					vim.o.mouse = ""
+				else
+					dapui.open()
+					-- 启用鼠标
+					vim.o.mouse = "a"
+				end
+			end,
+			desc = "Toggle UI", 
+			nowait = false, 
+			remap = false 
+		},
 		{ "<leader>das", EnableAllBreakpoints, desc = "Enable All Breakpoints", nowait = false, remap = false },
 		{ "<leader>dat", DisableAllBreakpoints, desc = "Disable All Breakpoints", nowait = false, remap = false },
 		{ "<leader>db", "<cmd> lua require'dap'.step_back()<cr>", desc = "Step Back", nowait = false, remap = false },

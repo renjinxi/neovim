@@ -30,7 +30,12 @@ local function get_python_path()
 	return vim.fn.exepath("python")
 end
 
-dap_python.setup(get_python_path())
+-- debugpy 使用 Mason 安装的版本，python_path 使用项目环境
+local python_path = get_python_path()
+local debugpy_path = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python"
+dap_python.setup(debugpy_path, {
+	python_path = python_path
+})
 local configs = {
 	{
 		type = "python",
