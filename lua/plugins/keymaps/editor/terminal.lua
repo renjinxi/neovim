@@ -14,8 +14,7 @@ function M.setup()
 	local claude_code = Terminal:new({
 		cmd = "claude",
 		hidden = true,
-		direction = "vertical",
-		size = math.floor(vim.o.columns * 0.4),
+		direction = "tab",  -- 改为新 tab
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
 			vim.opt_local.number = false
@@ -24,8 +23,7 @@ function M.setup()
 	local kimi_claude_code = Terminal:new({
 		cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude",
 		hidden = true,
-		direction = "vertical",
-		size = math.floor(vim.o.columns * 0.4),
+		direction = "tab",  -- 改为新 tab
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
 			vim.opt_local.number = false
