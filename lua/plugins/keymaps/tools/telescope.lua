@@ -1,5 +1,35 @@
 local M = {}
 
+local function copy_file_content_to_current()
+	require("telescope.builtin").find_files({
+		prompt_title = "Copy File Content",
+		attach_mappings = function(prompt_bufnr, map)
+			local actions = require("telescope.actions")
+			local action_state = require("telescope.actions.state")
+
+			map("i", "<CR>", function()
+				local selection = action_state.get_selected_entry()
+				actions.close(prompt_bufnr)
+
+				if selection then
+					local file_path = selection.path or selection.value
+					local file_content = vim.fn.readfile(file_path)
+
+					-- 获取当前光标位置
+					local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+
+					-- 在当前光标位置插入文件内容
+					vim.api.nvim_buf_set_lines(0, row, row, false, file_content)
+
+					print("File content copied: " .. file_path)
+				end
+			end)
+
+			return true
+		end,
+	})
+end
+
 function M.setup()
 	local keymap = {
 		{ "<leader>f", group = "Telescope", nowait = false, remap = false },
@@ -50,6 +80,15 @@ function M.setup()
 		{ "<leader>fu", "<cmd>Telescope dir find_files<cr>", desc = "Dir Find Files", nowait = false, remap = false },
 		{ "<leader>fy", "<cmd>Telescope session-lens<cr>", desc = "Session", nowait = false, remap = false },
 		{ "<leader>fz", "<cmd>Telescope keymaps<cr>", desc = "Search Keymaps", nowait = false, remap = false },
+		{
+			"<leader>fc",
+			function()
+				copy_file_content_to_current()
+			end,
+			desc = "Copy File Content",
+			nowait = false,
+			remap = false,
+		},
 	}
 	require("which-key").add(keymap)
 end
