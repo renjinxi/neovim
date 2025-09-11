@@ -2,19 +2,22 @@ local M = {}
 
 function M.setup()
 	local Terminal = require("toggleterm.terminal").Terminal
-	local ncdu = Terminal:new({ cmd = "ncdu --color dark", hidden = true, direction = "float" })
-	local htop = Terminal:new({ cmd = "htop", hidden = true, direction = "float" })
-	local ipython = Terminal:new({ cmd = "ipython", hidden = true })
-	local lua = Terminal:new({ cmd = "lua", hidden = true })
-	local cling = Terminal:new({ cmd = "cling", hidden = true })
-	local new_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "float" })
-	local tig = Terminal:new({ cmd = "tig", hidden = true, direction = "float" })
-	local new_tab_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab" })
-	local newsboat = Terminal:new({ cmd = "newsboat", hidden = true, direction = "tab" })
+	
+	-- 专用终端使用 count >= 2，保留 count=1 给默认的 <c-\> 映射
+	local ncdu = Terminal:new({ cmd = "ncdu --color dark", hidden = true, direction = "float", count = 2 })
+	local htop = Terminal:new({ cmd = "htop", hidden = true, direction = "float", count = 3 })
+	local ipython = Terminal:new({ cmd = "ipython", hidden = true, count = 4 })
+	local lua = Terminal:new({ cmd = "lua", hidden = true, count = 5 })
+	local cling = Terminal:new({ cmd = "cling", hidden = true, count = 6 })
+	local new_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "float", count = 7 })
+	local tig = Terminal:new({ cmd = "tig", hidden = true, direction = "float", count = 8 })
+	local new_tab_term = Terminal:new({ cmd = "/bin/zsh", hidden = true, direction = "tab", count = 9 })
+	local newsboat = Terminal:new({ cmd = "newsboat", hidden = true, direction = "tab", count = 10 })
 	local claude_code = Terminal:new({
 		cmd = "claude",
 		hidden = true,
 		direction = "tab",  -- 改为新 tab
+		count = 11,
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
 			vim.opt_local.number = false
@@ -24,6 +27,7 @@ function M.setup()
 		cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude",
 		hidden = true,
 		direction = "tab",  -- 改为新 tab
+		count = 12,
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
 			vim.opt_local.number = false
@@ -34,6 +38,7 @@ function M.setup()
 		hidden = true,
 		direction = "vertical",
 		size = math.floor(vim.o.columns * 0.4),
+		count = 13,
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
 			vim.opt_local.number = false
@@ -44,6 +49,7 @@ function M.setup()
 		hidden = true,
 		direction = "vertical",
 		size = math.floor(vim.o.columns * 0.4),
+		count = 14,
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
 			vim.opt_local.number = false
@@ -54,6 +60,7 @@ function M.setup()
 		hidden = true,
 		direction = "vertical",
 		size = math.floor(vim.o.columns * 0.4),
+		count = 15,
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
 			vim.opt_local.number = false
