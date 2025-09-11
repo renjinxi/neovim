@@ -6,3 +6,4 @@ end
 require("dap.ext.vscode").load_launchjs(".nvim/launch.json", nil)
 require("plugins.dap.language.python")
 require("plugins.dap.language.c")
+require("plugins.dap.language.go")
