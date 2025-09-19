@@ -379,6 +379,13 @@ return {
 	},
 	"rcarriga/nvim-dap-ui",
 	"mfussenegger/nvim-dap-python",
+	{
+		"leoluz/nvim-dap-go",
+		dependencies = "mfussenegger/nvim-dap",
+		config = function()
+			require("dap-go").setup()
+		end,
+	},
 	"nvim-telescope/telescope-dap.nvim",
 	"theHamsta/nvim-dap-virtual-text",
 	{
