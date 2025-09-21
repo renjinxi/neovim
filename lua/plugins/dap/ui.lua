@@ -24,7 +24,62 @@ dap.listeners.before.event_exited["dapui_config"] = function()
 	vim.o.mouse = original_mouse
 end
 
+-- 设置断点图标的高亮组
+vim.api.nvim_set_hl(0, 'DapBreakpoint', { ctermbg = 0, fg = '#ff6b6b', bg = 'NONE' })
+vim.api.nvim_set_hl(0, 'DapBreakpointCondition', { ctermbg = 0, fg = '#feca57', bg = 'NONE' })
+vim.api.nvim_set_hl(0, 'DapLogPoint', { ctermbg = 0, fg = '#54a0ff', bg = 'NONE' })
+vim.api.nvim_set_hl(0, 'DapStopped', { ctermbg = 0, fg = '#5f27cd', bg = 'NONE' })
+
+-- 定义美观的断点图标
+vim.fn.sign_define('DapBreakpoint', {
+	text='●',
+	texthl='DapBreakpoint',
+	linehl='',
+	numhl='DapBreakpoint'
+})
+vim.fn.sign_define('DapBreakpointCondition', {
+	text='◉',
+	texthl='DapBreakpointCondition',
+	linehl='',
+	numhl='DapBreakpointCondition'
+})
+vim.fn.sign_define('DapBreakpointRejected', {
+	text='○',
+	texthl='DapBreakpoint',
+	linehl='',
+	numhl='DapBreakpoint'
+})
+vim.fn.sign_define('DapLogPoint', {
+	text='◆',
+	texthl='DapLogPoint',
+	linehl='',
+	numhl='DapLogPoint'
+})
+vim.fn.sign_define('DapStopped', {
+	text='▶',
+	texthl='DapStopped',
+	linehl='DapStopped',
+	numhl='DapStopped'
+})
+
+-- 确保颜色在切换主题后不会丢失
+vim.api.nvim_create_autocmd("ColorScheme", {
+	pattern = "*",
+	desc = "保持 DAP 断点图标颜色",
+	callback = function()
+		vim.api.nvim_set_hl(0, 'DapBreakpoint', { ctermbg = 0, fg = '#ff6b6b', bg = 'NONE' })
+		vim.api.nvim_set_hl(0, 'DapBreakpointCondition', { ctermbg = 0, fg = '#feca57', bg = 'NONE' })
+		vim.api.nvim_set_hl(0, 'DapLogPoint', { ctermbg = 0, fg = '#54a0ff', bg = 'NONE' })
+		vim.api.nvim_set_hl(0, 'DapStopped', { ctermbg = 0, fg = '#5f27cd', bg = 'NONE' })
+	end
+})
+
 dapui.setup({
+	icons = {
+		expanded = "▾",
+		collapsed = "▸",
+		current_frame = "▸"
+	},
 	layouts = {
 		{
 			elements = {
