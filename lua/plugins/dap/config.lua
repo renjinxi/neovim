@@ -4,7 +4,7 @@ if not mason_nvim_dap_exists then
 end
 
 mason_nvim_dap.setup({
-	ensure_installed = { "python", "codelldb" },
+	ensure_installed = { "python", "codelldb", "js" },
 	handlers = {
 		function(config)
 			-- all sources with no handler get passed here
