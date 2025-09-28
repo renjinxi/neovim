@@ -25,50 +25,28 @@ dap_go.setup({
 			request = "launch",
 			program = "${file}",
 		},
-		-- 调试整个包（当前目录）
+		-- 调试当前包（当前目录）
 		{
 			type = "go",
 			name = "Debug Package",
 			request = "launch",
 			program = "${fileDirname}",
 		},
-		-- 调试主程序（项目根目录）
+		-- 调试当前测试文件
 		{
 			type = "go",
-			name = "Debug Main (project root)",
+			name = "Debug Test File",
 			request = "launch",
-			program = "${workspaceFolder}",
+			mode = "test",
+			program = "${file}",
 		},
-		-- 附加到远程进程
-		{
-			type = "go",
-			name = "Attach remote",
-			mode = "remote",
-			request = "attach",
-		},
-		-- 附加到本地进程
+		-- 附加到已运行的本地进程
 		{
 			type = "go",
 			name = "Attach to Process",
 			mode = "local",
 			request = "attach",
 			processId = require("dap.utils").pick_process,
-		},
-		-- 调试测试文件
-		{
-			type = "go",
-			name = "Debug test (current file)",
-			request = "launch",
-			mode = "test",
-			program = "${file}",
-		},
-		-- 调试包中的所有测试
-		{
-			type = "go",
-			name = "Debug test (go.mod)",
-			request = "launch",
-			mode = "test",
-			program = "./${relativeFileDirname}",
 		},
 	},
 	-- 调试测试时的标志

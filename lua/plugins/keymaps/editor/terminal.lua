@@ -23,6 +23,16 @@ function M.setup()
 			vim.opt_local.number = false
 		end,
 	})
+	local codex = Terminal:new({
+		cmd = "codex",
+		hidden = true,
+		direction = "tab",
+		count = 16,
+		on_open = function(term)
+			vim.opt_local.relativenumber = false
+			vim.opt_local.number = false
+		end,
+	})
 	local kimi_claude_code = Terminal:new({
 		cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude",
 		hidden = true,
@@ -104,6 +114,9 @@ function M.setup()
 	local function claude_code_toggle()
 		claude_code:toggle()
 	end
+	local function codex_toggle()
+		codex:toggle()
+	end
 	local function qwen_toggle()
 		qwen:toggle()
 	end
@@ -118,6 +131,7 @@ function M.setup()
 		{ "<leader>g", group = "Terminal", nowait = false, remap = false },
 		{ "<leader>ga", lua_toggle, desc = "Lua", nowait = false, remap = false },
 		{ "<leader>gc", claude_code_toggle, desc = "Claude Code", nowait = false, remap = false },
+		{ "<leader>gd", codex_toggle, desc = "Codex", nowait = false, remap = false },
 		{ "<leader>gg", cursor_agent_toggle, desc = "Cursor Agent", nowait = false, remap = false },
 		{ "<leader>gh", htop_toggle, desc = "Htop", nowait = false, remap = false },
 		{ "<leader>gi", ipython_toggle, desc = "IPython", nowait = false, remap = false },
