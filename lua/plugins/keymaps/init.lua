@@ -25,6 +25,21 @@ local function setup_basic_keymaps()
 	end
 
 	vim.keymap.set("n", "gx", open_url, opts)
+
+	-- 标签页切换映射 - 在所有模式下生效
+	-- gt 和 gT 在 insert 模式下切换标签页并返回 normal 模式
+	vim.keymap.set("i", "gt", "<Esc>gt", opts)
+	vim.keymap.set("i", "gT", "<Esc>gT", opts)
+
+	-- Ctrl+数字 在所有模式下切换到对应标签页
+	for i = 1, 9 do
+		-- Normal 模式
+		vim.keymap.set("n", "<C-" .. i .. ">", i .. "gt", opts)
+		-- Insert 模式 - 切换后返回 normal 模式
+		vim.keymap.set("i", "<C-" .. i .. ">", "<Esc>" .. i .. "gt", opts)
+		-- Visual 模式
+		vim.keymap.set("v", "<C-" .. i .. ">", "<Esc>" .. i .. "gt", opts)
+	end
 end
 
 -- 根据环境加载不同的模块
