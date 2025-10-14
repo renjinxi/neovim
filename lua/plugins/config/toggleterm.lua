@@ -7,15 +7,6 @@ function _G.set_terminal_keymaps()
 	vim.keymap.set("t", "<C-j>", [[<Cmd>wincmd j<CR>]], opts)
 	vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], opts)
 	vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], opts)
-	-- 在终端模式下也能使用gt切换标签页并切换到normal模式
-	vim.keymap.set("t", "gt", [[<C-\><C-n>gt]], opts)
-	-- 在终端模式下也能使用gT切换到上一个标签页并切换到normal模式
-	vim.keymap.set("t", "gT", [[<C-\><C-n>gT]], opts)
-
-	-- 在终端模式下使用Ctrl+数字切换到对应标签页并切换到normal模式
-	for i = 1, 9 do
-		vim.keymap.set("t", "<C-" .. i .. ">", [[<C-\><C-n>]] .. i .. [[gt]], opts)
-	end
 end
 
 -- Apply terminal keymaps when terminal opens
