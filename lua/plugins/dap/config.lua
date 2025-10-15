@@ -6,9 +6,10 @@ end
 mason_nvim_dap.setup({
 	ensure_installed = { "python", "codelldb", "js" },
 	handlers = {
+		-- 排除 js，因为我们有自定义配置
+		js = function() end,
 		function(config)
 			-- all sources with no handler get passed here
-
 			-- Keep original functionality
 			require("mason-nvim-dap").default_setup(config)
 		end,
