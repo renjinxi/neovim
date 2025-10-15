@@ -2,6 +2,19 @@ local M = {}
 
 function M.setup()
 	local Terminal = require("toggleterm.terminal").Terminal
+	local env = require("core.env")
+
+	-- 构建 Claude Code 命令的辅助函数
+	local function build_claude_cmd(api_num)
+		local base_url = env.get("CLAUDE_API" .. api_num .. "_BASE_URL")
+		local token = env.get("CLAUDE_API" .. api_num .. "_TOKEN")
+
+		if base_url and token and base_url ~= "your_token_" .. api_num .. "_here" and token ~= "your_token_" .. api_num .. "_here" then
+			return string.format("ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude", base_url, token)
+		else
+			return "claude"  -- 回退到默认命令
+		end
+	end
 	
 	-- 专用终端使用 count >= 2，保留 count=1 给默认的 <c-\> 映射
 	local ncdu = Terminal:new({ cmd = "ncdu --color dark", hidden = true, direction = "float", count = 2 })
@@ -76,6 +89,26 @@ function M.setup()
 			vim.opt_local.number = false
 		end,
 	})
+	local claude_code_1 = Terminal:new({
+		cmd = build_claude_cmd(1),
+		hidden = true,
+		direction = "tab",
+		count = 17,
+		on_open = function(term)
+			vim.opt_local.relativenumber = false
+			vim.opt_local.number = false
+		end,
+	})
+	local claude_code_2 = Terminal:new({
+		cmd = build_claude_cmd(2),
+		hidden = true,
+		direction = "tab",
+		count = 18,
+		on_open = function(term)
+			vim.opt_local.relativenumber = false
+			vim.opt_local.number = false
+		end,
+	})
 
 	local function ncdu_toggle()
 		ncdu:toggle()
@@ -126,11 +159,19 @@ function M.setup()
 	local function cursor_agent_toggle()
 		cursor_agent:toggle()
 	end
+	local function claude_code_1_toggle()
+		claude_code_1:toggle()
+	end
+	local function claude_code_2_toggle()
+		claude_code_2:toggle()
+	end
 
 	local keymap = {
 		{ "<leader>g", group = "Terminal", nowait = false, remap = false },
 		{ "<leader>ga", lua_toggle, desc = "Lua", nowait = false, remap = false },
 		{ "<leader>gc", claude_code_toggle, desc = "Claude Code", nowait = false, remap = false },
+		{ "<leader>gc1", claude_code_1_toggle, desc = "Claude Code API 1", nowait = false, remap = false },
+		{ "<leader>gc2", claude_code_2_toggle, desc = "Claude Code API 2", nowait = false, remap = false },
 		{ "<leader>gd", codex_toggle, desc = "Codex", nowait = false, remap = false },
 		{ "<leader>gg", cursor_agent_toggle, desc = "Cursor Agent", nowait = false, remap = false },
 		{ "<leader>gh", htop_toggle, desc = "Htop", nowait = false, remap = false },
