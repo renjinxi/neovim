@@ -7,6 +7,8 @@ function _G.set_terminal_keymaps()
 	vim.keymap.set("t", "<C-j>", [[<Cmd>wincmd j<CR>]], opts)
 	vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], opts)
 	vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], opts)
+	-- 在终端模式中按 Ctrl+U: 先进入 normal 模式，然后执行 Ctrl+U (向上翻页半屏)
+	vim.keymap.set("t", "<C-u>", [[<C-\><C-n><C-u>]], opts)
 end
 
 -- Apply terminal keymaps when terminal opens
