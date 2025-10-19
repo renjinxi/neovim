@@ -166,12 +166,67 @@ function M.setup()
 		claude_code_2:toggle()
 	end
 
+	-- 动态创建新的 Claude Code 标签页
+	local claude_instances = {}
+	local next_claude_count = 20 -- 从 20 开始计数，避免与现有终端冲突
+
+	local function create_new_claude_tab()
+		local Terminal = require("toggleterm.terminal").Terminal
+		local count = next_claude_count
+		next_claude_count = next_claude_count + 1
+
+		local new_claude = Terminal:new({
+			cmd = "claude",
+			hidden = true,
+			direction = "tab",
+			count = count,
+			on_open = function(term)
+				vim.opt_local.relativenumber = false
+				vim.opt_local.number = false
+			end,
+		})
+
+		-- 保存实例引用
+		claude_instances[count] = new_claude
+
+		-- 打开新的 Claude Code 标签页
+		new_claude:toggle()
+	end
+
+	-- 创建带有指定 API 配置的新 Claude Code 标签页
+	local function create_new_claude_tab_with_api(api_num)
+		local Terminal = require("toggleterm.terminal").Terminal
+		local count = next_claude_count
+		next_claude_count = next_claude_count + 1
+
+		local cmd = build_claude_cmd(api_num)
+		local new_claude = Terminal:new({
+			cmd = cmd,
+			hidden = true,
+			direction = "tab",
+			count = count,
+			on_open = function(term)
+				vim.opt_local.relativenumber = false
+				vim.opt_local.number = false
+			end,
+		})
+
+		-- 保存实例引用
+		claude_instances[count] = new_claude
+
+		-- 打开新的 Claude Code 标签页
+		new_claude:toggle()
+	end
+
 	local keymap = {
 		{ "<leader>g", group = "Terminal", nowait = false, remap = false },
 		{ "<leader>ga", lua_toggle, desc = "Lua", nowait = false, remap = false },
 		{ "<leader>gc", claude_code_toggle, desc = "Claude Code", nowait = false, remap = false },
 		{ "<leader>gc1", claude_code_1_toggle, desc = "Claude Code API 1", nowait = false, remap = false },
 		{ "<leader>gc2", claude_code_2_toggle, desc = "Claude Code API 2", nowait = false, remap = false },
+		{ "<leader>gcn", create_new_claude_tab, desc = "New Claude Code Tab", nowait = false, remap = false },
+		{ "<leader>gcn1", function() create_new_claude_tab_with_api(1) end, desc = "New Claude Code Tab (API 1)", nowait = false, remap = false },
+		{ "<leader>gcn2", function() create_new_claude_tab_with_api(2) end, desc = "New Claude Code Tab (API 2)", nowait = false, remap = false },
 		{ "<leader>gd", codex_toggle, desc = "Codex", nowait = false, remap = false },
 		{ "<leader>gg", cursor_agent_toggle, desc = "Cursor Agent", nowait = false, remap = false },
 		{ "<leader>gh", htop_toggle, desc = "Htop", nowait = false, remap = false },
