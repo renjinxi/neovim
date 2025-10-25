@@ -166,6 +166,66 @@ function M.setup()
 		claude_code_2:toggle()
 	end
 
+	-- 记录最后一个打开的终端
+	local last_terminal_id = nil
+
+	-- 切换当前终端 tab（隐藏/恢复）
+	local function toggle_current_term()
+		local current_buf = vim.api.nvim_get_current_buf()
+		local buf_ft = vim.api.nvim_buf_get_option(current_buf, 'filetype')
+
+		-- 如果当前是终端，隐藏它并记录 ID
+		if buf_ft == 'toggleterm' then
+			-- 获取终端 ID
+			local term_id = vim.b[current_buf].toggle_number
+			if term_id then
+				last_terminal_id = term_id
+			end
+			vim.cmd('close')
+		else
+			-- 如果不是终端，尝试恢复上次的终端
+			if last_terminal_id then
+				vim.cmd(last_terminal_id .. "ToggleTerm")
+			else
+				vim.notify("No terminal to restore", vim.log.levels.WARN)
+			end
+		end
+	end
+
+	-- 保存所有终端的可见状态
+	local all_terms_hidden = false
+
+	-- 切换显示/隐藏所有终端 tabs
+	local function toggle_all_terms()
+		local terms = require("toggleterm.terminal")
+		local terminals = terms.get_all(true) -- true 表示包括隐藏的终端
+
+		if not terminals or vim.tbl_isempty(terminals) then
+			vim.notify("No terminals found", vim.log.levels.INFO)
+			return
+		end
+
+		all_terms_hidden = not all_terms_hidden
+
+		if all_terms_hidden then
+			-- 隐藏所有终端
+			for _, term in pairs(terminals) do
+				if term:is_open() then
+					term:close()
+				end
+			end
+			vim.notify("All terminals hidden", vim.log.levels.INFO)
+		else
+			-- 显示所有之前打开的终端
+			for _, term in pairs(terminals) do
+				if not term:is_open() then
+					term:open()
+				end
+			end
+			vim.notify("All terminals shown", vim.log.levels.INFO)
+		end
+	end
+
 	-- 动态创建新的 Claude Code 标签页
 	local claude_instances = {}
 	local next_claude_count = 20 -- 从 20 开始计数，避免与现有终端冲突
@@ -240,6 +300,16 @@ function M.setup()
 		{ "<leader>gu", ncdu_toggle, desc = "Ncdu", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
+
+	-- 切换当前终端: Ctrl+q (normal、insert 和 terminal 模式)
+	vim.keymap.set("n", "<C-q>", toggle_current_term, { desc = "Toggle Current Terminal", silent = true })
+	vim.keymap.set("i", "<C-q>", toggle_current_term, { desc = "Toggle Current Terminal", silent = true })
+	vim.keymap.set("t", "<C-q>", toggle_current_term, { desc = "Toggle Current Terminal", silent = true })
+
+	-- 切换所有终端: Ctrl+a (normal 和 insert 模式)
+	vim.keymap.set("n", "<C-a>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
+	vim.keymap.set("i", "<C-a>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
+	vim.keymap.set("t", "<C-a>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
 end
 
 return M
