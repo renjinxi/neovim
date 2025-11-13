@@ -9,13 +9,18 @@ function M.setup()
 		local base_url = env.get("CLAUDE_API" .. api_num .. "_BASE_URL")
 		local token = env.get("CLAUDE_API" .. api_num .. "_TOKEN")
 
-		if base_url and token and base_url ~= "your_token_" .. api_num .. "_here" and token ~= "your_token_" .. api_num .. "_here" then
+		if
+			base_url
+			and token
+			and base_url ~= "your_token_" .. api_num .. "_here"
+			and token ~= "your_token_" .. api_num .. "_here"
+		then
 			return string.format("ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude", base_url, token)
 		else
-			return "claude"  -- 回退到默认命令
+			return "claude" -- 回退到默认命令
 		end
 	end
-	
+
 	-- 专用终端使用 count >= 2，保留 count=1 给默认的 <c-\> 映射
 	local ncdu = Terminal:new({ cmd = "ncdu --color dark", hidden = true, direction = "float", count = 2 })
 	local htop = Terminal:new({ cmd = "htop", hidden = true, direction = "float", count = 3 })
@@ -29,7 +34,7 @@ function M.setup()
 	local claude_code = Terminal:new({
 		cmd = "claude",
 		hidden = true,
-		direction = "tab",  -- 改为新 tab
+		direction = "tab", -- 改为新 tab
 		count = 11,
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
@@ -49,7 +54,7 @@ function M.setup()
 	local kimi_claude_code = Terminal:new({
 		cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude",
 		hidden = true,
-		direction = "tab",  -- 改为新 tab
+		direction = "tab", -- 改为新 tab
 		count = 12,
 		on_open = function(term)
 			vim.opt_local.relativenumber = false
@@ -172,16 +177,16 @@ function M.setup()
 	-- 切换当前终端 tab（隐藏/恢复）
 	local function toggle_current_term()
 		local current_buf = vim.api.nvim_get_current_buf()
-		local buf_ft = vim.api.nvim_buf_get_option(current_buf, 'filetype')
+		local buf_ft = vim.api.nvim_buf_get_option(current_buf, "filetype")
 
 		-- 如果当前是终端，隐藏它并记录 ID
-		if buf_ft == 'toggleterm' then
+		if buf_ft == "toggleterm" then
 			-- 获取终端 ID
 			local term_id = vim.b[current_buf].toggle_number
 			if term_id then
 				last_terminal_id = term_id
 			end
-			vim.cmd('close')
+			vim.cmd("close")
 		else
 			-- 如果不是终端，尝试恢复上次的终端
 			if last_terminal_id then
@@ -281,12 +286,28 @@ function M.setup()
 	local keymap = {
 		{ "<leader>g", group = "Terminal", nowait = false, remap = false },
 		{ "<leader>ga", lua_toggle, desc = "Lua", nowait = false, remap = false },
-		{ "<leader>gc", claude_code_toggle, desc = "Claude Code", nowait = false, remap = false },
+		{ "<leader>gc", claude_code_1_toggle, desc = "Claude Code", nowait = false, remap = false },
 		{ "<leader>gc1", claude_code_1_toggle, desc = "Claude Code API 1", nowait = false, remap = false },
 		{ "<leader>gc2", claude_code_2_toggle, desc = "Claude Code API 2", nowait = false, remap = false },
 		{ "<leader>gcn", create_new_claude_tab, desc = "New Claude Code Tab", nowait = false, remap = false },
-		{ "<leader>gcn1", function() create_new_claude_tab_with_api(1) end, desc = "New Claude Code Tab (API 1)", nowait = false, remap = false },
-		{ "<leader>gcn2", function() create_new_claude_tab_with_api(2) end, desc = "New Claude Code Tab (API 2)", nowait = false, remap = false },
+		{
+			"<leader>gcn1",
+			function()
+				create_new_claude_tab_with_api(1)
+			end,
+			desc = "New Claude Code Tab (API 1)",
+			nowait = false,
+			remap = false,
+		},
+		{
+			"<leader>gcn2",
+			function()
+				create_new_claude_tab_with_api(2)
+			end,
+			desc = "New Claude Code Tab (API 2)",
+			nowait = false,
+			remap = false,
+		},
 		{ "<leader>gd", codex_toggle, desc = "Codex", nowait = false, remap = false },
 		{ "<leader>gg", cursor_agent_toggle, desc = "Cursor Agent", nowait = false, remap = false },
 		{ "<leader>gh", htop_toggle, desc = "Htop", nowait = false, remap = false },
