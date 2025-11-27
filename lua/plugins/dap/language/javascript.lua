@@ -282,9 +282,31 @@ local function get_js_debug_config()
 	}
 end
 
--- 配置语言
-dap.configurations.javascript = get_js_debug_config()
-dap.configurations.typescript = get_js_debug_config()
-dap.configurations.javascriptreact = get_js_debug_config()
-dap.configurations.typescriptreact = get_js_debug_config()
+-- 配置语言 - 使用懒加载，避免在家目录启动时执行find命令卡顿
+-- 参考: https://github.com/mfussenegger/nvim-dap/discussions/810
+local function lazy_get_config()
+	if not dap.configurations.javascript then
+		local config = get_js_debug_config()
+		dap.configurations.javascript = config
+		dap.configurations.typescript = config
+		dap.configurations.javascriptreact = config
+		dap.configurations.typescriptreact = config
+	end
+	return dap.configurations.javascript
+end
+
+-- 设置空表，在第一次调试时才真正初始化
+dap.configurations.javascript = {}
+dap.configurations.typescript = {}
+dap.configurations.javascriptreact = {}
+dap.configurations.typescriptreact = {}
+
+-- 使用autocmd在打开JS/TS文件时才初始化配置
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
+	once = true,
+	callback = function()
+		lazy_get_config()
+	end,
+})
 
