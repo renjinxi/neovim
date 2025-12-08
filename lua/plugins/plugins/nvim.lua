@@ -27,8 +27,14 @@ return {
 		config = function()
 			require("mason-tool-installer").setup({
 				ensure_installed = {
+					-- 格式化工具
 					"prettierd",
 					"goimports",
+					"google-java-format", -- Java 格式化
+					"ktlint", -- Kotlin 格式化和 linting
+					-- Java/Android 开发工具
+					"java-debug-adapter", -- Java 调试器
+					"java-test", -- Java 测试
 				},
 				auto_update = false,
 				run_on_start = true,
@@ -72,6 +78,13 @@ return {
 				post_open_hook = post_open_hook,
 			})
 		end,
+	},
+	{
+		"mfussenegger/nvim-jdtls", -- Java LSP 增强插件
+		ft = { "java", "kotlin" },
+		dependencies = {
+			"mfussenegger/nvim-dap", -- Java 调试需要 DAP
+		},
 	},
 
 	-- ================================

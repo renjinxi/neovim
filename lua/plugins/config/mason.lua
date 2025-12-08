@@ -45,6 +45,10 @@ function M.setup()
 			"ruff", -- Python linting/formatting (2025年新增)
 			"bashls", -- Bash
 
+			-- Java/Kotlin/Android 开发
+			"jdtls", -- Java Language Server
+			"kotlin_language_server", -- Kotlin
+
 			-- 配置文件
 			"yamlls",
 			"nginx_language_server",

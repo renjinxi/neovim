@@ -22,6 +22,8 @@ local opts = {
 		rust = { "rustfmt" },
 		c = { "clang-format" },
 		cpp = { "clang-format" },
+		java = { "google-java-format" },
+		kotlin = { "ktlint" },
 	},
 	default_format_opts = {
 		lsp_format = "fallback",

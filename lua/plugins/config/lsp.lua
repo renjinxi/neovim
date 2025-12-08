@@ -228,6 +228,28 @@ vim.lsp.config('nginx_language_server', {
 	settings = {},
 })
 
+-- Kotlin 语言服务器配置
+vim.lsp.config('kotlin_language_server', {
+	cmd = { 'kotlin-language-server' },
+	root_markers = { 'settings.gradle', 'settings.gradle.kts', 'build.gradle', 'build.gradle.kts', '.git' },
+	filetypes = { 'kotlin' },
+	init_options = {
+		storagePath = vim.fn.stdpath("data") .. "/kotlin",
+	},
+	settings = {
+		kotlin = {
+			compiler = {
+				jvm = {
+					target = "11",
+				},
+			},
+			linting = {
+				debounceTime = 250,
+			},
+		},
+	},
+})
+
 -- JSON 语言服务器配置 (使用 schemastore)
 local schemastore_available, schemastore = pcall(require, "schemastore")
 if schemastore_available then
@@ -289,3 +311,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- 注意：由于 mason-lspconfig.nvim 配置了 automatic_enable = true，
 -- 已安装的服务器会自动启用，无需手动调用 vim.lsp.enable()
 -- 这些 vim.lsp.config() 配置会在服务器启动时自动应用
+
+-- Java 语言服务器使用特殊的 nvim-jdtls 插件配置
+-- 配置文件: lua/plugins/config/jdtls.lua
+require("plugins.config.jdtls")
