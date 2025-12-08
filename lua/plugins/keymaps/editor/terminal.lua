@@ -327,10 +327,10 @@ function M.setup()
 	vim.keymap.set("i", "<C-q>", toggle_current_term, { desc = "Toggle Current Terminal", silent = true })
 	vim.keymap.set("t", "<C-q>", toggle_current_term, { desc = "Toggle Current Terminal", silent = true })
 
-	-- 切换所有终端: Ctrl+a (normal 和 insert 模式)
-	vim.keymap.set("n", "<C-a>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
-	vim.keymap.set("i", "<C-a>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
-	vim.keymap.set("t", "<C-a>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
+	-- 切换所有终端: Ctrl+k (normal 和 insert 模式)
+	vim.keymap.set("n", "<C-k>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
+	vim.keymap.set("i", "<C-k>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
+	vim.keymap.set("t", "<C-k>", toggle_all_terms, { desc = "Toggle All Terminals", silent = true })
 end
 
 return M
