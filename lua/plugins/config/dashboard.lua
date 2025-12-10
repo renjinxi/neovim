@@ -38,16 +38,16 @@ require("dashboard").setup({
 				key = "f",
 			},
 			{
-				desc = " Apps",
+				desc = " Projects",
 				group = "DiagnosticHint",
-				action = "Telescope app",
-				key = "a",
+				action = "Telescope projects",
+				key = "p",
 			},
 			{
-				desc = " dotfiles",
+				desc = " Recent",
 				group = "Number",
-				action = "Telescope dotfiles",
-				key = "d",
+				action = "Telescope oldfiles",
+				key = "r",
 			},
 		},
 		-- 页脚

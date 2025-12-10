@@ -8,7 +8,20 @@ local M = {}
 function M.setup()
 	local jdtls_ok, jdtls = pcall(require, "jdtls")
 	if not jdtls_ok then
-		vim.notify("nvim-jdtls 未安装", vim.log.levels.WARN)
+		-- nvim-jdtls 未安装，使用默认 LSP
+		return
+	end
+
+	-- 检查 Mason registry 是否可用
+	local mason_ok, mason_registry = pcall(require, "mason-registry")
+	if not mason_ok then
+		vim.notify("Mason 未安装", vim.log.levels.WARN)
+		return
+	end
+
+	-- 检查 jdtls 包是否已安装
+	if not mason_registry.is_installed("jdtls") then
+		vim.notify("jdtls 未安装，请运行 :MasonInstall jdtls", vim.log.levels.WARN)
 		return
 	end
 
@@ -18,7 +31,6 @@ function M.setup()
 	local android_home = env.get("ANDROID_HOME") or os.getenv("ANDROID_HOME") or ""
 
 	-- JDTLS 安装路径 (Mason 安装)
-	local mason_registry = require("mason-registry")
 	local jdtls_path = mason_registry.get_package("jdtls"):get_install_path()
 
 	-- 配置和插件路径
@@ -39,19 +51,24 @@ function M.setup()
 	-- Java Debug 和 Test 插件路径
 	local bundles = {}
 
-	-- Java Debug Adapter
-	local java_debug_path = mason_registry.get_package("java-debug-adapter"):get_install_path()
-	local java_debug_jar = vim.fn.glob(java_debug_path .. "/extension/server/com.microsoft.java.debug.plugin-*.jar", true)
-	if java_debug_jar ~= "" then
-		table.insert(bundles, java_debug_jar)
+	-- Java Debug Adapter (可选)
+	if mason_registry.is_installed("java-debug-adapter") then
+		local java_debug_path = mason_registry.get_package("java-debug-adapter"):get_install_path()
+		local java_debug_jar =
+			vim.fn.glob(java_debug_path .. "/extension/server/com.microsoft.java.debug.plugin-*.jar", true)
+		if java_debug_jar ~= "" then
+			table.insert(bundles, java_debug_jar)
+		end
 	end
 
-	-- Java Test Runner
-	local java_test_path = mason_registry.get_package("java-test"):get_install_path()
-	local java_test_jars = vim.split(vim.fn.glob(java_test_path .. "/extension/server/*.jar", true), "\n")
-	for _, jar in ipairs(java_test_jars) do
-		if jar ~= "" then
-			table.insert(bundles, jar)
+	-- Java Test Runner (可选)
+	if mason_registry.is_installed("java-test") then
+		local java_test_path = mason_registry.get_package("java-test"):get_install_path()
+		local java_test_jars = vim.split(vim.fn.glob(java_test_path .. "/extension/server/*.jar", true), "\n")
+		for _, jar in ipairs(java_test_jars) do
+			if jar ~= "" then
+				table.insert(bundles, jar)
+			end
 		end
 	end
 

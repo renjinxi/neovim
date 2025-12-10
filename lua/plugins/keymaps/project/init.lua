@@ -9,6 +9,7 @@ function M.setup()
 	require("plugins.keymaps.project.overseer").setup()
 	require("plugins.keymaps.project.rest").setup()
 	require("plugins.keymaps.project.ufo").setup()
+	require("plugins.keymaps.project.android").setup()
 end
 
 return M

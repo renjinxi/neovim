@@ -1,14 +1,14 @@
 require("nvim-treesitter.configs").setup({
-	ensure_installed = "all", -- one of "all" or a list of languages
+	-- 安装所有可用的 parser，并确保 Java 和 Kotlin 被优先安装
+	ensure_installed = "all",
 	sync_install = false,
 
 	-- Automatically install missing parsers when entering buffer
-	--   -- Recommendation: set to false if you don't have `tree-sitter` CLI
-	--   installed locally
 	auto_install = true,
+
 	ignore_install = { "" }, -- List of parsers to ignore installing
 	highlight = {
-		enable = true, -- false will disable the whole extension
+		enable = true, -- 启用 Treesitter 高亮
 		-- disable = { "css", "text" }, -- list of language that will be disabled
 		disable = function(lang, buf)
 			local max_filesize = 100 * 1024 -- 100 KB
@@ -17,6 +17,7 @@ require("nvim-treesitter.configs").setup({
 				return true
 			end
 		end,
+		additional_vim_regex_highlighting = false,
 	},
 	autopairs = {
 		enable = true,

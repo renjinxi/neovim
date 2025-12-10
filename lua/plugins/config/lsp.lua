@@ -313,5 +313,4 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- 这些 vim.lsp.config() 配置会在服务器启动时自动应用
 
 -- Java 语言服务器使用特殊的 nvim-jdtls 插件配置
--- 配置文件: lua/plugins/config/jdtls.lua
-require("plugins.config.jdtls")
+-- 配置会在打开 Java/Kotlin 文件时自动加载（见 jdtls.lua 中的 autocmd）
