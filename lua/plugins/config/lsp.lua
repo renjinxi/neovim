@@ -228,6 +228,89 @@ vim.lsp.config('nginx_language_server', {
 	settings = {},
 })
 
+-- Vue 语言服务器配置 (Volar)
+vim.lsp.config('volar', {
+	cmd = { 'vue-language-server', '--stdio' },
+	root_markers = { 'package.json', 'vue.config.js', 'vite.config.js', 'nuxt.config.js', '.git' },
+	filetypes = { 'vue' },
+	init_options = {
+		typescript = {
+			tsdk = vim.fn.getcwd() .. '/node_modules/typescript/lib',
+		},
+		vue = {
+			hybridMode = false,
+		},
+	},
+	settings = {
+		vue = {
+			inlayHints = {
+				inlineHandlerLeading = true,
+				missingProps = true,
+				optionsWrapper = true,
+				vBindShorthand = true,
+			},
+		},
+	},
+})
+
+-- Emmet 语言服务器配置 (前端开发必备)
+vim.lsp.config('emmet_language_server', {
+	cmd = { 'emmet-language-server', '--stdio' },
+	root_markers = { 'package.json', '.git' },
+	filetypes = {
+		'html', 'css', 'scss', 'less',
+		'javascriptreact', 'typescriptreact',
+		'vue', 'svelte'
+	},
+	settings = {},
+})
+
+-- ESLint 语言服务器配置
+vim.lsp.config('eslint', {
+	cmd = { 'vscode-eslint-language-server', '--stdio' },
+	root_markers = {
+		'.eslintrc', '.eslintrc.js', '.eslintrc.json',
+		'.eslintrc.yml', '.eslintrc.yaml',
+		'eslint.config.js', 'eslint.config.mjs',
+		'package.json', '.git'
+	},
+	filetypes = {
+		'javascript', 'javascriptreact',
+		'typescript', 'typescriptreact',
+		'vue', 'svelte'
+	},
+	settings = {
+		codeAction = {
+			disableRuleComment = {
+				enable = true,
+				location = "separateLine"
+			},
+			showDocumentation = {
+				enable = true
+			}
+		},
+		codeActionOnSave = {
+			enable = false,
+			mode = "all"
+		},
+		experimental = {
+			useFlatConfig = false
+		},
+		format = true,
+		nodePath = "",
+		onIgnoredFiles = "off",
+		packageManager = "npm",
+		quiet = false,
+		rulesCustomizations = {},
+		run = "onType",
+		useESLintClass = false,
+		validate = "on",
+		workingDirectory = {
+			mode = "location"
+		}
+	},
+})
+
 -- Kotlin 语言服务器配置
 vim.lsp.config('kotlin_language_server', {
 	cmd = { 'kotlin-language-server' },

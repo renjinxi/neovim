@@ -28,7 +28,8 @@ return {
 			require("mason-tool-installer").setup({
 				ensure_installed = {
 					-- 格式化工具
-					"prettierd",
+					"prettierd", -- 前端代码格式化
+					"eslint_d", -- ESLint daemon (更快的 linting)
 					"goimports",
 					"google-java-format", -- Java 格式化
 					"ktlint", -- Kotlin 格式化和 linting

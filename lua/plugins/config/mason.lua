@@ -33,6 +33,8 @@ function M.setup()
 			"cssls",
 			"jsonls",
 			"eslint",
+			-- "volar", -- Vue Language Server (已弃用，如需要请手动安装)
+			"emmet_language_server", -- Emmet 支持
 
 			-- 系统编程
 			"clangd", -- C/C++
