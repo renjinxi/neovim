@@ -123,6 +123,21 @@ function M.setup()
 		},
 		{ "<leader>du", "<cmd> lua require'dap'.step_out()<cr>", desc = "Step Out", nowait = false, remap = false },
 		{ "<leader>dx", "<cmd> lua require'dap'.terminate()<cr>", desc = "Terminate", nowait = false, remap = false },
+		-- 重启调试（终止后重新启动，使用上次的配置）
+		{
+			"<leader>dX",
+			function()
+				require("dap").terminate()
+				vim.defer_fn(function()
+					require("dap").run_last()
+				end, 100)
+			end,
+			desc = "Restart Debug",
+			nowait = false,
+			remap = false,
+		},
+		-- 直接运行上次的调试配置（不需要重新选择）
+		{ "<leader>dL", "<cmd>lua require'dap'.run_last()<cr>", desc = "Run Last", nowait = false, remap = false },
 	}
 	require("which-key").add(keymap)
 

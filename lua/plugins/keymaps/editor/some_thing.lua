@@ -172,7 +172,110 @@ local function copy_file_path()
 	copy_to_clipboard(file_path, "复制文件路径到剪贴板: " .. file_path)
 end
 
+local function copy_word_with_location()
+	-- 获取当前光标下的 word
+	local word = vim.fn.expand('<cword>')
+	-- 获取当前文件路径
+	local file_path = vim.fn.expand('%:p')
+	-- 获取当前行号
+	local line_num = vim.fn.line('.')
+
+	-- 格式: file_path:line_num:word
+	local content = string.format("%s:%d:%s", file_path, line_num, word)
+
+	copy_to_clipboard(content, "复制 word 和位置信息到剪贴板")
+end
+
+local function extract_path_with_line_at_cursor()
+	local current_line = vim.api.nvim_get_current_line()
+	local cursor_col = vim.api.nvim_win_get_cursor(0)[2] + 1
+	local patterns = { "[^%s:]+:%d+:%d+", "[^%s:]+:%d+" }
+
+	for _, pattern in ipairs(patterns) do
+		local start_col = 1
+		while true do
+			local s, e = current_line:find(pattern, start_col)
+			if not s then
+				break
+			end
+			if cursor_col >= s and cursor_col <= e then
+				return current_line:sub(s, e)
+			end
+			start_col = e + 1
+		end
+	end
+end
+
+local function resolve_path(base_path)
+	if not base_path or base_path == "" then
+		return nil
+	end
+
+	if base_path:sub(1, 1) == "~" then
+		base_path = vim.fn.expand(base_path)
+	end
+
+	if base_path:match("^/") and vim.fn.filereadable(base_path) == 1 then
+		return vim.fn.fnamemodify(base_path, ":p")
+	end
+
+	local project_root = get_project_root()
+	if project_root and project_root ~= "" then
+		local candidate = vim.fn.fnamemodify(project_root .. "/" .. base_path, ":p")
+		if vim.fn.filereadable(candidate) == 1 then
+			return candidate
+		end
+	end
+
+	local current_dir = vim.fn.expand("%:p:h")
+	if current_dir and current_dir ~= "" then
+		local candidate = vim.fn.fnamemodify(current_dir .. "/" .. base_path, ":p")
+		if vim.fn.filereadable(candidate) == 1 then
+			return candidate
+		end
+	end
+
+	local candidate = vim.fn.fnamemodify(vim.fn.getcwd() .. "/" .. base_path, ":p")
+	if vim.fn.filereadable(candidate) == 1 then
+		return candidate
+	end
+
+	return vim.fn.fnamemodify(base_path, ":p")
+end
+
+local function open_path_at_cursor()
+	local match = extract_path_with_line_at_cursor()
+	if not match then
+		vim.notify("未在光标附近找到 path:line", vim.log.levels.WARN)
+		return
+	end
+
+	match = match:gsub("[,.;]+$", "")
+	local path_part, line_str, col_str = match:match("^([^:]+):(%d+):?(%d*)$")
+	if not path_part or not line_str then
+		vim.notify("无法解析路径: " .. match, vim.log.levels.WARN)
+		return
+	end
+
+	local target_path = resolve_path(path_part)
+	if not target_path or vim.fn.filereadable(target_path) == 0 then
+		vim.notify("文件不存在: " .. (target_path or path_part), vim.log.levels.ERROR)
+		return
+	end
+
+	vim.cmd("edit " .. vim.fn.fnameescape(target_path))
+	local line_num = tonumber(line_str) or 1
+	local col_num = tonumber(col_str)
+	if col_num and col_num > 0 then
+		vim.api.nvim_win_set_cursor(0, { line_num, col_num - 1 })
+	else
+		vim.api.nvim_win_set_cursor(0, { line_num, 0 })
+	end
+end
+
 function M.setup()
+	vim.keymap.set("n", "gF", open_path_at_cursor, { desc = "Open path:line under cursor" })
+
 	local keymap = {
 		{ "<leader>v", group = "Some Thing", nowait = false, remap = false },
 		{ "<leader>vE", "<cmd>edit %<cr>", desc = "Reload Current File", nowait = false, remap = false },
@@ -229,6 +332,8 @@ function M.setup()
 		{ "<leader>vx", copy_message, desc = "Copy Message Content", nowait = false, remap = false },
 		{ "<leader>vxl", copy_last_message, desc = "Copy Last Message", nowait = false, remap = false },
 		{ "<leader>vxa", copy_all_messages, desc = "Copy All Messages", nowait = false, remap = false },
+		{ "<leader>vxw", copy_word_with_location, desc = "Copy Word with Location", nowait = false, remap = false },
+		{ "<leader>vL", open_path_at_cursor, desc = "Open path:line under cursor", nowait = false, remap = false },
 	}
 
 	which_key.add(keymap)

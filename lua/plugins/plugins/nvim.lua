@@ -560,7 +560,7 @@ return {
 		config = function()
 			require("which-key").setup({
 				delay = function(ctx)
-					return 400
+					return 600  -- 增加延迟以减少终端输出干扰
 				end,
 			})
 		end,

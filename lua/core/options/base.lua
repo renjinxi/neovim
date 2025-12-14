@@ -35,7 +35,7 @@ function M.setup()
 		writebackup = false, -- 不创建备份文件
 		undofile = true, -- 启用持久撤销
 		updatetime = 300, -- 更新时间
-		timeoutlen = 500, -- 键盘序列超时时间
+		timeoutlen = 1000, -- 键盘序列超时时间（增加以减少终端干扰）
 		completeopt = "menuone,noselect", -- 补全设置
 		autoread = true, -- 自动读取外部更改的文件
 	}

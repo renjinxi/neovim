@@ -32,6 +32,25 @@ dap_go.setup({
 			request = "launch",
 			program = "${fileDirname}",
 		},
+		-- 调试当前包（带固定配置文件参数）
+		{
+			type = "go",
+			name = "Debug Package with Config",
+			request = "launch",
+			program = "${fileDirname}",
+			args = { "-c", "./conf/config.yaml" },
+		},
+		-- 调试当前包（动态输入参数）
+		{
+			type = "go",
+			name = "Debug Package with Args",
+			request = "launch",
+			program = "${fileDirname}",
+			args = function()
+				local args_string = vim.fn.input("Arguments: ", "-c ./conf/config.yaml")
+				return vim.split(args_string, " +")
+			end,
+		},
 		-- 调试当前测试文件
 		{
 			type = "go",
