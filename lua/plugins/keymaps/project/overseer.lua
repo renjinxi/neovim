@@ -11,7 +11,7 @@ function M.setup()
 			"<leader>rb",
 			function()
 				local overseer = require("overseer")
-				overseer.run_template({ name = "Go Build" })
+				overseer.run_task({ name = "Go Build" })
 			end,
 			desc = "Go Build",
 			nowait = false,
@@ -21,7 +21,7 @@ function M.setup()
 			"<leader>rs",
 			function()
 				local overseer = require("overseer")
-				overseer.run_template({ name = "run script" })
+				overseer.run_task({ name = "run script" })
 			end,
 			desc = "Run Script",
 			nowait = false,
@@ -31,7 +31,7 @@ function M.setup()
 			"<leader>ra",
 			function()
 				local overseer = require("overseer")
-				overseer.run_template({ name = "run script with args" })
+				overseer.run_task({ name = "run script with args" })
 			end,
 			desc = "Run Script with Args",
 			nowait = false,
@@ -39,6 +39,11 @@ function M.setup()
 		},
 	}
 	require("which-key").add(keymap)
+
+	-- Ctrl 快捷键 (macOS 兼容)
+	vim.keymap.set("n", "<C-S-r>", "<cmd>OverseerRun<cr>", { desc = "Overseer Run" })
+	vim.keymap.set("n", "<C-S-t>", "<cmd>OverseerToggle<cr>", { desc = "Overseer Toggle" })
+	vim.keymap.set("n", "<C-S-l>", "<cmd>OverseerRestartLast<cr>", { desc = "Overseer Restart Last" })
 end
 
 return M

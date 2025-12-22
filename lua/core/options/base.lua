@@ -38,6 +38,7 @@ function M.setup()
 		timeoutlen = 1000, -- 键盘序列超时时间（增加以减少终端干扰）
 		completeopt = "menuone,noselect", -- 补全设置
 		autoread = true, -- 自动读取外部更改的文件
+		exrc = true, -- 启用项目本地配置 (.nvim.lua)
 	}
 
 	-- 代码折叠配置
