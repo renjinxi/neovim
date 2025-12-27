@@ -3,6 +3,8 @@
 local M = {}
 
 local log_dir = vim.fn.expand('~/.local/share/worklog')
+local float_win = nil
+local float_buf = nil
 
 local function ensure_dir()
   if vim.fn.isdirectory(log_dir) == 0 then
@@ -14,56 +16,91 @@ local function get_week_file()
   return log_dir .. '/' .. os.date('%Y-W%W') .. '.md'
 end
 
+local function close_float()
+  if float_win and vim.api.nvim_win_is_valid(float_win) then
+    vim.api.nvim_win_close(float_win, true)
+  end
+  float_win = nil
+  float_buf = nil
+end
+
 local function open_log()
   ensure_dir()
   local file = get_week_file()
   -- 如果文件不存在，创建时加入周标题
   if vim.fn.filereadable(file) == 0 then
-    local header = '# Week ' .. os.date('%Y-W%W') .. '\n'
+    local header = '# Week ' .. os.date('%Y-W%W')
     vim.fn.writefile({ header }, file)
   end
-  vim.cmd('edit ' .. file)
+
+  -- 如果浮动窗口已存在，直接聚焦
+  if float_win and vim.api.nvim_win_is_valid(float_win) then
+    vim.api.nvim_set_current_win(float_win)
+    vim.cmd('normal! G')
+    return
+  end
+
+  -- 创建浮动窗口
+  local width = 50
+  local height = 12
+
+  float_buf = vim.fn.bufnr(file, true)
+  vim.fn.bufload(float_buf)
+
+  float_win = vim.api.nvim_open_win(float_buf, true, {
+    relative = 'cursor',
+    width = width,
+    height = height,
+    row = 1,
+    col = 0,
+    style = 'minimal',
+    border = 'rounded',
+    title = ' Journal ',
+    title_pos = 'center',
+  })
+
+  -- 设置浮动窗口选项
+  vim.wo[float_win].wrap = true
+  vim.wo[float_win].linebreak = true
+
+  -- q 关闭浮动窗口
+  vim.keymap.set('n', 'q', close_float, { buffer = float_buf, nowait = true })
+
   vim.cmd('normal! G')
 end
 
 local function insert_template(type)
-  local templates = {
-    stuck = '### 卡住\n- 在哪：\n- 试了：\n- 通了：',
-    friction = '### 不爽\n- 场景：\n- 感受：',
-    idea = '### 灵感\n- 想法：',
-  }
-  local timestamp = os.date('\n## %m-%d %H:%M\n')
-  local lines = vim.split(timestamp .. templates[type], '\n')
+  local entry = os.date('\n%Y-%m-%d %H:%M') .. ' ' .. type .. '\n'
+  local lines = vim.split(entry, '\n')
   vim.api.nvim_put(lines, 'l', true, true)
-  -- 定位到第一个需要填写的位置
-  vim.cmd('normal! 2k$')
+  vim.cmd('startinsert!')
 end
 
 function M.setup()
   local keymap = vim.keymap.set
 
   -- 打开本周日志
-  keymap('n', '<leader>wl', function()
+  keymap('n', '<leader>jl', function()
     open_log()
-  end, { desc = 'Worklog: open' })
+  end, { desc = 'Journal: open' })
 
   -- 快速记录：卡住
-  keymap('n', '<leader>ws', function()
+  keymap('n', '<leader>js', function()
     open_log()
     insert_template('stuck')
-  end, { desc = 'Worklog: stuck' })
+  end, { desc = 'Journal: stuck' })
 
   -- 快速记录：不爽
-  keymap('n', '<leader>wf', function()
+  keymap('n', '<leader>jf', function()
     open_log()
     insert_template('friction')
-  end, { desc = 'Worklog: friction' })
+  end, { desc = 'Journal: friction' })
 
   -- 快速记录：灵感
-  keymap('n', '<leader>wi', function()
+  keymap('n', '<leader>ja', function()
     open_log()
     insert_template('idea')
-  end, { desc = 'Worklog: idea' })
+  end, { desc = 'Journal: idea (aha)' })
 end
 
 return M

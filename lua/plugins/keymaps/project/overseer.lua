@@ -6,6 +6,8 @@ function M.setup()
 		{ "<leader>rl", ":OverseerRestartLast<cr>", desc = "Restart Last Task", nowait = false, remap = false },
 		{ "<leader>ro", ":OverseerQuickAction<cr>", desc = "Quick Action", nowait = false, remap = false },
 		{ "<leader>rr", ":OverseerRun<cr>", desc = "Run", nowait = false, remap = false },
+		{ "<leader>rm", ":OverseerRunMulti<cr>", desc = "Run Multi", nowait = false, remap = false },
+		{ "<leader>rp", ":OverseerRunLast<cr>", desc = "Run Previous", nowait = false, remap = false },
 		{ "<leader>rg", ":OverseerToggle<cr>", desc = "Toggle", nowait = false, remap = false },
 		{
 			"<leader>rb",
