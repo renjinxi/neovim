@@ -196,16 +196,7 @@ function M.setup()
 	-- 启动或附加到 LSP
 	jdtls.start_or_attach(config)
 
-	-- Java 特定的快捷键 (可选)
-	local opts = { noremap = true, silent = true }
-	vim.keymap.set("n", "<leader>jo", "<Cmd>lua require'jdtls'.organize_imports()<CR>", opts)
-	vim.keymap.set("n", "<leader>jv", "<Cmd>lua require'jdtls'.extract_variable()<CR>", opts)
-	vim.keymap.set("v", "<leader>jv", "<Esc><Cmd>lua require'jdtls'.extract_variable(true)<CR>", opts)
-	vim.keymap.set("n", "<leader>jc", "<Cmd>lua require'jdtls'.extract_constant()<CR>", opts)
-	vim.keymap.set("v", "<leader>jc", "<Esc><Cmd>lua require'jdtls'.extract_constant(true)<CR>", opts)
-	vim.keymap.set("v", "<leader>jm", "<Esc><Cmd>lua require'jdtls'.extract_method(true)<CR>", opts)
-	vim.keymap.set("n", "<leader>jt", "<Cmd>lua require'jdtls'.test_class()<CR>", opts)
-	vim.keymap.set("n", "<leader>jn", "<Cmd>lua require'jdtls'.test_nearest_method()<CR>", opts)
+	-- Java keymaps 已迁移到 keymaps/all.lua (filetype: java/kotlin)
 end
 
 -- 自动启动 JDTLS

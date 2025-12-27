@@ -1,6 +1,5 @@
-vim.keymap.set("n", "zR", require("ufo").openAllFolds)
-vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
-vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds)
+-- Ufo 折叠配置
+-- Keymaps 已迁移到 keymaps/all.lua
 
 require("ufo").setup({
 	provider_selector = function(bufnr, filetype, buftype)

@@ -164,48 +164,7 @@ return {
 		opts = function()
 			return require("plugins.config.flash")
 		end,
-		keys = {
-			{
-				"s",
-				mode = { "n", "x", "o" },
-				function()
-					require("flash").jump()
-				end,
-				desc = "Flash",
-			},
-			{
-				"S",
-				mode = { "n", "x", "o" },
-				function()
-					require("flash").treesitter()
-				end,
-				desc = "Flash Treesitter",
-			},
-			{
-				"r",
-				mode = "o",
-				function()
-					require("flash").remote()
-				end,
-				desc = "Remote Flash",
-			},
-			{
-				"R",
-				mode = { "o", "x" },
-				function()
-					require("flash").treesitter_search()
-				end,
-				desc = "Treesitter Search",
-			},
-			{
-				"<c-s>",
-				mode = { "c" },
-				function()
-					require("flash").toggle()
-				end,
-				desc = "Toggle Flash Search",
-			},
-		},
+		-- keys 已迁移到 keymaps/all.lua
 	},
 
 	-- ================================
@@ -220,11 +179,7 @@ return {
 			"NvimTreeFindFile",
 			"NvimTreeFindFileToggle",
 		},
-		keys = {
-			{ "<leader>tu", "<cmd>NvimTreeToggle<cr>", desc = "Toggle file tree" },
-			{ "<leader>tf", "<cmd>NvimTreeFocus<cr>", desc = "Focus file tree" },
-			{ "<leader>tr", "<cmd>NvimTreeFindFile<cr>", desc = "Find current file" },
-		},
+		-- keys 已迁移到 keymaps/all.lua
 		config = function()
 			require("plugins.config.nvim-tree")
 		end,
@@ -269,9 +224,7 @@ return {
 			"nvim-telescope/telescope.nvim",
 		},
 		cmd = "Neogit",
-		keys = {
-			{ "<leader>gg", "<cmd>Neogit<cr>", desc = "Neogit" },
-		},
+		-- keys 已迁移到 keymaps/all.lua
 		config = function()
 			require("plugins.config.neogit")
 		end,
@@ -626,11 +579,7 @@ return {
 				name = ".venv",
 			})
 		end,
-		keys = {
-			{ "<leader>vvs", "<cmd>VenvSelect<cr>" },
-			{ "<leader>vvc", "<cmd>VenvSelectCached<cr>" },
-			{ "<leader>vvu", "<cmd>VenvSelectCurrent<cr>" },
-		},
+		-- keys 已迁移到 keymaps/all.lua
 	},
 	-- LaTeX
 	{
@@ -721,22 +670,7 @@ return {
 	},
 	{
 		"eandrju/cellular-automaton.nvim", -- 动画效果
-		keys = {
-			{
-				"<leader>arr",
-				"<cmd>CellularAutomaton make_it_rain<cr>",
-				desc = "Rain",
-			},
-			{
-				"<leader>arg",
-				"<cmd>CellularAutomaton game_of_life<cr>",
-				desc = "Game",
-			},
-			{
-				"<leader>ars",
-				"<cmd>CellularAutomaton scramble<cr>",
-				desc = "Game",
-			},
-		},
+		cmd = "CellularAutomaton",
+		-- keys 已迁移到 keymaps/all.lua
 	},
 }

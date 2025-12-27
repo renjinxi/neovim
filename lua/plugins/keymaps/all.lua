@@ -1,0 +1,570 @@
+-- ============================================================================
+-- 统一的 Keymap 注册中心
+-- 所有快捷键集中在此文件定义，方便查看和避免冲突
+-- ============================================================================
+local M = {}
+
+-- ============================================================================
+-- 辅助函数引用
+-- ============================================================================
+local fn = require("plugins.keymaps.functions")
+
+-- ============================================================================
+-- 所有 Keymap 定义
+-- 按前缀分组，便于查看冲突
+-- ============================================================================
+M.mappings = {
+	-- ========================================================================
+	-- <leader>a - REST Client / Android (冲突！需要按文件类型区分)
+	-- ========================================================================
+	{ "<leader>a", group = "REST/Android" },
+	-- REST Client
+	{ "<leader>ao", "<cmd>Rest open<cr>", desc = "REST: Open result pane" },
+	{ "<leader>aa", "<cmd>Rest run<cr>", desc = "REST: Run request" },
+	{ "<leader>an", "<cmd>Rest run ", desc = "REST: Run with name" },
+	{ "<leader>al", "<cmd>Rest last<cr>", desc = "REST: Run last" },
+	{ "<leader>ag", "<cmd>Rest logs<cr>", desc = "REST: Edit logs" },
+	{ "<leader>ac", "<cmd>Rest cookies<cr>", desc = "REST: Edit cookies" },
+	{ "<leader>as", "<cmd>Rest env show<cr>", desc = "REST: Show env" },
+	{ "<leader>ae", "<cmd>Rest env select<cr>", desc = "REST: Select env" },
+	{ "<leader>at", "<cmd>Rest env set ", desc = "REST: Set env path" },
+	-- Android (通过 fn 引用)
+	{ "<leader>ad", fn.android_adb_picker, desc = "Android: ADB Commands" },
+	-- { "<leader>ag", fn.android_gradle_picker, desc = "Android: Gradle Tasks" }, -- 与 REST logs 冲突
+	-- { "<leader>al", fn.android_show_error_log, desc = "Android: View Error Log" }, -- 与 REST last 冲突
+
+	-- ========================================================================
+	-- <leader>b - Messages
+	-- ========================================================================
+	{ "<leader>b", group = "Messages" },
+	{ "<leader>ba", "<cmd>messages<CR>", desc = "All Messages" },
+	{ "<leader>bl", "<cmd>echo v:statusmsg<CR>", desc = "Last Message" },
+
+	-- ========================================================================
+	-- <leader>c - QuickFix / Workspace
+	-- ========================================================================
+	{ "<leader>c", group = "QuickFix/Workspace" },
+	-- QuickFix
+	{ "<leader>cl", "<cmd>cclose<cr>", desc = "QF: Close" },
+	{ "<leader>cn", "<cmd>cnext<cr>", desc = "QF: Next item" },
+	{ "<leader>co", "<cmd>copen<cr>", desc = "QF: Open" },
+	{ "<leader>cp", "<cmd>cprevious<cr>", desc = "QF: Previous item" },
+	-- Workspace
+	{ "<leader>ca", fn.workspace_add_project, desc = "WS: Add project" },
+	{ "<leader>cA", fn.workspace_add_project_path, desc = "WS: Add project (path)" },
+	{ "<leader>cr", fn.workspace_remove_project, desc = "WS: Remove project" },
+	-- { "<leader>cl", fn.workspace_list_projects, desc = "WS: List projects" }, -- 与 QF close 冲突
+	{ "<leader>cs", fn.workspace_switch_root, desc = "WS: Switch root" },
+	{ "<leader>cf", fn.workspace_search_all, desc = "WS: Find files (all)" },
+	{ "<leader>cF", fn.workspace_search_all_hidden, desc = "WS: Find files (hidden)" },
+	{ "<leader>cg", fn.workspace_grep_all, desc = "WS: Grep (all)" },
+	{ "<leader>cG", fn.workspace_grep_all_hidden, desc = "WS: Grep (hidden)" },
+	{ "<leader>caf", function() vim.lsp.buf.add_workspace_folder() end, desc = "WS: Add LSP folder" },
+	{ "<leader>crf", function() vim.lsp.buf.remove_workspace_folder() end, desc = "WS: Remove LSP folder" },
+	{ "<leader>clf", function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, desc = "WS: List LSP folders" },
+	{ "<leader>cc", "<cmd>Telescope workspaces<cr>", desc = "WS: Telescope" },
+
+	-- ========================================================================
+	-- <leader>d - Debug (DAP)
+	-- ========================================================================
+	{ "<leader>d", group = "Debug" },
+	{ "<leader>dC", fn.dap_conditional_breakpoint, desc = "Conditional Breakpoint" },
+	{ "<leader>dE", fn.dap_eval_input, desc = "Evaluate Input" },
+	{ "<leader>dL", "<cmd>lua require'dap'.run_last()<cr>", desc = "Run Last" },
+	{ "<leader>dR", "<cmd>lua require'dap'.run_to_cursor()<cr>", desc = "Run to Cursor" },
+	{ "<leader>dS", "<cmd>lua require'dap.ui.widgets'.scopes()<cr>", desc = "Scopes" },
+	{ "<leader>dU", fn.dap_toggle_ui, desc = "Toggle UI" },
+	{ "<leader>dX", fn.dap_restart, desc = "Restart Debug" },
+	{ "<leader>das", fn.dap_enable_all_breakpoints, desc = "Enable All Breakpoints" },
+	{ "<leader>dat", fn.dap_disable_all_breakpoints, desc = "Disable All Breakpoints" },
+	{ "<leader>db", "<cmd>lua require'dap'.step_back()<cr>", desc = "Step Back" },
+	{ "<leader>dc", "<cmd>lua require'dap'.continue()<cr>", desc = "Continue" },
+	{ "<leader>dd", "<cmd>lua require'dap'.disconnect()<cr>", desc = "Disconnect" },
+	{ "<leader>de", "<cmd>lua require'dapui'.eval()<cr>", desc = "Evaluate" },
+	{ "<leader>dg", "<cmd>lua require'dap'.session()<cr>", desc = "Get Session" },
+	{ "<leader>dh", "<cmd>lua require'dap.ui.widgets'.hover()<cr>", desc = "Hover Variables" },
+	{ "<leader>di", "<cmd>lua require'dap'.step_into()<cr>", desc = "Step Into" },
+	{ "<leader>dl", fn.dap_clear_all_breakpoints, desc = "Clear All Breakpoints" },
+	{ "<leader>dn", "<cmd>lua require'dap'.step_over()<cr>", desc = "Step Over" },
+	{ "<leader>dp", "<cmd>lua require'dap'.pause.toggle()<cr>", desc = "Pause" },
+	{ "<leader>dq", "<cmd>lua require'dap'.close()<cr>", desc = "Quit" },
+	{ "<leader>dr", "<cmd>lua require'dap'.repl.toggle()<cr><C-w>H", desc = "Toggle Repl" },
+	{ "<leader>ds", "<cmd>lua require'dap'.continue()<cr>", desc = "Start" },
+	{ "<leader>dt", fn.dap_toggle_breakpoint, desc = "Toggle Breakpoint" },
+	{ "<leader>du", "<cmd>lua require'dap'.step_out()<cr>", desc = "Step Out" },
+	{ "<leader>dx", "<cmd>lua require'dap'.terminate()<cr>", desc = "Terminate" },
+	-- Visual mode
+	{ "<leader>e", "<cmd>lua require'dapui'.eval()<cr>", desc = "Evaluate", mode = "v" },
+
+	-- ========================================================================
+	-- <leader>f - Telescope (Find)
+	-- ========================================================================
+	{ "<leader>f", group = "Telescope" },
+	{ "<leader>fF", "<cmd>lua require('telescope.builtin').find_files({no_ignore=true, hidden=true})<cr>", desc = "Find Files (all)" },
+	{ "<leader>fG", "<cmd>Telescope live_grep<cr>", desc = "Builtin Live Grep" },
+	{ "<leader>fa", "<cmd>Telescope neoclip<cr>", desc = "NeoClip" },
+	{ "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
+	{ "<leader>fc", fn.telescope_copy_file_content, desc = "Copy File Content" },
+	{ "<leader>fd", "<cmd>Telescope commands<cr>", desc = "Commands" },
+	{ "<leader>fe", "<cmd>Telescope oldfiles<cr>", desc = "Recent Files" },
+	{ "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
+	{ "<leader>fg", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", desc = "Live Grep" },
+	{ "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help Tags" },
+	{ "<leader>fi", "<cmd>Telescope dir live_grep<cr>", desc = "Dir Live Grep" },
+	{ "<leader>fj", "<cmd>Telescope diagnostics<cr>", desc = "Diagnostics" },
+	{ "<leader>fk", "<cmd>lua require('telescope-live-grep-args.shortcuts').grep_word_under_cursor()<cr>", desc = "Grep Word" },
+	{ "<leader>fl", "<cmd>Telescope file_browser<cr>", desc = "File Browser" },
+	{ "<leader>fm", "<cmd>Telescope marks<cr>", desc = "Marks" },
+	{ "<leader>fn", "<cmd>Telescope command_history<cr>", desc = "Command History" },
+	{ "<leader>fo", "<cmd>Telescope projects<cr>", desc = "Recent Projects" },
+	{ "<leader>fp", "<cmd>Telescope jumplist<cr>", desc = "Jumplist" },
+	{ "<leader>fr", "<cmd>Telescope projects<cr>", desc = "Recent Project History" },
+	{ "<leader>fs", "<cmd>Telescope search_history<cr>", desc = "Search History" },
+	{ "<leader>ft", "<cmd>Telescope git_status<cr>", desc = "Git status" },
+	{ "<leader>fu", "<cmd>Telescope dir find_files<cr>", desc = "Dir Find Files" },
+	{ "<leader>fy", "<cmd>Telescope session-lens<cr>", desc = "Session" },
+	{ "<leader>fz", "<cmd>Telescope keymaps<cr>", desc = "Search Keymaps" },
+
+	-- ========================================================================
+	-- <leader>g - Terminal
+	-- ========================================================================
+	{ "<leader>g", group = "Terminal" },
+	{ "<leader>ga", fn.terminal_lua_toggle, desc = "Lua" },
+	{ "<leader>gc", fn.terminal_claude_code_1_toggle, desc = "Claude Code" },
+	{ "<leader>gc1", fn.terminal_claude_code_1_toggle, desc = "Claude Code API 1" },
+	{ "<leader>gc2", fn.terminal_claude_code_2_toggle, desc = "Claude Code API 2" },
+	{ "<leader>gcn", fn.terminal_create_new_claude_tab, desc = "New Claude Code Tab" },
+	{ "<leader>gcn1", fn.terminal_create_new_claude_tab_api1, desc = "New Claude Tab (API 1)" },
+	{ "<leader>gcn2", fn.terminal_create_new_claude_tab_api2, desc = "New Claude Tab (API 2)" },
+	{ "<leader>gd", fn.terminal_codex_toggle, desc = "Codex" },
+	{ "<leader>gg", fn.terminal_cursor_agent_toggle, desc = "Cursor Agent" },
+	{ "<leader>gh", fn.terminal_htop_toggle, desc = "Htop" },
+	{ "<leader>gi", fn.terminal_ipython_toggle, desc = "IPython" },
+	{ "<leader>gk", fn.terminal_kimi_claude_code_toggle, desc = "Kimi Claude Code" },
+	{ "<leader>gl", fn.terminal_gemini_toggle, desc = "Gemini" },
+	{ "<leader>gn", fn.terminal_newterm_toggle, desc = "New Term" },
+	{ "<leader>gq", fn.terminal_qwen_toggle, desc = "Qwen" },
+	{ "<leader>gr", fn.terminal_newsboat_toggle, desc = "Newsboat" },
+	{ "<leader>gt", fn.terminal_newterm_tab, desc = "New Tab Term" },
+	{ "<leader>gu", fn.terminal_ncdu_toggle, desc = "Ncdu" },
+
+	-- ========================================================================
+	-- <leader>i - FzfLua
+	-- ========================================================================
+	{ "<leader>i", group = "FzfLua" },
+	{ "<leader>if", ":FzfLua files<cr>", desc = "Find Files" },
+	{ "<leader>ig", ":FzfLua live_grep<cr>", desc = "Live Grep" },
+	{ "<leader>ib", ":FzfLua buffers<cr>", desc = "Buffers" },
+	{ "<leader>id", ":FzfLua commands<cr>", desc = "Commands" },
+	{ "<leader>ie", ":FzfLua oldfiles<cr>", desc = "Recent Files" },
+	{ "<leader>ih", ":FzfLua help_tags<cr>", desc = "Help Tags" },
+	{ "<leader>ii", ":FzfLua dir live_grep<cr>", desc = "Dir Live Grep" },
+	{ "<leader>ij", ":FzfLua diagnostics<cr>", desc = "Diagnostics" },
+	{ "<leader>ik", "<cmd>lua require('telescope-live-grep-args.shortcuts').grep_word_under_cursor()<cr>", desc = "Grep Word" },
+	{ "<leader>il", ":FzfLua file_browser<cr>", desc = "File Browser" },
+	{ "<leader>im", ":FzfLua marks<cr>", desc = "Marks" },
+	{ "<leader>in", ":FzfLua command_history<cr>", desc = "Command History" },
+	{ "<leader>io", ":FzfLua projects<cr>", desc = "Recent Projects" },
+	{ "<leader>ip", ":FzfLua jumplist<cr>", desc = "Jumplist" },
+	{ "<leader>ir", "<cmd>lua require'telescope'.extensions.project.project{}<cr>", desc = "Project History" },
+	{ "<leader>is", ":FzfLua search_history<cr>", desc = "Search History" },
+	{ "<leader>it", ":FzfLua git_status<cr>", desc = "Git status" },
+	{ "<leader>iu", ":FzfLua dir find_files<cr>", desc = "Dir Find Files" },
+	{ "<leader>iy", ":FzfLua session-lens<cr>", desc = "Session" },
+
+	-- ========================================================================
+	-- <leader>j - goto_preview
+	-- ========================================================================
+	{ "<leader>j", group = "goto_preview" },
+	{ "<leader>jc", "<cmd>lua require('goto-preview').close_all_win()<CR>", desc = "Close all" },
+	{ "<leader>jd", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", desc = "Definition" },
+	{ "<leader>ji", "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", desc = "Implementation" },
+	{ "<leader>jr", "<cmd>lua require('goto-preview').goto_preview_references()<CR>", desc = "References" },
+	{ "<leader>jt", "<cmd>lua require('goto-preview').goto_preview_type_definition()<CR>", desc = "Type Definition" },
+
+	-- ========================================================================
+	-- <leader>K, <leader>[d, <leader>]d - LSP Quick
+	-- ========================================================================
+	{ "<leader>K", "<cmd>lua vim.lsp.buf.hover()<CR>", desc = "Hover" },
+	{ "<leader>[d", "<cmd>lua vim.diagnostic.goto_prev()<CR>", desc = "Previous Diagnostic" },
+	{ "<leader>]d", "<cmd>lua vim.diagnostic.goto_next()<CR>", desc = "Next Diagnostic" },
+
+	-- ========================================================================
+	-- <leader>l - LSP / LeetCode (冲突！)
+	-- ========================================================================
+	{ "<leader>l", group = "LSP/LeetCode" },
+	-- LSP
+	{ "<leader>lD", "<cmd>lua vim.lsp.buf.declaration()<CR>", desc = "LSP: Declaration" },
+	{ "<leader>lI", "<cmd>lua vim.lsp.buf.implementation()<CR>", desc = "LSP: Implementation" },
+	{ "<leader>lR", "<cmd>lua vim.lsp.buf.references()<CR>", desc = "LSP: References" },
+	{ "<leader>la", "<cmd>lua vim.lsp.buf.references()<CR>", desc = "LSP: Find References" },
+	{ "<leader>lc", "<cmd>lua vim.lsp.buf.code_action()<CR>", desc = "LSP: Code Action" },
+	{ "<leader>ld", "<cmd>lua vim.lsp.buf.definition()<CR>", desc = "LSP: Definition" },
+	{ "<leader>le", "<cmd>lua vim.diagnostic.open_float()<CR>", desc = "LSP: Diagnostic Float" },
+	{ "<leader>lf", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", desc = "LSP: Format" },
+	{ "<leader>lg", "<cmd>Telescope lsp_outgoing_calls<CR>", desc = "LSP: Outgoing Calls" },
+	{ "<leader>li", "<cmd>Telescope lsp_incoming_calls<CR>", desc = "LSP: Incoming Calls" },
+	{ "<leader>lq", "<cmd>lua vim.diagnostic.setloclist()<CR>", desc = "LSP: Diagnostic Loclist" },
+	{ "<leader>lr", "<cmd>lua vim.lsp.buf.rename()<CR>", desc = "LSP: Rename" },
+	{ "<leader>ls", "<cmd>lua vim.lsp.buf.document_symbol()<CR>", desc = "LSP: Document Symbols" },
+	{ "<leader>lsh", "<cmd>lua vim.lsp.buf.signature_help()<CR>", desc = "LSP: Signature Help" },
+	{ "<leader>lwa", "<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", desc = "LSP: Add Workspace Folder" },
+	{ "<leader>lwl", "<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>", desc = "LSP: List Workspace Folders" },
+	{ "<leader>lwr", "<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", desc = "LSP: Remove Workspace Folder" },
+	-- LeetCode (使用 <leader>L 避免冲突，或保持原样)
+	{ "<leader>ll", "<cmd>Leet<CR>", desc = "LeetCode: Dashboard" },
+	{ "<leader>lm", "<cmd>Leet menu<CR>", desc = "LeetCode: Menu" },
+	-- 其他 LeetCode 键位与 LSP 冲突，建议迁移到 <leader>L
+
+	-- ========================================================================
+	-- <leader>m - Sessions
+	-- ========================================================================
+	{ "<leader>m", group = "Sessions" },
+	{ "<leader>ms", "<cmd>PossessionSave<cr>", desc = "Save session" },
+	{ "<leader>ml", "<cmd>PossessionLoad<cr>", desc = "Load session" },
+	{ "<leader>md", "<cmd>PossessionDelete<cr>", desc = "Delete session" },
+	{ "<leader>mc", "<cmd>PossessionClose<cr>", desc = "Close session" },
+	{ "<leader>mh", "<cmd>PossessionList<cr>", desc = "List sessions" },
+	{ "<leader>mr", "<cmd>PossessionRename<cr>", desc = "Rename session" },
+	{ "<leader>mi", "<cmd>PossessionShow<cr>", desc = "Show current session" },
+	{ "<leader>mw", fn.session_save_workspace, desc = "Save workspace session" },
+	{ "<leader>mW", fn.session_load_workspace, desc = "Load workspace session" },
+	{ "<leader>mD", fn.session_delete_workspace, desc = "Delete workspace session" },
+	{ "<leader>mm", fn.session_list_workspace, desc = "Select session" },
+	{ "<leader>mt", fn.session_telescope, desc = "Telescope sessions" },
+
+	-- ========================================================================
+	-- <leader>o - Neotest
+	-- ========================================================================
+	{ "<leader>o", group = "Neotest" },
+	{ "<leader>oa", fn.neotest_all, desc = "Test All" },
+	{ "<leader>oc", "<cmd>lua require('neotest').run.run(vim.fn.expand('%'))<cr>", desc = "Test Current File" },
+	{ "<leader>od", "<cmd>lua require('neotest').run.run({vim.fn.expand('%'), strategy = 'dap'})<cr>", desc = "Debug Current File" },
+	{ "<leader>oe", "<cmd>Neotest output-panel<cr>", desc = "Show Test Result" },
+	{ "<leader>of", "<cmd>Neotest output<cr>", desc = "Show Result Float" },
+	{ "<leader>os", "<cmd>lua require('neotest').summary.toggle()<cr>", desc = "Summary Toggle" },
+	{ "<leader>ot", "<cmd>lua require('neotest').stop()<cr>", desc = "Test Stop" },
+
+	-- ========================================================================
+	-- <leader>p - Project
+	-- ========================================================================
+	{ "<leader>p", group = "Project" },
+	{ "<leader>pp", "<cmd>Telescope projects<cr>", desc = "List Projects" },
+	{ "<leader>pf", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
+	{ "<leader>ps", "<cmd>Telescope live_grep<cr>", desc = "Search in Project" },
+	{ "<leader>pr", fn.project_reset_root, desc = "Reset Project Root" },
+	{ "<leader>pm", fn.project_manual_set_root, desc = "Manually Set Root" },
+
+	-- ========================================================================
+	-- <leader>r - Overseer (Run)
+	-- ========================================================================
+	{ "<leader>r", group = "Overseer" },
+	{ "<leader>rl", ":OverseerRestartLast<cr>", desc = "Restart Last Task" },
+	{ "<leader>ro", ":OverseerQuickAction<cr>", desc = "Quick Action" },
+	{ "<leader>rr", ":OverseerRun<cr>", desc = "Run" },
+	{ "<leader>rm", ":OverseerRunMulti<cr>", desc = "Run Multi" },
+	{ "<leader>rp", ":OverseerRunLast<cr>", desc = "Run Previous" },
+	{ "<leader>rg", ":OverseerToggle<cr>", desc = "Toggle" },
+	{ "<leader>rb", fn.overseer_go_build, desc = "Go Build" },
+	{ "<leader>rs", fn.overseer_run_script, desc = "Run Script" },
+	{ "<leader>ra", fn.overseer_run_script_args, desc = "Run Script with Args" },
+
+	-- ========================================================================
+	-- <leader>s - Git (Source control)
+	-- ========================================================================
+	{ "<leader>s", group = "Git" },
+	{ "<leader>sg", ":Neogit<cr>", desc = "Neogit" },
+	{ "<leader>sl", ":LazyGit<cr>", desc = "LazyGit (current)" },
+	{ "<leader>sL", fn.git_lazygit_multi_repo, desc = "LazyGit (select repo)" },
+	{ "<leader>sk", fn.git_lazygit_last_repo, desc = "LazyGit (last repo)" },
+	{ "<leader>sf", ":Git<cr>", desc = "Fugitive" },
+	{ "<leader>sa", ":Git add %<cr>", desc = "Add Current File" },
+	{ "<leader>sA", ":Git add .<cr>", desc = "Add All Files" },
+	{ "<leader>sm", ":Git commit<cr>", desc = "Commit" },
+	{ "<leader>sd", ":Git diff %<cr>", desc = "Diff Current File" },
+	{ "<leader>si", ":Git diff .<cr>", desc = "Diff All Files" },
+	{ "<leader>sD", ":Git diff --cached %<cr>", desc = "Diff Staged" },
+	{ "<leader>so", ":Git log<cr>", desc = "Git Log" },
+	{ "<leader>sv", ":DiffviewOpen<cr>", desc = "DiffView" },
+	{ "<leader>sc", ":DiffviewFileHistory<cr>", desc = "File History" },
+	{ "<leader>sp", ":Git pull --rebase<cr>", desc = "Pull Rebase" },
+	{ "<leader>sP", ":Git push<cr>", desc = "Push" },
+	{ "<leader>sn", function() require('gitsigns').next_hunk() end, desc = "Next Hunk" },
+	{ "<leader>sb", function() require('gitsigns').prev_hunk() end, desc = "Prev Hunk" },
+	{ "<leader>ss", function() require('gitsigns').stage_hunk() end, desc = "Stage Hunk" },
+	{ "<leader>sr", function() require('gitsigns').reset_hunk() end, desc = "Reset Hunk" },
+	{ "<leader>su", function() require('gitsigns').undo_stage_hunk() end, desc = "Undo Stage Hunk" },
+	{ "<leader>sh", function() require('gitsigns').preview_hunk() end, desc = "Preview Hunk" },
+	{ "<leader>sB", function() require('gitsigns').blame_line{full=true} end, desc = "Blame Line" },
+	{ "<leader>st", function() require('gitsigns').toggle_current_line_blame() end, desc = "Toggle Line Blame" },
+	{ "<leader>sT", function() require('gitsigns').toggle_deleted() end, desc = "Toggle Deleted" },
+	{ "<leader>se", fn.git_compare_head, desc = "Compare with HEAD" },
+
+	-- ========================================================================
+	-- <leader>t - Tree / Tab
+	-- ========================================================================
+	{ "<leader>t", group = "Tree/Tab" },
+	{ "<leader>tt", "<cmd>NvimTreeToggle<cr>", desc = "Toggle Tree" },
+	{ "<leader>tf", "<cmd>NvimTreeFocus<cr>", desc = "Focus Tree" },
+	{ "<leader>tr", "<cmd>NvimTreeFindFile<cr>", desc = "Find current file" },
+	{ "<leader>tc", "<cmd>NvimTreeClose<cr>", desc = "Close Tree" },
+	{ "<leader>tn", fn.tab_rename, desc = "Rename Tab" },
+	{ "<leader>tx", fn.tab_clear_name, desc = "Clear Tab Name" },
+	{ "<leader>tu", "<cmd>NvimTreeToggle<cr>", desc = "Toggle file tree" },
+
+	-- ========================================================================
+	-- <leader>v - Various (Some Thing)
+	-- ========================================================================
+	{ "<leader>v", group = "Various" },
+	{ "<leader>vE", "<cmd>edit %<cr>", desc = "Reload Current File" },
+	{ "<leader>vL", fn.open_path_at_cursor, desc = "Open path:line" },
+	{ "<leader>va", "<cmd>qa<cr>", desc = "Exit" },
+	{ "<leader>vb", "<cmd>%bd|e#<cr>", desc = "Delete Other Buffers" },
+	{ "<leader>vc", "<cmd>DiffviewClose<cr>", desc = "Close Diff" },
+	{ "<leader>vd", "<cmd>DiffviewOpen<cr>", desc = "Open Diff" },
+	{ "<leader>ve", "<cmd>bufdo edit %<cr>", desc = "Reload All Buffers" },
+	{ "<leader>vf", "<cmd>ASToggle<cr>", desc = "Toggle Auto Save" },
+	{ "<leader>vg", "<cmd>ToggleTermToggleAll<cr>", desc = "Toggle All Terms" },
+	{ "<leader>vh", fn.toggle_hlsearch, desc = "Toggle Hlsearch" },
+	{ "<leader>vi", fn.reload_config, desc = "Reload Neovim Config" },
+	{ "<leader>vj", "<cmd>set relativenumber<cr>", desc = "Set Relative Number" },
+	{ "<leader>vk", "<cmd>set norelativenumber<cr>", desc = "Cancel Relative Number" },
+	{ "<leader>vlr", fn.rename_current_file, desc = "Rename Current File" },
+	{ "<leader>vla", fn.create_new_file, desc = "Create New File" },
+	{ "<leader>vm", ":%bd!|e#|bd#<cr>", desc = "Remove Other Buffers" },
+	{ "<leader>vn", "<cmd>lua = vim.api.nvim_buf_get_name(0)<cr>", desc = "Get File Abs Path" },
+	{ "<leader>vo", "<cmd>only<cr>", desc = "Only Window" },
+	{ "<leader>vp", fn.copy_file_path, desc = "Copy File Path" },
+	{ "<leader>vq", "<cmd>q<cr>", desc = "Close Current Tab" },
+	{ "<leader>vr", "<cmd>LspRestart<cr>", desc = "Lsp Restart" },
+	{ "<leader>vs", "<cmd>only<cr><cmd>tabo<cr>", desc = "Only Window/Tab" },
+	{ "<leader>vt", fn.toggle_neovide, desc = "Toggle Neovide" },
+	{ "<leader>vu", ":UndotreeToggle<cr>", desc = "Undo Tree Toggle" },
+	{ "<leader>vv", fn.open_project_in_new_tab, desc = "Open Project In New Tab" },
+	{ "<leader>vw", ":DiffviewFileHistory %<cr>", desc = "File History" },
+	{ "<leader>vy", "viw:Translate zh-CN<cr>", desc = "Translate" },
+	{ "<leader>vz", ":ZenMode<cr>", desc = "Toggle Zen Mode" },
+	{ "<leader>vx", fn.copy_message, desc = "Copy Message" },
+	{ "<leader>vxl", fn.copy_last_message, desc = "Copy Last Message" },
+	{ "<leader>vxa", fn.copy_all_messages, desc = "Copy All Messages" },
+	{ "<leader>vxw", fn.copy_word_with_location, desc = "Copy Word with Location" },
+
+	-- ========================================================================
+	-- <leader>w - Window
+	-- ========================================================================
+	{ "<leader>w", group = "Window" },
+	{ "<leader>wH", "<C-w>H", desc = "Move To Left" },
+	{ "<leader>wJ", "<C-w>J", desc = "Move To Below" },
+	{ "<leader>wK", "<C-w>K", desc = "Move To Up" },
+	{ "<leader>wL", "<C-w>L", desc = "Move To Right" },
+	{ "<leader>wT", "<C-w>T", desc = "Move To New Tab" },
+	{ "<leader>wh", "<C-w>h", desc = "Go Left" },
+	{ "<leader>wi", "<C-w>]<C-w>L", desc = "VSplit And Jump" },
+	{ "<leader>wj", "<C-w>j", desc = "Go Below" },
+	{ "<leader>wk", "<C-w>k", desc = "Go Up" },
+	{ "<leader>wl", "<C-w>l", desc = "Go Right" },
+	{ "<leader>wm", ":tabmove<cr>", desc = "Move Tab To Last" },
+	{ "<leader>wt", "<C-w>]<C-w>T", desc = "Split And Jump Tab" },
+	{ "<leader>wu", "<C-w>]", desc = "Split And Jump" },
+
+	-- ========================================================================
+	-- <leader>x - Trouble
+	-- ========================================================================
+	{ "<leader>x", group = "Trouble" },
+	{ "<leader>xj", "<cmd>Trouble loclist toggle<cr>", desc = "Location List" },
+	{ "<leader>xl", "<cmd>Trouble lsp toggle focus=false win.position=right<cr>", desc = "LSP Definitions" },
+	{ "<leader>xm", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List" },
+	{ "<leader>xs", "<cmd>Trouble symbols toggle focus=false<cr>", desc = "Symbols" },
+	{ "<leader>xu", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", desc = "Buffer Diagnostics" },
+	{ "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics" },
+
+	-- ========================================================================
+	-- <leader>z - Ufo Fold
+	-- ========================================================================
+	{ "<leader>z", group = "Fold" },
+	{ "<leader>zh", ":lua require('ufo').goPreviousStartFold()<cr>", desc = "Go To Fold Start" },
+	{ "<leader>zi", fn.ufo_focus_next_fold, desc = "Focus Next Fold" },
+	{ "<leader>zn", ":lua require('ufo').goNextClosedFold()<cr>", desc = "Go To Next Fold" },
+	{ "<leader>zo", fn.ufo_fold_except_current, desc = "Only Open Current" },
+	{ "<leader>zp", ":lua require('ufo').goPreviousClosedFold()<cr>", desc = "Go To Prev Fold" },
+
+	-- ========================================================================
+	-- <leader>ar - Animation (Cellular Automaton)
+	-- ========================================================================
+	{ "<leader>ar", group = "Animation" },
+	{ "<leader>arr", "<cmd>CellularAutomaton make_it_rain<cr>", desc = "Rain" },
+	{ "<leader>arg", "<cmd>CellularAutomaton game_of_life<cr>", desc = "Game of Life" },
+	{ "<leader>ars", "<cmd>CellularAutomaton scramble<cr>", desc = "Scramble" },
+
+	-- ========================================================================
+	-- <leader>vv - Venv Selector (Python)
+	-- ========================================================================
+	{ "<leader>vv", group = "Venv" },
+	{ "<leader>vvs", "<cmd>VenvSelect<cr>", desc = "Select Venv" },
+	{ "<leader>vvc", "<cmd>VenvSelectCached<cr>", desc = "Select Cached" },
+	{ "<leader>vvu", "<cmd>VenvSelectCurrent<cr>", desc = "Select Current" },
+}
+
+-- ============================================================================
+-- 非 Leader 键映射
+-- ============================================================================
+M.non_leader_mappings = {
+	-- Flash
+	{ "s", function() require("flash").jump() end, desc = "Flash", mode = { "n", "x", "o" } },
+	{ "S", function() require("flash").treesitter() end, desc = "Flash Treesitter", mode = { "n", "x", "o" } },
+	{ "r", function() require("flash").remote() end, desc = "Remote Flash", mode = "o" },
+	{ "R", function() require("flash").treesitter_search() end, desc = "Treesitter Search", mode = { "o", "x" } },
+	{ "<c-s>", function() require("flash").toggle() end, desc = "Toggle Flash Search", mode = "c" },
+
+	-- gF - Open path:line
+	{ "gF", fn.open_path_at_cursor, desc = "Open path:line under cursor", mode = "n" },
+
+	-- zR, zM, zr - Fold
+	{ "zR", function() require("ufo").openAllFolds() end, desc = "Open All Folds", mode = "n" },
+	{ "zM", function() require("ufo").closeAllFolds() end, desc = "Close All Folds", mode = "n" },
+	{ "zr", function() require("ufo").openFoldsExceptKinds() end, desc = "Open Folds Except", mode = "n" },
+}
+
+-- ============================================================================
+-- Ctrl 键映射
+-- ============================================================================
+M.ctrl_mappings = {
+	-- Terminal toggle
+	{ "<C-q>", fn.toggle_current_term, desc = "Toggle Current Terminal", mode = { "n", "i", "t" } },
+	{ "<C-k>", fn.toggle_all_terms, desc = "Toggle All Terminals", mode = { "n", "i", "t" } },
+
+	-- Overseer
+	{ "<C-S-r>", "<cmd>OverseerRun<cr>", desc = "Overseer Run", mode = "n" },
+	{ "<C-S-t>", "<cmd>OverseerToggle<cr>", desc = "Overseer Toggle", mode = "n" },
+	{ "<C-S-l>", "<cmd>OverseerRestartLast<cr>", desc = "Overseer Restart Last", mode = "n" },
+
+	-- LuaSnip
+	{ "<C-G>", function() require("luasnip").expand() end, desc = "Expand Snippet", mode = "i" },
+	{ "<C-t>", function() require("luasnip").jump(1) end, desc = "Jump Next", mode = { "i", "s" } },
+	{ "<C-b>", function() require("luasnip").jump(-1) end, desc = "Jump Prev", mode = { "i", "s" } },
+	{ "<C-,>", function() if require("luasnip").choice_active() then require("luasnip").change_choice(1) end end, desc = "Change Choice", mode = { "i", "s" } },
+}
+
+-- ============================================================================
+-- Window 快速跳转 (动态生成)
+-- ============================================================================
+M.window_jump_mappings = {}
+for i = 1, 9 do
+	table.insert(M.window_jump_mappings, {
+		"<leader>w" .. i,
+		string.format("<cmd>%dwincmd w<cr>", i),
+		desc = string.format("Window %d", i),
+	})
+	table.insert(M.window_jump_mappings, {
+		"<leader>wc" .. i,
+		string.format("<cmd>%dwincmd q<cr>", i),
+		desc = string.format("Close Window %d", i),
+	})
+end
+
+-- ============================================================================
+-- Tab 导航 (动态生成)
+-- ============================================================================
+M.tab_nav_mappings = {}
+for i = 1, 9 do
+	table.insert(M.tab_nav_mappings, { "<C-" .. i .. ">", i .. "gt", desc = "Tab " .. i, mode = "n" })
+	table.insert(M.tab_nav_mappings, { "<C-" .. i .. ">", "<Esc>" .. i .. "gt", desc = "Tab " .. i, mode = "i" })
+	table.insert(M.tab_nav_mappings, { "<C-" .. i .. ">", "<Esc>" .. i .. "gt", desc = "Tab " .. i, mode = "v" })
+	table.insert(M.tab_nav_mappings, { "<C-" .. i .. ">", [[<C-\><C-n>]] .. i .. [[gt]], desc = "Tab " .. i, mode = "t" })
+end
+
+-- ============================================================================
+-- macOS Option 键映射
+-- ============================================================================
+M.option_mappings = {}
+local option_chars = {
+	-- 数字键 -> 窗口
+	{ "¡", 1 }, { "™", 2 }, { "£", 3 }, { "¢", 4 }, { "∞", 5 },
+	{ "§", 6 }, { "¶", 7 }, { "•", 8 }, { "ª", 9 },
+}
+for _, item in ipairs(option_chars) do
+	local char, win = item[1], item[2]
+	local cmd = string.format("<cmd>%dwincmd w<cr>", win)
+	table.insert(M.option_mappings, { char, cmd, desc = "Window " .. win, mode = { "n", "i", "v", "t" } })
+end
+-- 字母键快捷操作
+table.insert(M.option_mappings, { "ß", "<cmd>w<cr>", desc = "Quick Save (Option+s)", mode = { "n", "i" } })
+table.insert(M.option_mappings, { "œ", "<cmd>q<cr>", desc = "Quick Quit (Option+q)", mode = "n" })
+table.insert(M.option_mappings, { "∑", "<cmd>bdelete<cr>", desc = "Close Buffer (Option+w)", mode = "n" })
+table.insert(M.option_mappings, { "†", "<cmd>NvimTreeToggle<cr>", desc = "Toggle Tree (Option+t)", mode = { "n", "i", "v", "t" } })
+table.insert(M.option_mappings, { "©", "<cmd>OverseerToggle<cr>", desc = "Toggle Overseer (Option+g)", mode = { "n", "i", "v", "t" } })
+table.insert(M.option_mappings, { "¬", "<cmd>OverseerRestartLast<cr>", desc = "Restart Last (Option+l)", mode = { "n", "i", "v", "t" } })
+
+-- ============================================================================
+-- Terminal 模式特殊键
+-- ============================================================================
+M.terminal_mappings = {
+	{ "[[", [[<C-\><C-n>]], desc = "Exit Terminal", mode = "t" },
+	{ "【【", [[<C-\><C-n>]], desc = "Exit Terminal (CN)", mode = "t" },
+	{ "<C-h>", [[<Cmd>wincmd h<CR>]], desc = "Window Left", mode = "t" },
+	{ "<C-j>", [[<Cmd>wincmd j<CR>]], desc = "Window Down", mode = "t" },
+	{ "<C-l>", [[<Cmd>wincmd l<CR>]], desc = "Window Right", mode = "t" },
+	{ "<C-'>", fn.terminal_scroll_up, desc = "Scroll Up", mode = "t" },
+	{ "gt", [[<C-\><C-n>gt]], desc = "Next Tab", mode = "t" },
+	{ "gT", [[<C-\><C-n>gT]], desc = "Prev Tab", mode = "t" },
+}
+
+-- ============================================================================
+-- Insert 模式 Tab 导航
+-- ============================================================================
+M.insert_tab_mappings = {
+	{ "gt", "<Esc>gt", desc = "Next Tab", mode = "i" },
+	{ "gT", "<Esc>gT", desc = "Prev Tab", mode = "i" },
+}
+
+-- ============================================================================
+-- 注册函数
+-- ============================================================================
+function M.setup()
+	local wk = require("which-key")
+
+	-- 注册主要 leader 键映射
+	wk.add(M.mappings)
+
+	-- 注册 window 跳转映射
+	wk.add(M.window_jump_mappings)
+
+	-- 注册非 leader 键映射
+	for _, map in ipairs(M.non_leader_mappings) do
+		local mode = map.mode or "n"
+		vim.keymap.set(mode, map[1], map[2], { desc = map.desc, silent = true })
+	end
+
+	-- 注册 Ctrl 键映射
+	for _, map in ipairs(M.ctrl_mappings) do
+		local mode = map.mode or "n"
+		vim.keymap.set(mode, map[1], map[2], { desc = map.desc, silent = true })
+	end
+
+	-- 注册 Tab 导航映射
+	for _, map in ipairs(M.tab_nav_mappings) do
+		vim.keymap.set(map.mode, map[1], map[2], { desc = map.desc, silent = true })
+	end
+
+	-- 注册 Option 键映射 (仅 macOS)
+	if vim.fn.has("mac") == 1 then
+		for _, map in ipairs(M.option_mappings) do
+			local modes = type(map.mode) == "table" and map.mode or { map.mode }
+			for _, mode in ipairs(modes) do
+				vim.keymap.set(mode, map[1], map[2], { desc = map.desc, silent = true })
+			end
+		end
+	end
+
+	-- 注册 Terminal 映射
+	for _, map in ipairs(M.terminal_mappings) do
+		vim.keymap.set(map.mode or "t", map[1], map[2], { desc = map.desc, silent = true })
+	end
+
+	-- 注册 Insert 模式 Tab 映射
+	for _, map in ipairs(M.insert_tab_mappings) do
+		vim.keymap.set(map.mode, map[1], map[2], { desc = map.desc, silent = true })
+	end
+end
+
+return M

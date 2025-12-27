@@ -1,13 +1,15 @@
+-- ============================================================================
+-- Keymaps 入口文件
+-- 所有快捷键统一在 all.lua 中定义
+-- ============================================================================
 local M = {}
 
--- 基础按键设置
+-- 基础按键设置 (leader 键等)
 local function setup_basic_keymaps()
 	local opts = { noremap = true, silent = true }
-	local term_opts = { silent = true }
 
-	-- 设置 leader 键 (使用现代化API)
+	-- 设置 leader 键
 	vim.keymap.set("n", "<space>", "", opts)
-	-- vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", term_opts) -- 注释掉让ESC发送给终端
 
 	-- URL 打开功能
 	local open_command = vim.fn.has("mac") == 1 and "open" or "xdg-open"
@@ -25,39 +27,19 @@ local function setup_basic_keymaps()
 	end
 
 	vim.keymap.set("n", "gx", open_url, opts)
-
-end
-
--- 根据环境加载不同的模块
-local function get_modules()
-	if vim.g.vscode then
-		-- VSCode/Cursor 环境：只加载基础编辑功能
-		return {
-			"editor", -- 编辑器基础功能
-		}
-	else
-		-- 原生 Neovim 环境：加载完整功能
-		return {
-			"editor", -- 编辑器基础功能
-			"tools", -- 工具类功能
-			"git", -- Git 相关
-			"debug", -- 调试相关
-			"lsp", -- LSP 相关
-			"project", -- 项目管理
-		}
-	end
 end
 
 function M.setup()
 	-- 设置基础按键映射
 	setup_basic_keymaps()
 
-	-- 根据环境加载对应的模块
-	local modules = get_modules()
-	
-	for _, module in ipairs(modules) do
-		require("plugins.keymaps." .. module).setup()
+	-- VSCode/Cursor 环境：不加载完整 keymap
+	if vim.g.vscode then
+		return
 	end
+
+	-- 原生 Neovim 环境：加载统一的 keymap 配置
+	require("plugins.keymaps.all").setup()
 end
 
 return M

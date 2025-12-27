@@ -1,0 +1,606 @@
+-- ============================================================================
+-- Keymap 回调函数集合
+-- 所有复杂的回调函数集中在此，供 all.lua 引用
+-- ============================================================================
+local M = {}
+
+-- ============================================================================
+-- 辅助函数
+-- ============================================================================
+local function get_project_root()
+	local git_root = vim.fn.system("git rev-parse --show-toplevel 2>/dev/null")
+	if git_root ~= "" then
+		return git_root:gsub("%s+", "")
+	end
+	return nil
+end
+
+local function copy_to_clipboard(content, notify_message)
+	if not content or content == "" then
+		vim.notify("没有内容可复制", vim.log.levels.WARN)
+		return
+	end
+	if os.getenv('SSH_CLIENT') or os.getenv('SSH_TTY') then
+		local text = content:gsub('\n$', '')
+		local osc52 = string.format('\027]52;c;%s\007', vim.base64.encode(text))
+		io.stdout:write(osc52)
+		io.stdout:flush()
+		vim.notify("已通过OSC52" .. notify_message, vim.log.levels.INFO)
+	else
+		vim.fn.setreg('+', content)
+		vim.notify("已" .. notify_message, vim.log.levels.INFO)
+	end
+end
+
+-- ============================================================================
+-- Editor: Some Thing
+-- ============================================================================
+function M.create_new_file()
+	local current_directory = vim.fn.expand("%:p:h")
+	local directory = current_directory ~= "" and current_directory or get_project_root()
+	if not directory then
+		print("Error: No project root found.")
+		return
+	end
+	vim.ui.input({
+		prompt = "New File Name (in " .. directory .. "): ",
+		default = directory .. "/",
+	}, function(new_name)
+		if not new_name or new_name == "" then return end
+		local dir = new_name:match("(.*/)")
+		if dir and not vim.loop.fs_stat(dir) then
+			os.execute("mkdir -p " .. dir)
+		end
+		local file = io.open(new_name, "w")
+		if file then
+			file:close()
+			vim.cmd("e " .. new_name)
+			print("File created: " .. new_name)
+		end
+	end)
+end
+
+function M.rename_current_file()
+	local old_path = vim.fn.expand("%:p")
+	local default_input = old_path
+	vim.ui.input({
+		prompt = "New Path and Name: ",
+		default = default_input,
+	}, function(new_path)
+		if not new_path or new_path == "" then return end
+		local dir = new_path:match("(.*/)")
+		if dir and not vim.loop.fs_stat(dir) then
+			os.execute("mkdir -p " .. dir)
+		end
+		local success, err = os.rename(old_path, new_path)
+		if success then
+			vim.cmd("e " .. new_path)
+			print("File renamed to " .. new_path)
+		else
+			print("Error renaming file: " .. err)
+		end
+	end)
+end
+
+function M.open_project_in_new_tab()
+	local input = vim.fn.input("Tab Name: ")
+	if input ~= "" then
+		vim.cmd("tabnew")
+		vim.cmd("Telescope projects")
+		vim.cmd("LualineRenameTab " .. input)
+	end
+end
+
+function M.toggle_neovide()
+	vim.g.neovide_fullscreen = not vim.g.neovide_fullscreen
+end
+
+function M.toggle_hlsearch()
+	vim.o.hlsearch = not vim.o.hlsearch
+end
+
+function M.copy_message()
+	copy_to_clipboard(vim.fn.getreg("+"), "复制消息内容到剪贴板")
+end
+
+function M.copy_last_message()
+	local messages = vim.api.nvim_exec2("messages", {output = true})
+	local lines = vim.split(messages.output, "\n")
+	for i = #lines, 1, -1 do
+		if lines[i] ~= "" then
+			copy_to_clipboard(lines[i], "复制最后一条消息到剪贴板")
+			return
+		end
+	end
+end
+
+function M.copy_all_messages()
+	local messages = vim.api.nvim_exec2("messages", {output = true})
+	copy_to_clipboard(messages.output, "复制所有消息到剪贴板")
+end
+
+function M.copy_file_path()
+	local file_path = vim.fn.expand('%:p')
+	copy_to_clipboard(file_path, "复制文件路径到剪贴板: " .. file_path)
+end
+
+function M.copy_word_with_location()
+	local word = vim.fn.expand('<cword>')
+	local file_path = vim.fn.expand('%:p')
+	local line_num = vim.fn.line('.')
+	local content = string.format("%s:%d:%s", file_path, line_num, word)
+	copy_to_clipboard(content, "复制 word 和位置信息到剪贴板")
+end
+
+function M.open_path_at_cursor()
+	local current_line = vim.api.nvim_get_current_line()
+	local cursor_col = vim.api.nvim_win_get_cursor(0)[2] + 1
+	local patterns = { "[^%s:]+:%d+:%d+", "[^%s:]+:%d+" }
+	local match = nil
+	for _, pattern in ipairs(patterns) do
+		local start_col = 1
+		while true do
+			local s, e = current_line:find(pattern, start_col)
+			if not s then break end
+			if cursor_col >= s and cursor_col <= e then
+				match = current_line:sub(s, e)
+				break
+			end
+			start_col = e + 1
+		end
+		if match then break end
+	end
+	if not match then
+		vim.notify("未在光标附近找到 path:line", vim.log.levels.WARN)
+		return
+	end
+	match = match:gsub("[,.;]+$", "")
+	local path_part, line_str, col_str = match:match("^([^:]+):(%d+):?(%d*)$")
+	if not path_part then
+		vim.notify("无法解析路径: " .. match, vim.log.levels.WARN)
+		return
+	end
+	-- Resolve path
+	local target_path = path_part
+	if path_part:sub(1, 1) == "~" then
+		target_path = vim.fn.expand(path_part)
+	elseif not path_part:match("^/") then
+		local project_root = get_project_root()
+		if project_root then
+			local candidate = vim.fn.fnamemodify(project_root .. "/" .. path_part, ":p")
+			if vim.fn.filereadable(candidate) == 1 then
+				target_path = candidate
+			end
+		end
+	end
+	if vim.fn.filereadable(target_path) == 0 then
+		vim.notify("文件不存在: " .. target_path, vim.log.levels.ERROR)
+		return
+	end
+	vim.cmd("edit " .. vim.fn.fnameescape(target_path))
+	local line_num = tonumber(line_str) or 1
+	local col_num = tonumber(col_str)
+	vim.api.nvim_win_set_cursor(0, { line_num, col_num and col_num - 1 or 0 })
+end
+
+function M.reload_config()
+	local ok, reload = pcall(require, "core.reload")
+	if ok then
+		reload.reload_config()
+	else
+		vim.notify("无法加载 reload 模块", vim.log.levels.ERROR)
+	end
+end
+
+-- ============================================================================
+-- Editor: Terminal
+-- ============================================================================
+local terminals = {}
+local next_claude_count = 20
+
+local function get_terminal(name, cmd, direction, count)
+	if not terminals[name] then
+		local Terminal = require("toggleterm.terminal").Terminal
+		terminals[name] = Terminal:new({
+			cmd = cmd,
+			hidden = true,
+			direction = direction or "float",
+			count = count,
+			on_open = function(term)
+				if direction == "tab" then
+					vim.opt_local.relativenumber = false
+					vim.opt_local.number = false
+				end
+			end,
+		})
+	end
+	return terminals[name]
+end
+
+local function build_claude_cmd(api_num)
+	local env = require("core.env")
+	local base_url = env.get("CLAUDE_API" .. api_num .. "_BASE_URL")
+	local token = env.get("CLAUDE_API" .. api_num .. "_TOKEN")
+	if base_url and token then
+		return string.format("ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude", base_url, token)
+	end
+	return "claude"
+end
+
+function M.terminal_ncdu_toggle() get_terminal("ncdu", "ncdu --color dark", "float", 2):toggle() end
+function M.terminal_htop_toggle() get_terminal("htop", "htop", "float", 3):toggle() end
+function M.terminal_ipython_toggle() get_terminal("ipython", "ipython", "horizontal", 4):toggle() end
+function M.terminal_lua_toggle() get_terminal("lua", "lua", "horizontal", 5):toggle() end
+function M.terminal_newterm_toggle() get_terminal("newterm", "/bin/zsh", "float", 7):toggle() end
+function M.terminal_newsboat_toggle() get_terminal("newsboat", "newsboat", "tab", 10):toggle() end
+function M.terminal_newterm_tab() get_terminal("newtab", "/bin/zsh", "tab", 9):toggle() end
+
+function M.terminal_claude_code_1_toggle() get_terminal("claude1", build_claude_cmd(1), "tab", 17):toggle() end
+function M.terminal_claude_code_2_toggle() get_terminal("claude2", build_claude_cmd(2), "tab", 18):toggle() end
+function M.terminal_codex_toggle() get_terminal("codex", "codex", "tab", 16):toggle() end
+function M.terminal_kimi_claude_code_toggle()
+	local cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude"
+	get_terminal("kimi", cmd, "tab", 12):toggle()
+end
+function M.terminal_qwen_toggle() get_terminal("qwen", "qwen", "vertical", 13):toggle() end
+function M.terminal_gemini_toggle() get_terminal("gemini", "gemini", "vertical", 14):toggle() end
+function M.terminal_cursor_agent_toggle() get_terminal("cursor", "cursor-agent", "vertical", 15):toggle() end
+
+function M.terminal_create_new_claude_tab()
+	local Terminal = require("toggleterm.terminal").Terminal
+	local count = next_claude_count
+	next_claude_count = next_claude_count + 1
+	Terminal:new({ cmd = "claude", hidden = true, direction = "tab", count = count }):toggle()
+end
+
+function M.terminal_create_new_claude_tab_api1()
+	local Terminal = require("toggleterm.terminal").Terminal
+	local count = next_claude_count
+	next_claude_count = next_claude_count + 1
+	Terminal:new({ cmd = build_claude_cmd(1), hidden = true, direction = "tab", count = count }):toggle()
+end
+
+function M.terminal_create_new_claude_tab_api2()
+	local Terminal = require("toggleterm.terminal").Terminal
+	local count = next_claude_count
+	next_claude_count = next_claude_count + 1
+	Terminal:new({ cmd = build_claude_cmd(2), hidden = true, direction = "tab", count = count }):toggle()
+end
+
+local last_terminal_id = nil
+function M.toggle_current_term()
+	local buf_ft = vim.bo.filetype
+	if buf_ft == "toggleterm" then
+		last_terminal_id = vim.b.toggle_number
+		vim.cmd("close")
+	elseif last_terminal_id then
+		vim.cmd(last_terminal_id .. "ToggleTerm")
+	else
+		vim.notify("No terminal to restore", vim.log.levels.WARN)
+	end
+end
+
+local all_terms_hidden = false
+function M.toggle_all_terms()
+	local terms = require("toggleterm.terminal")
+	local all = terms.get_all(true)
+	if not all or vim.tbl_isempty(all) then
+		vim.notify("No terminals found", vim.log.levels.INFO)
+		return
+	end
+	all_terms_hidden = not all_terms_hidden
+	for _, term in pairs(all) do
+		if all_terms_hidden then
+			if term:is_open() then term:close() end
+		else
+			if not term:is_open() then term:open() end
+		end
+	end
+end
+
+function M.terminal_scroll_up()
+	vim.cmd([[stopinsert]])
+	vim.schedule(function()
+		local half_page = math.floor(vim.api.nvim_win_get_height(0) / 2)
+		vim.cmd("normal! " .. half_page .. "k")
+	end)
+end
+
+-- ============================================================================
+-- Editor: Tab
+-- ============================================================================
+function M.tab_rename()
+	vim.ui.input({ prompt = "Tab name: " }, function(name)
+		if name and name ~= "" then
+			vim.t.tab_name = name
+			vim.cmd.redrawtabline()
+		end
+	end)
+end
+
+function M.tab_clear_name()
+	vim.t.tab_name = nil
+	vim.cmd.redrawtabline()
+end
+
+-- ============================================================================
+-- Tools: Telescope
+-- ============================================================================
+function M.telescope_copy_file_content()
+	require("telescope.builtin").find_files({
+		prompt_title = "Copy File Content",
+		attach_mappings = function(prompt_bufnr, map)
+			local actions = require("telescope.actions")
+			local action_state = require("telescope.actions.state")
+			map("i", "<CR>", function()
+				local selection = action_state.get_selected_entry()
+				actions.close(prompt_bufnr)
+				if selection then
+					local file_path = selection.path or selection.value
+					local file_content = vim.fn.readfile(file_path)
+					local row = vim.api.nvim_win_get_cursor(0)[1]
+					vim.api.nvim_buf_set_lines(0, row, row, false, file_content)
+					print("File content copied: " .. file_path)
+				end
+			end)
+			return true
+		end,
+	})
+end
+
+-- ============================================================================
+-- Git
+-- ============================================================================
+local last_selected_repo = nil
+
+function M.git_lazygit_last_repo()
+	if not last_selected_repo then
+		vim.notify("还没有选择过仓库", vim.log.levels.WARN)
+		return
+	end
+	local Terminal = require("toggleterm.terminal").Terminal
+	Terminal:new({
+		cmd = "lazygit",
+		dir = vim.fn.fnamemodify(last_selected_repo, ":p"),
+		direction = "float",
+		float_opts = { border = "curved" },
+		on_open = function() vim.cmd("startinsert!") end,
+	}):toggle()
+end
+
+function M.git_lazygit_multi_repo()
+	local git_dirs = vim.fn.systemlist("find . -maxdepth 3 -type d -name '.git' 2>/dev/null | sed 's|/.git||' | sort")
+	if #git_dirs == 0 then
+		vim.notify("未找到任何 git 仓库", vim.log.levels.WARN)
+		return
+	end
+	require("telescope.pickers").new({}, {
+		prompt_title = "选择 Git 仓库",
+		finder = require("telescope.finders").new_table({
+			results = git_dirs,
+			entry_maker = function(entry)
+				local display = entry:gsub("^%./", "")
+				if entry == last_selected_repo then display = "★ " .. display end
+				return { value = entry, display = display, ordinal = display }
+			end,
+		}),
+		sorter = require("telescope.config").values.generic_sorter({}),
+		attach_mappings = function(prompt_bufnr, map)
+			require("telescope.actions").select_default:replace(function()
+				require("telescope.actions").close(prompt_bufnr)
+				local selection = require("telescope.actions.state").get_selected_entry()
+				if selection then
+					last_selected_repo = selection.value
+					local Terminal = require("toggleterm.terminal").Terminal
+					Terminal:new({
+						cmd = "lazygit",
+						dir = vim.fn.fnamemodify(selection.value, ":p"),
+						direction = "float",
+						float_opts = { border = "curved" },
+						on_open = function() vim.cmd("startinsert!") end,
+					}):toggle()
+				end
+			end)
+			return true
+		end,
+	}):find()
+end
+
+function M.git_compare_head()
+	local file = vim.api.nvim_buf_get_name(0)
+	if file == "" then
+		vim.notify("当前 buffer 没有关联文件", vim.log.levels.WARN)
+		return
+	end
+	local git_root = vim.fn.systemlist("git -C " .. vim.fn.fnameescape(vim.fn.expand("%:p:h")) .. " rev-parse --show-toplevel")[1]
+	if not git_root or git_root == "" then
+		vim.notify("未找到 git 仓库根目录", vim.log.levels.ERROR)
+		return
+	end
+	local relpath = file:sub(#git_root + 2)
+	vim.cmd("tabnew")
+	vim.cmd("edit " .. file)
+	vim.cmd("vsplit")
+	vim.cmd("wincmd j")
+	vim.cmd("Gedit HEAD:" .. relpath)
+	vim.cmd("wincmd k")
+end
+
+-- ============================================================================
+-- Debug (DAP)
+-- ============================================================================
+function M.dap_conditional_breakpoint()
+	require('persistent-breakpoints.api').set_conditional_breakpoint()
+end
+
+function M.dap_eval_input()
+	require('dap').eval(vim.fn.input('[Expression] > '))
+end
+
+function M.dap_toggle_ui()
+	local dapui = require("dapui")
+	local is_open = false
+	for _, win in ipairs(vim.api.nvim_list_wins()) do
+		local name = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win))
+		if name:match("DAP") then is_open = true break end
+	end
+	if is_open then
+		dapui.close()
+		vim.o.mouse = ""
+	else
+		dapui.open()
+		vim.o.mouse = "a"
+	end
+end
+
+function M.dap_restart()
+	require("dap").terminate()
+	vim.defer_fn(function() require("dap").run_last() end, 100)
+end
+
+function M.dap_enable_all_breakpoints()
+	local dap = require("dap")
+	for _, bp in pairs(dap.breakpoints) do
+		for _, breakpoint in pairs(bp) do breakpoint.enabled = true end
+	end
+	dap.refresh_breakpoints()
+end
+
+function M.dap_disable_all_breakpoints()
+	local dap = require("dap")
+	for _, bp in pairs(dap.breakpoints) do
+		for _, breakpoint in pairs(bp) do breakpoint.enabled = false end
+	end
+	dap.refresh_breakpoints()
+end
+
+function M.dap_clear_all_breakpoints()
+	require('persistent-breakpoints.api').clear_all_breakpoints()
+end
+
+function M.dap_toggle_breakpoint()
+	require('persistent-breakpoints.api').toggle_breakpoint()
+end
+
+-- ============================================================================
+-- Workspace
+-- ============================================================================
+local function get_workspaces_config()
+	return require("plugins.config.workspaces")
+end
+
+function M.workspace_add_project() get_workspaces_config().add_project_to_workspace() end
+function M.workspace_add_project_path()
+	vim.ui.input({ prompt = "Project path: ", completion = "dir" }, function(path)
+		if path then get_workspaces_config().add_project_to_workspace(vim.fn.expand(path)) end
+	end)
+end
+function M.workspace_remove_project() get_workspaces_config().remove_project_from_workspace() end
+function M.workspace_list_projects() get_workspaces_config().list_workspace_projects() end
+function M.workspace_switch_root() get_workspaces_config().switch_project_root() end
+function M.workspace_search_all() get_workspaces_config().search_all_projects() end
+function M.workspace_search_all_hidden() get_workspaces_config().search_all_projects_with_hidden() end
+function M.workspace_grep_all() get_workspaces_config().grep_all_projects() end
+function M.workspace_grep_all_hidden() get_workspaces_config().grep_all_projects_with_hidden() end
+
+-- ============================================================================
+-- Sessions
+-- ============================================================================
+local function get_possession_config()
+	return require("plugins.config.possession")
+end
+
+function M.session_save_workspace() get_possession_config().save_workspace_session() end
+function M.session_load_workspace() get_possession_config().load_workspace_session() end
+function M.session_delete_workspace() get_possession_config().delete_workspace_session() end
+function M.session_list_workspace() get_possession_config().list_workspace_sessions() end
+function M.session_telescope()
+	if pcall(require, "telescope") then
+		vim.cmd("Telescope possession")
+	else
+		vim.cmd("PossessionList")
+	end
+end
+
+-- ============================================================================
+-- Neotest
+-- ============================================================================
+function M.neotest_all()
+	local common = require("core.common")
+	local project_root = common.find_project_root_by_marker("pyproject.toml") or vim.loop.getcwd()
+	require("neotest").run.run(project_root)
+end
+
+-- ============================================================================
+-- Project
+-- ============================================================================
+function M.project_reset_root()
+	require("project_nvim.project").set_pwd()
+end
+
+function M.project_manual_set_root()
+	vim.ui.input({ prompt = "Enter project root path: " }, function(input)
+		if input then
+			vim.cmd("cd " .. input)
+			require("project_nvim.project").set_pwd()
+		end
+	end)
+end
+
+-- ============================================================================
+-- Overseer
+-- ============================================================================
+function M.overseer_go_build()
+	require("overseer").run_task({ name = "Go Build" })
+end
+
+function M.overseer_run_script()
+	require("overseer").run_task({ name = "run script" })
+end
+
+function M.overseer_run_script_args()
+	require("overseer").run_task({ name = "run script with args" })
+end
+
+-- ============================================================================
+-- Ufo Fold
+-- ============================================================================
+function M.ufo_fold_except_current()
+	require("ufo").closeAllFolds()
+	local row = vim.api.nvim_win_get_cursor(0)[1]
+	if vim.fn.foldclosed(row) ~= -1 then
+		vim.cmd(row .. "foldopen")
+	end
+end
+
+function M.ufo_focus_next_fold()
+	vim.cmd("normal! zc")
+	require("ufo").goNextClosedFold()
+	vim.cmd("normal! zO")
+	vim.cmd("normal! zz")
+end
+
+-- ============================================================================
+-- Android
+-- ============================================================================
+local function get_android_config()
+	local ok, android = pcall(require, "plugins.config.android")
+	return ok and android or nil
+end
+
+function M.android_adb_picker()
+	local android = get_android_config()
+	if android then android.adb_picker() end
+end
+
+function M.android_gradle_picker()
+	local android = get_android_config()
+	if android then android.gradle_picker() end
+end
+
+function M.android_show_error_log()
+	local android = get_android_config()
+	if android then android.show_error_log() end
+end
+
+return M
