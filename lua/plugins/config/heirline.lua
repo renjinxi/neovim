@@ -573,7 +573,12 @@ local BufferLine = utils.make_buflist(
 
 local Tabpage = {
 	provider = function(self)
-		return "%" .. self.tabnr .. "T " .. self.tabnr .. " %T"
+		-- 获取 tab handle，然后获取自定义名字
+		local tabpages = vim.api.nvim_list_tabpages()
+		local tabid = tabpages[self.tabnr]
+		local tab_name = tabid and vim.t[tabid].tab_name or nil
+		local display = tab_name or self.tabnr
+		return "%" .. self.tabnr .. "T " .. display .. " %T"
 	end,
 	hl = function(self)
 		if not self.is_active then
@@ -583,6 +588,18 @@ local Tabpage = {
 		end
 	end,
 }
+
+-- 设置 tab 名字的命令
+vim.api.nvim_create_user_command("TabRename", function(opts)
+	vim.t.tab_name = opts.args
+	vim.cmd.redrawtabline()
+end, { nargs = 1, desc = "Rename current tab" })
+
+-- 清除 tab 名字的命令
+vim.api.nvim_create_user_command("TabRenameClear", function()
+	vim.t.tab_name = nil
+	vim.cmd.redrawtabline()
+end, { desc = "Clear tab name" })
 
 local TabPages = {
 	condition = function()
