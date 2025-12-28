@@ -97,6 +97,16 @@ M.mappings = {
 	{ "<leader>e", "<cmd>lua require'dapui'.eval()<cr>", desc = "Evaluate", mode = "v" },
 
 	-- ========================================================================
+	-- <leader>c - Claude Float
+	-- ========================================================================
+	{ "<leader>c", group = "Claude Float" },
+	{ "<leader>cf1", fn.claude_float_1_toggle, desc = "Claude Float 1" },
+	{ "<leader>cf2", fn.claude_float_2_toggle, desc = "Claude Float 2" },
+	{ "<leader>cf3", fn.claude_float_3_toggle, desc = "Claude Float 3" },
+	{ "<leader>cfa", fn.claude_float_toggle_all, desc = "Toggle All Claude Floats" },
+	{ "<leader>cfn", fn.claude_float_new, desc = "New Claude Float" },
+
+	-- ========================================================================
 	-- <leader>f - Telescope (Find)
 	-- ========================================================================
 	{ "<leader>f", group = "Telescope" },
@@ -463,14 +473,13 @@ for i = 1, 9 do
 end
 
 -- ============================================================================
--- Tab 导航 (动态生成)
+-- Tab 导航 (动态生成) - Terminal 模式通过 toggleterm TermOpen autocmd 注册
 -- ============================================================================
 M.tab_nav_mappings = {}
 for i = 1, 9 do
 	table.insert(M.tab_nav_mappings, { "<C-" .. i .. ">", i .. "gt", desc = "Tab " .. i, mode = "n" })
 	table.insert(M.tab_nav_mappings, { "<C-" .. i .. ">", "<Esc>" .. i .. "gt", desc = "Tab " .. i, mode = "i" })
 	table.insert(M.tab_nav_mappings, { "<C-" .. i .. ">", "<Esc>" .. i .. "gt", desc = "Tab " .. i, mode = "v" })
-	table.insert(M.tab_nav_mappings, { "<C-" .. i .. ">", [[<C-\><C-n>]] .. i .. [[gt]], desc = "Tab " .. i, mode = "t" })
 end
 
 -- ============================================================================
@@ -496,18 +505,8 @@ table.insert(M.option_mappings, { "©", "<cmd>OverseerToggle<cr>", desc = "Toggl
 table.insert(M.option_mappings, { "¬", "<cmd>OverseerRestartLast<cr>", desc = "Restart Last (Option+l)", mode = { "n", "i", "v", "t" } })
 
 -- ============================================================================
--- Terminal 模式特殊键
+-- Terminal 模式特殊键 (通过 toggleterm 的 TermOpen autocmd 注册，见 config/toggleterm.lua)
 -- ============================================================================
-M.terminal_mappings = {
-	{ "[[", [[<C-\><C-n>]], desc = "Exit Terminal", mode = "t" },
-	{ "【【", [[<C-\><C-n>]], desc = "Exit Terminal (CN)", mode = "t" },
-	{ "<C-h>", [[<Cmd>wincmd h<CR>]], desc = "Window Left", mode = "t" },
-	{ "<C-j>", [[<Cmd>wincmd j<CR>]], desc = "Window Down", mode = "t" },
-	{ "<C-l>", [[<Cmd>wincmd l<CR>]], desc = "Window Right", mode = "t" },
-	{ "<C-'>", fn.terminal_scroll_up, desc = "Scroll Up", mode = "t" },
-	{ "gt", [[<C-\><C-n>gt]], desc = "Next Tab", mode = "t" },
-	{ "gT", [[<C-\><C-n>gT]], desc = "Prev Tab", mode = "t" },
-}
 
 -- ============================================================================
 -- Insert 模式 Tab 导航
@@ -554,11 +553,6 @@ function M.setup()
 				vim.keymap.set(mode, map[1], map[2], { desc = map.desc, silent = true })
 			end
 		end
-	end
-
-	-- 注册 Terminal 映射
-	for _, map in ipairs(M.terminal_mappings) do
-		vim.keymap.set(map.mode or "t", map[1], map[2], { desc = map.desc, silent = true })
 	end
 
 	-- 注册 Insert 模式 Tab 映射
