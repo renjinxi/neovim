@@ -62,17 +62,17 @@ The configuration automatically detects and loads different configurations based
 Check environment: `vim.g.vscode` is set in VSCode/Cursor environments.
 
 ### Keymap Organization
-Keymaps are organized by functional areas with conditional loading:
+**集中式管理**：所有快捷键统一在两个文件中管理：
 
 ```
 keymaps/
-├── editor/     # Navigation, window management, terminal
-├── tools/      # Telescope, FZF, nvim-tree
-├── git/        # Git operations
-├── lsp/        # Language server operations
-├── debug/      # DAP debugging
-└── project/    # Testing, task management, folding
+├── all.lua        # 所有快捷键定义，按 <leader> 前缀分组
+└── functions.lua  # 复杂回调函数，供 all.lua 引用
 ```
+
+- `all.lua`：快捷键注册中心，使用 which-key 格式
+- `functions.lua`：复杂功能的实现（终端、Git、DAP 等）
+- 新增快捷键必须在 `all.lua` 中注册，不要在 config 文件中直接定义
 
 ## Language Server Protocol (LSP)
 
@@ -153,6 +153,8 @@ Modern, highly customizable status bar with components:
 - **Neotest**: Testing framework
 - **toggleterm**: Terminal management
 - **possession**: Session management
+- **浮动终端**: 支持多个 Claude/普通终端浮动窗口，智能避让布局
+- **多 Git Repo**: 支持在一个目录下管理多个 Git 仓库的变更
 
 ## Configuration Patterns
 
@@ -176,9 +178,10 @@ Modern, highly customizable status bar with components:
 ```
 
 ### Keymap Organization Pattern
-- Group by functional area (editor, tools, git, etc.)
-- Use aggregator `init.lua` files to load submodules
-- Environment-conditional loading in root keymap init.lua
+- 所有快捷键在 `all.lua` 集中定义
+- 复杂回调函数放在 `functions.lua`
+- 使用 which-key 的 table 格式：`{ "<leader>xx", fn.xxx, desc = "Description" }`
+- 按 `<leader>` 前缀分组，便于查看冲突
 
 ## Important Development Notes
 

@@ -1086,4 +1086,40 @@ function M.diffview_multi_repo_status()
 	vim.keymap.set("n", "<Esc>", function() vim.api.nvim_win_close(win, true) end, { buffer = buf })
 end
 
+-- ============================================================================
+-- NvimTree Float
+-- ============================================================================
+function M.nvim_tree_float()
+	local view = require("nvim-tree.view")
+	local api = require("nvim-tree.api")
+
+	-- 先关闭已有的 tree
+	api.tree.close()
+
+	-- 计算居中位置
+	local width = math.floor(vim.o.columns * 0.6)
+	local height = math.floor(vim.o.lines * 0.7)
+	local col = math.floor((vim.o.columns - width) / 2)
+	local row = math.floor((vim.o.lines - height) / 2)
+
+	-- 临时修改 view 配置为浮动
+	view.View.float.enable = true
+	view.View.float.open_win_config = {
+		relative = "editor",
+		width = width,
+		height = height,
+		col = col,
+		row = row,
+		border = "rounded",
+	}
+
+	-- 打开 tree
+	api.tree.open()
+
+	-- 恢复为非浮动模式（下次正常打开时用侧边栏）
+	vim.schedule(function()
+		view.View.float.enable = false
+	end)
+end
+
 return M

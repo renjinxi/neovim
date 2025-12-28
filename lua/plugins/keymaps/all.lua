@@ -328,6 +328,7 @@ M.mappings = {
 	-- ========================================================================
 	{ "<leader>t", group = "Tree/Tab" },
 	{ "<leader>tt", "<cmd>NvimTreeToggle<cr>", desc = "Toggle Tree" },
+	{ "<leader>tl", fn.nvim_tree_float, desc = "Float Tree" },
 	{ "<leader>tf", "<cmd>NvimTreeFocus<cr>", desc = "Focus Tree" },
 	{ "<leader>tr", "<cmd>NvimTreeFindFile<cr>", desc = "Find current file" },
 	{ "<leader>tc", "<cmd>NvimTreeClose<cr>", desc = "Close Tree" },
