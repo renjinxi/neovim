@@ -55,14 +55,14 @@ M.mappings = {
 	{ "<leader>cr", fn.workspace_remove_project, desc = "WS: Remove project" },
 	-- { "<leader>cl", fn.workspace_list_projects, desc = "WS: List projects" }, -- 与 QF close 冲突
 	{ "<leader>cs", fn.workspace_switch_root, desc = "WS: Switch root" },
-	{ "<leader>cf", fn.workspace_search_all, desc = "WS: Find files (all)" },
-	{ "<leader>cF", fn.workspace_search_all_hidden, desc = "WS: Find files (hidden)" },
+	{ "<leader>cw", fn.workspace_search_all, desc = "WS: Find files (all)" },
+	{ "<leader>cW", fn.workspace_search_all_hidden, desc = "WS: Find files (hidden)" },
 	{ "<leader>cg", fn.workspace_grep_all, desc = "WS: Grep (all)" },
 	{ "<leader>cG", fn.workspace_grep_all_hidden, desc = "WS: Grep (hidden)" },
 	{ "<leader>caf", function() vim.lsp.buf.add_workspace_folder() end, desc = "WS: Add LSP folder" },
 	{ "<leader>crf", function() vim.lsp.buf.remove_workspace_folder() end, desc = "WS: Remove LSP folder" },
 	{ "<leader>clf", function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, desc = "WS: List LSP folders" },
-	{ "<leader>cc", "<cmd>Telescope workspaces<cr>", desc = "WS: Telescope" },
+	{ "<leader>cws", "<cmd>Telescope workspaces<cr>", desc = "WS: Telescope" },
 
 	-- ========================================================================
 	-- <leader>d - Debug (DAP)
