@@ -97,14 +97,16 @@ M.mappings = {
 	{ "<leader>e", "<cmd>lua require'dapui'.eval()<cr>", desc = "Evaluate", mode = "v" },
 
 	-- ========================================================================
-	-- <leader>c - Claude Float
+	-- <leader>c - Claude Float (智能避让布局)
 	-- ========================================================================
 	{ "<leader>c", group = "Claude Float" },
 	{ "<leader>cf1", fn.claude_float_1_toggle, desc = "Claude Float 1" },
 	{ "<leader>cf2", fn.claude_float_2_toggle, desc = "Claude Float 2" },
 	{ "<leader>cf3", fn.claude_float_3_toggle, desc = "Claude Float 3" },
-	{ "<leader>cfa", fn.claude_float_toggle_all, desc = "Toggle All Claude Floats" },
-	{ "<leader>cfn", fn.claude_float_new, desc = "New Claude Float" },
+	{ "<leader>cf4", fn.claude_float_4_toggle, desc = "Claude Float 4" },
+	{ "<leader>cfn", fn.claude_float_nvim_toggle, desc = "Claude [nvim config]" },
+	{ "<leader>cfk", fn.claude_float_kitty_toggle, desc = "Claude [kitty config]" },
+	{ "<leader>cfa", fn.claude_float_toggle_all, desc = "Toggle All" },
 
 	-- ========================================================================
 	-- <leader>f - Telescope (Find)

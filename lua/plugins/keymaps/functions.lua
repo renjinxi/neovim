@@ -267,6 +267,186 @@ function M.terminal_create_new_claude_tab_api2()
 	Terminal:new({ cmd = build_claude_cmd(2), hidden = true, direction = "tab", count = count }):toggle()
 end
 
+-- ============================================================================
+-- 浮动 Claude 终端（原生 API 实现，智能避让布局）
+-- ============================================================================
+local claude_floats = {}
+
+local function get_open_positions()
+	local positions = {}
+	for _, state in pairs(claude_floats) do
+		if state.win and vim.api.nvim_win_is_valid(state.win) then
+			local cfg = vim.api.nvim_win_get_config(state.win)
+			table.insert(positions, { row = cfg.row, col = cfg.col })
+		end
+	end
+	return positions
+end
+
+local function find_free_position(preferred_row, preferred_col, width, height)
+	local open_pos = get_open_positions()
+	local offset_step = 3
+	local row, col = preferred_row, preferred_col
+	local screen_w = vim.o.columns
+	local screen_h = vim.o.lines
+
+	-- 检查是否与已有窗口重叠
+	local function is_overlapping(r, c)
+		for _, pos in ipairs(open_pos) do
+			if math.abs(r - pos.row) < height and math.abs(c - pos.col) < width then
+				return true
+			end
+		end
+		return false
+	end
+
+	-- 如果重叠，往左下偏移
+	local attempts = 0
+	while is_overlapping(row, col) and attempts < 10 do
+		col = col - offset_step
+		row = row + offset_step
+		-- 边界检查
+		if col < 1 then col = screen_w - width - 1 end
+		if row > screen_h - height - 4 then row = 1 end
+		attempts = attempts + 1
+	end
+
+	return row, col
+end
+
+local function get_float_config(id)
+	local width = 60
+	local height = 16
+	local screen_w = vim.o.columns
+	local screen_h = vim.o.lines
+
+	-- 基础配置：指定偏好位置和特殊属性
+	local configs = {
+		[1] = { pref_row = 1, pref_col = screen_w - width - 1, title = " Claude 1 " },
+		[2] = { pref_row = 1, pref_col = screen_w - width - 1, title = " Claude 2 " },
+		[3] = { pref_row = 1, pref_col = screen_w - width - 1, title = " Claude 3 " },
+		[4] = { pref_row = 1, pref_col = screen_w - width - 1, title = " Claude 4 " },
+		[5] = { pref_row = 1, pref_col = screen_w - width - 1, title = " Claude [nvim] ", cwd = "~/.config/nvim" },
+		[6] = { pref_row = 1, pref_col = screen_w - width - 1, title = " Claude [kitty] ", cwd = "~/.config/kitty" },
+	}
+
+	local cfg = configs[id] or configs[1]
+	local row, col = find_free_position(cfg.pref_row, cfg.pref_col, width, height)
+
+	return {
+		width = width,
+		height = height,
+		row = row,
+		col = col,
+		title = cfg.title,
+		cwd = cfg.cwd,
+	}
+end
+
+local function claude_float_toggle(id)
+	local state = claude_floats[id]
+
+	-- 如果窗口已存在且有效，关闭它
+	if state and state.win and vim.api.nvim_win_is_valid(state.win) then
+		vim.api.nvim_win_close(state.win, true)
+		claude_floats[id].win = nil
+		return
+	end
+
+	local cfg = get_float_config(id)
+
+	-- 如果 buffer 不存在，创建新的终端 buffer
+	if not state or not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
+		local buf = vim.api.nvim_create_buf(false, true)
+		claude_floats[id] = { buf = buf, win = nil }
+
+		-- 创建浮动窗口
+		local win = vim.api.nvim_open_win(buf, true, {
+			relative = "editor",
+			width = cfg.width,
+			height = cfg.height,
+			row = cfg.row,
+			col = cfg.col,
+			style = "minimal",
+			border = "rounded",
+			title = cfg.title,
+			title_pos = "center",
+		})
+		claude_floats[id].win = win
+
+		-- 启动终端
+		local cmd = build_claude_cmd(1)
+		if cfg.cwd then
+			cmd = "cd " .. vim.fn.expand(cfg.cwd) .. " && " .. cmd
+		end
+		vim.fn.termopen(cmd, {
+			on_exit = function()
+				if claude_floats[id] then
+					claude_floats[id].buf = nil
+				end
+			end,
+		})
+		vim.cmd("startinsert")
+
+		-- q 键关闭
+		vim.keymap.set("t", "q", function()
+			if claude_floats[id] and claude_floats[id].win and vim.api.nvim_win_is_valid(claude_floats[id].win) then
+				vim.api.nvim_win_close(claude_floats[id].win, true)
+				claude_floats[id].win = nil
+			end
+		end, { buffer = buf, noremap = true, silent = true })
+	else
+		-- buffer 存在但窗口关闭了，重新打开窗口
+		local win = vim.api.nvim_open_win(state.buf, true, {
+			relative = "editor",
+			width = cfg.width,
+			height = cfg.height,
+			row = cfg.row,
+			col = cfg.col,
+			style = "minimal",
+			border = "rounded",
+			title = cfg.title,
+			title_pos = "center",
+		})
+		claude_floats[id].win = win
+		vim.cmd("startinsert")
+	end
+end
+
+function M.claude_float_1_toggle() claude_float_toggle(1) end
+function M.claude_float_2_toggle() claude_float_toggle(2) end
+function M.claude_float_3_toggle() claude_float_toggle(3) end
+function M.claude_float_4_toggle() claude_float_toggle(4) end
+function M.claude_float_nvim_toggle() claude_float_toggle(5) end
+function M.claude_float_kitty_toggle() claude_float_toggle(6) end
+
+function M.claude_float_toggle_all()
+	local any_open = false
+	for _, state in pairs(claude_floats) do
+		if state.win and vim.api.nvim_win_is_valid(state.win) then
+			any_open = true
+			break
+		end
+	end
+
+	if any_open then
+		-- 全部隐藏
+		for id, state in pairs(claude_floats) do
+			if state.win and vim.api.nvim_win_is_valid(state.win) then
+				vim.api.nvim_win_close(state.win, true)
+				claude_floats[id].win = nil
+			end
+		end
+	else
+		-- 恢复所有有 buffer 的
+		for id, state in pairs(claude_floats) do
+			if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
+				claude_float_toggle(id)
+			end
+		end
+	end
+end
+
 local last_terminal_id = nil
 function M.toggle_current_term()
 	local buf_ft = vim.bo.filetype
