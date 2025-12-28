@@ -106,7 +106,18 @@ M.mappings = {
 	{ "<leader>cf4", fn.claude_float_4_toggle, desc = "Claude Float 4" },
 	{ "<leader>cfn", fn.claude_float_nvim_toggle, desc = "Claude [nvim config]" },
 	{ "<leader>cfk", fn.claude_float_kitty_toggle, desc = "Claude [kitty config]" },
-	{ "<leader>cfa", fn.claude_float_toggle_all, desc = "Toggle All" },
+	{ "<leader>cfa", fn.claude_float_toggle_all, desc = "Toggle All Claude" },
+	{ "<leader>cfs", fn.float_toggle_api_select, desc = "Toggle API Select" },
+
+	-- ========================================================================
+	-- <leader>ct - Terminal Float (智能避让布局)
+	-- ========================================================================
+	{ "<leader>ct", group = "Terminal Float" },
+	{ "<leader>ct1", fn.term_float_1_toggle, desc = "Terminal Float 1" },
+	{ "<leader>ct2", fn.term_float_2_toggle, desc = "Terminal Float 2" },
+	{ "<leader>ct3", fn.term_float_3_toggle, desc = "Terminal Float 3" },
+	{ "<leader>ct4", fn.term_float_4_toggle, desc = "Terminal Float 4" },
+	{ "<leader>cta", fn.term_float_toggle_all, desc = "Toggle All Terminal" },
 
 	-- ========================================================================
 	-- <leader>f - Telescope (Find)
