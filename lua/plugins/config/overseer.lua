@@ -38,6 +38,26 @@ local function save_last_tasks(tasks)
 end
 
 local overseer = require("overseer")
+local render = require("overseer.render")
+
+-- 自定义渲染函数，显示命令和工作目录
+local function format_with_cmd(task)
+	local ret = {
+		render.status_and_name(task),
+		render.cmd(task), -- 显示具体命令
+	}
+	-- 显示工作目录（简化路径）
+	if task.cwd then
+		local cwd = task.cwd:gsub(vim.env.HOME, "~")
+		table.insert(ret, { { "  " .. cwd, "Comment" } })
+	end
+	vim.list_extend(ret, render.source_lines(task))
+	table.insert(ret, render.join(render.duration(task), render.time_since_completed(task, { hl_group = "Comment" })))
+	vim.list_extend(ret, render.result_lines(task, { oneline = true }))
+	vim.list_extend(ret, render.output_lines(task, { num_lines = 1 }))
+	return render.remove_empty_lines(ret)
+end
+
 overseer.setup({
 	templates = { "builtin", "user" },
 	strategy = "terminal",
@@ -51,6 +71,7 @@ overseer.setup({
 		min_width = { 60, 0.4 },
 		max_width = { 100, 0.5 },
 		default_detail = 2,
+		render = format_with_cmd, -- 使用自定义渲染
 		bindings = {
 			["<CR>"] = "RunAction",
 			["o"] = "Open",

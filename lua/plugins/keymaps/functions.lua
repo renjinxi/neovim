@@ -1120,6 +1120,13 @@ function M.nvim_tree_float()
 	vim.schedule(function()
 		view.View.float.enable = false
 	end)
+
+	-- 设置 enter 后自动关闭浮动窗口
+	local bufnr = vim.api.nvim_get_current_buf()
+	vim.keymap.set("n", "<CR>", function()
+		api.node.open.edit()
+		api.tree.close()
+	end, { buffer = bufnr, nowait = true })
 end
 
 return M

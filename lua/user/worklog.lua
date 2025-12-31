@@ -112,6 +112,32 @@ function M.setup()
     open_log()
     insert_template('idea')
   end, { desc = 'Journal: idea (aha)' })
+
+  -- 临时草稿浮动框（不保存）
+  keymap('n', '<leader>jt', function()
+    local width = 60
+    local height = 15
+    local buf = vim.api.nvim_create_buf(false, true) -- nofile, scratch
+    vim.bo[buf].buftype = 'nofile'
+    vim.bo[buf].bufhidden = 'wipe'
+    vim.bo[buf].filetype = 'markdown'
+    local win = vim.api.nvim_open_win(buf, true, {
+      relative = 'editor',
+      width = width,
+      height = height,
+      col = math.floor((vim.o.columns - width) / 2),
+      row = math.floor((vim.o.lines - height) / 2),
+      style = 'minimal',
+      border = 'rounded',
+      title = ' Scratch ',
+      title_pos = 'center',
+    })
+    vim.wo[win].wrap = true
+    vim.wo[win].linebreak = true
+    vim.keymap.set('n', 'q', function() vim.api.nvim_win_close(win, true) end, { buffer = buf, nowait = true })
+    vim.keymap.set('n', '<Esc>', function() vim.api.nvim_win_close(win, true) end, { buffer = buf, nowait = true })
+    vim.cmd('startinsert')
+  end, { desc = 'Journal: scratch (temp)' })
 end
 
 return M
