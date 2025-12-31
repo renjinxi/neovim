@@ -69,8 +69,19 @@ local function open_log()
   vim.cmd('normal! G')
 end
 
+-- 生成唯一 ID: 类型首字母 + 短 UUID (如 F-a1b2c3d4)
+local function generate_id(type)
+  local prefix = type:sub(1, 1):upper() -- F/S/I
+  -- 使用 uuidgen 生成 UUID，取前 8 位
+  local handle = io.popen('uuidgen | cut -c1-8 | tr A-Z a-z')
+  local uuid = handle:read('*a'):gsub('%s+', '')
+  handle:close()
+  return prefix .. '-' .. uuid
+end
+
 local function insert_template(type)
-  local entry = os.date('\n%Y-%m-%d %H:%M') .. ' ' .. type .. '\n'
+  local id = generate_id(type)
+  local entry = os.date('\n%Y-%m-%d %H:%M') .. ' ' .. type .. ' [' .. id .. ']\n'
   local lines = vim.split(entry, '\n')
   vim.api.nvim_put(lines, 'l', true, true)
   vim.cmd('startinsert!')

@@ -1,5 +1,25 @@
 local fzf_lua = require("fzf-lua")
 
+-- fzf-lua setup
+fzf_lua.setup({
+	files = {
+		actions = {
+			-- ctrl-g 切换搜索包含 gitignore 文件
+			["ctrl-g"] = function()
+				fzf_lua.files({ cmd = "fd --hidden --no-ignore" })
+			end,
+		},
+	},
+	grep = {
+		actions = {
+			-- ctrl-g 切换搜索包含 gitignore 文件
+			["ctrl-g"] = function()
+				fzf_lua.live_grep({ rg_opts = "--no-ignore --hidden --column --line-number --no-heading --color=always --smart-case" })
+			end,
+		},
+	},
+})
+
 function ChangeDirectory(opts)
 	opts = opts or {}
 	opts.prompt = "Directories> "

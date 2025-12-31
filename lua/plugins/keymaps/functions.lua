@@ -608,8 +608,8 @@ function M.git_lazygit_last_repo()
 		dir = vim.fn.fnamemodify(last_selected_repo, ":p"),
 		direction = "float",
 		float_opts = { border = "curved" },
-		on_open = function() vim.cmd("startinsert!") end,
 	}):toggle()
+	vim.cmd("startinsert!")
 end
 
 function M.git_lazygit_multi_repo()
@@ -641,8 +641,8 @@ function M.git_lazygit_multi_repo()
 						dir = vim.fn.fnamemodify(selection.value, ":p"),
 						direction = "float",
 						float_opts = { border = "curved" },
-						on_open = function() vim.cmd("startinsert!") end,
 					}):toggle()
+					vim.cmd("startinsert!")
 				end
 			end)
 			return true
@@ -1023,8 +1023,8 @@ function M.diffview_multi_repo()
 				dir = repo_path,
 				direction = "float",
 				float_opts = { border = "curved" },
-				on_open = function() vim.cmd("startinsert!") end,
 			}):toggle()
+			vim.cmd("startinsert!")
 		end
 	end, opts)
 
