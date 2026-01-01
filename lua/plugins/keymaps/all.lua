@@ -322,6 +322,7 @@ M.mappings = {
 	{ "<leader>st", function() require('gitsigns').toggle_current_line_blame() end, desc = "Toggle Line Blame" },
 	{ "<leader>sT", function() require('gitsigns').toggle_deleted() end, desc = "Toggle Deleted" },
 	{ "<leader>se", fn.git_compare_head, desc = "Compare with HEAD" },
+	{ "<leader>sv", fn.show_multi_repo_branches, desc = "View Multi-Repo Branches" },
 
 	-- ========================================================================
 	-- <leader>t - Tree / Tab

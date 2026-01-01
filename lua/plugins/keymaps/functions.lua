@@ -274,6 +274,32 @@ end
 local float_terminals = {}
 local float_api_select_enabled = false  -- API 选择开关
 
+-- 获取当前目录下所有 git 仓库的分支信息
+local function get_multi_repo_branches()
+	local cwd = vim.fn.getcwd()
+	local repos = {}
+
+	-- 检查当前目录本身是否是 git repo
+	local current_branch = vim.fn.system("git -C " .. vim.fn.shellescape(cwd) .. " branch --show-current 2>/dev/null"):gsub("%s+", "")
+	if current_branch ~= "" then
+		local repo_name = vim.fn.fnamemodify(cwd, ":t")
+		table.insert(repos, { name = repo_name, branch = current_branch, path = cwd })
+	end
+
+	-- 查找子目录中的 git repos
+	local subdirs = vim.fn.glob(cwd .. "/*/.git", false, true)
+	for _, git_dir in ipairs(subdirs) do
+		local repo_path = vim.fn.fnamemodify(git_dir, ":h")
+		local repo_name = vim.fn.fnamemodify(repo_path, ":t")
+		local branch = vim.fn.system("git -C " .. vim.fn.shellescape(repo_path) .. " branch --show-current 2>/dev/null"):gsub("%s+", "")
+		if branch ~= "" then
+			table.insert(repos, { name = repo_name, branch = branch, path = repo_path })
+		end
+	end
+
+	return repos
+end
+
 function M.float_toggle_api_select()
 	float_api_select_enabled = not float_api_select_enabled
 	vim.notify("Float API Select: " .. (float_api_select_enabled and "ON" or "OFF"), vim.log.levels.INFO)
@@ -509,6 +535,96 @@ function M.term_float_toggle_all()
 			end
 		end
 	end
+end
+
+-- 显示所有 git repo 分支状态（浮动窗口）
+function M.show_multi_repo_branches()
+	local repos = get_multi_repo_branches()
+	if #repos == 0 then
+		vim.notify("当前目录下没有 git 仓库", vim.log.levels.WARN)
+		return
+	end
+
+	local lines = { "  Git Repositories Branches", "  " .. string.rep("─", 40) }
+	for _, repo in ipairs(repos) do
+		-- 获取更多状态信息
+		local status_cmd = "git -C " .. vim.fn.shellescape(repo.path) .. " status --porcelain 2>/dev/null | wc -l"
+		local changes = vim.fn.system(status_cmd):gsub("%s+", "")
+		local change_indicator = tonumber(changes) > 0 and " ✱" or ""
+
+		local display_path = repo.path:gsub(vim.fn.expand("~"), "~")
+		table.insert(lines, string.format("  %s: %s%s", repo.name, repo.branch, change_indicator))
+		table.insert(lines, string.format("    %s", display_path))
+	end
+	table.insert(lines, "")
+	table.insert(lines, "  [q] 关闭  [g] 刷新  [enter] 打开 lazygit")
+
+	-- 创建浮动窗口
+	local buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+	vim.bo[buf].modifiable = false
+	vim.bo[buf].buftype = "nofile"
+	vim.bo[buf].bufhidden = "wipe"
+
+	local width = 50
+	local height = #lines
+	local row = math.floor((vim.o.lines - height) / 2)
+	local col = math.floor((vim.o.columns - width) / 2)
+
+	local win = vim.api.nvim_open_win(buf, true, {
+		relative = "editor",
+		width = width,
+		height = height,
+		row = row,
+		col = col,
+		style = "minimal",
+		border = "rounded",
+		title = " Multi-Repo Branches ",
+		title_pos = "center",
+	})
+
+	-- 高亮设置
+	vim.api.nvim_buf_add_highlight(buf, -1, "Title", 0, 0, -1)
+	for i = 2, #lines - 2 do
+		if i % 2 == 1 then
+			vim.api.nvim_buf_add_highlight(buf, -1, "Function", i, 0, -1)
+		else
+			vim.api.nvim_buf_add_highlight(buf, -1, "Comment", i, 0, -1)
+		end
+	end
+	vim.api.nvim_buf_add_highlight(buf, -1, "Comment", #lines - 1, 0, -1)
+
+	-- 快捷键
+	local close_win = function()
+		if vim.api.nvim_win_is_valid(win) then
+			vim.api.nvim_win_close(win, true)
+		end
+	end
+
+	vim.keymap.set("n", "q", close_win, { buffer = buf, nowait = true })
+	vim.keymap.set("n", "<Esc>", close_win, { buffer = buf, nowait = true })
+	vim.keymap.set("n", "g", function()
+		close_win()
+		M.show_multi_repo_branches()
+	end, { buffer = buf, nowait = true })
+
+	-- Enter 打开 lazygit（使用当前光标所在的 repo）
+	vim.keymap.set("n", "<CR>", function()
+		local cursor_line = vim.api.nvim_win_get_cursor(win)[1]
+		local repo_idx = math.floor((cursor_line - 2) / 2) + 1
+		if repos[repo_idx] then
+			close_win()
+			local Terminal = require("toggleterm.terminal").Terminal
+			local lazygit = Terminal:new({
+				cmd = "lazygit",
+				dir = repos[repo_idx].path,
+				direction = "float",
+				float_opts = { border = "rounded" },
+			})
+			lazygit:toggle()
+			vim.cmd("startinsert!")
+		end
+	end, { buffer = buf, nowait = true })
 end
 
 local last_terminal_id = nil
