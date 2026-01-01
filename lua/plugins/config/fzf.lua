@@ -1,21 +1,17 @@
 local fzf_lua = require("fzf-lua")
+local actions = require("fzf-lua.actions")
 
 -- fzf-lua setup
 fzf_lua.setup({
 	files = {
 		actions = {
-			-- ctrl-g 切换搜索包含 gitignore 文件
-			["ctrl-g"] = function()
-				fzf_lua.files({ cmd = "fd --hidden --no-ignore" })
-			end,
+			-- ctrl-g 切换 gitignore (用内置 action，支持状态显示)
+			["ctrl-g"] = { fn = actions.toggle_ignore, reuse = true, header = false },
 		},
 	},
 	grep = {
 		actions = {
-			-- ctrl-g 切换搜索包含 gitignore 文件
-			["ctrl-g"] = function()
-				fzf_lua.live_grep({ rg_opts = "--no-ignore --hidden --column --line-number --no-heading --color=always --smart-case" })
-			end,
+			["ctrl-g"] = { fn = actions.toggle_ignore, reuse = true, header = false },
 		},
 	},
 })
