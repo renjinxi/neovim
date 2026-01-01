@@ -125,6 +125,27 @@ M.mappings = {
 	{ "<leader>f", group = "Telescope" },
 	{ "<leader>fF", "<cmd>lua require('telescope.builtin').find_files({no_ignore=true, hidden=true})<cr>", desc = "Find Files (all)" },
 	{ "<leader>fG", "<cmd>Telescope live_grep<cr>", desc = "Builtin Live Grep" },
+	-- Claude 配置目录快速访问
+	{
+		"<leader>fv",
+		function()
+			require("fzf-lua").files({
+				prompt = "Claude Config> ",
+				cwd = vim.fn.expand("~/.claude"),
+			})
+		end,
+		desc = "Claude Config Files",
+	},
+	{
+		"<leader>fw",
+		function()
+			require("fzf-lua").live_grep({
+				prompt = "Grep Claude> ",
+				cwd = vim.fn.expand("~/.claude"),
+			})
+		end,
+		desc = "Grep Claude Config",
+	},
 	{ "<leader>fa", "<cmd>Telescope neoclip<cr>", desc = "NeoClip" },
 	{ "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
 	{ "<leader>fc", fn.telescope_copy_file_content, desc = "Copy File Content" },

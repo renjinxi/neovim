@@ -185,6 +185,10 @@ Modern, highly customizable status bar with components:
 
 ## Important Development Notes
 
+### Keymap Preferences
+- **不使用大写字母快捷键**：所有 `<leader>` 快捷键只用小写字母，避免 Shift 组合
+- 新增快捷键时优先使用未占用的小写字母
+
 ### Code Comments
 Configuration uses Chinese comments extensively - this is intentional and should be preserved.
 
