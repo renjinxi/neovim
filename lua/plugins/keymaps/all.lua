@@ -415,6 +415,34 @@ M.mappings = {
 	{ "<leader>zp", ":lua require('ufo').goPreviousClosedFold()<cr>", desc = "Go To Prev Fold" },
 
 	-- ========================================================================
+	-- <leader>q - Database (Query)
+	-- ========================================================================
+	{ "<leader>q", group = "Database" },
+	{ "<leader>qu", "<cmd>DBUIToggle<cr>", desc = "Toggle DBUI" },
+	{
+		"<leader>qs",
+		function()
+			require("fzf-lua").files({
+				prompt = "SQL Queries> ",
+				cwd = vim.fn.stdpath("data") .. "/db_ui",
+				fd_opts = "--type f --extension sql",
+			})
+		end,
+		desc = "Search SQL Files",
+	},
+	{
+		"<leader>qg",
+		function()
+			require("fzf-lua").live_grep({
+				prompt = "Grep SQL> ",
+				cwd = vim.fn.stdpath("data") .. "/db_ui",
+				glob = "*.sql",
+			})
+		end,
+		desc = "Grep in SQL Files",
+	},
+
+	-- ========================================================================
 	-- <leader>ar - Animation (Cellular Automaton)
 	-- ========================================================================
 	{ "<leader>ar", group = "Animation" },
