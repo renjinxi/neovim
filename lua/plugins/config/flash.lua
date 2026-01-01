@@ -59,6 +59,10 @@ local config = {
 			enabled = true,
 			-- 按键映射
 			keys = { "f", "F", "t", "T", ";", "," },
+			-- 显示跳转标签（多个匹配时显示 a,b,c... 按标签跳转）
+			jump_labels = true,
+			-- 多行搜索
+			multi_line = true,
 			-- 搜索字符
 			search = { wrap = false },
 			-- 高亮
