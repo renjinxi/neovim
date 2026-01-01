@@ -967,36 +967,6 @@ end
 -- Git: 多 Repo 支持
 -- ============================================================================
 
--- 扫描当前目录下的所有 git repo
-local function find_git_repos(base_dir)
-	local repos = {}
-	local handle = io.popen('find "' .. base_dir .. '" -maxdepth 2 -name ".git" -type d 2>/dev/null')
-	if handle then
-		for line in handle:lines() do
-			local repo_path = line:gsub("/.git$", "")
-			table.insert(repos, repo_path)
-		end
-		handle:close()
-	end
-	return repos
-end
-
--- 获取 repo 的变更文件列表
-local function get_repo_changes(repo_path)
-	local changes = {}
-	local cmd = 'git -C "' .. repo_path .. '" status --porcelain 2>/dev/null'
-	local handle = io.popen(cmd)
-	if handle then
-		for line in handle:lines() do
-			local status = line:sub(1, 2):gsub("%s", "")
-			local file = line:sub(4)
-			table.insert(changes, { status = status, file = file, repo = repo_path })
-		end
-		handle:close()
-	end
-	return changes
-end
-
 -- 多 repo 变更查看器
 local multi_repo_state = { buf = nil, win = nil, items = {} }
 
@@ -1007,34 +977,24 @@ local function close_multi_repo_viewer()
 	multi_repo_state.win = nil
 end
 
-function M.diffview_multi_repo()
-	local cwd = vim.fn.getcwd()
-	local repos = find_git_repos(cwd)
-
-	if #repos == 0 then
-		vim.notify("No git repos found in " .. cwd, vim.log.levels.WARN)
-		return
-	end
-
-	-- 收集所有变更
+-- 渲染多 repo 变更查看器
+local function render_multi_repo_viewer(repos_with_changes, total_repos)
 	local lines = {}
 	local items = {}
 	local total_changes = 0
 
-	for _, repo in ipairs(repos) do
-		local changes = get_repo_changes(repo)
-		local repo_name = vim.fn.fnamemodify(repo, ":t")
-
-		if #changes > 0 then
+	for _, repo_data in ipairs(repos_with_changes) do
+		local repo_name = vim.fn.fnamemodify(repo_data.path, ":t")
+		if #repo_data.changes > 0 then
 			table.insert(lines, "")
 			table.insert(items, { type = "header" })
-			table.insert(lines, string.format("## %s (%d)", repo_name, #changes))
-			table.insert(items, { type = "repo", path = repo })
+			table.insert(lines, string.format("## %s (%d)", repo_name, #repo_data.changes))
+			table.insert(items, { type = "repo", path = repo_data.path })
 
-			for _, change in ipairs(changes) do
+			for _, change in ipairs(repo_data.changes) do
 				local icon = change.status == "M" and "~" or (change.status == "A" and "+" or (change.status == "D" and "-" or "?"))
 				table.insert(lines, string.format("   %s %s", icon, change.file))
-				table.insert(items, { type = "file", status = change.status, file = change.file, repo = change.repo })
+				table.insert(items, { type = "file", status = change.status, file = change.file, repo = repo_data.path })
 				total_changes = total_changes + 1
 			end
 		end
@@ -1049,7 +1009,7 @@ function M.diffview_multi_repo()
 	table.insert(items, { type = "footer" })
 	table.insert(lines, "─────────────────────────────────────────────────────────")
 	table.insert(items, { type = "footer" })
-	table.insert(lines, string.format(" Total: %d repos, %d changes", #repos, total_changes))
+	table.insert(lines, string.format(" Total: %d repos, %d changes", total_repos, total_changes))
 	table.insert(items, { type = "footer" })
 	table.insert(lines, "")
 	table.insert(items, { type = "footer" })
@@ -1153,53 +1113,168 @@ function M.diffview_multi_repo()
 	end
 end
 
--- 显示所有 repo 的变更概览（简化版）
+-- 异步获取多 repo 变更
+function M.diffview_multi_repo()
+	local cwd = vim.fn.getcwd()
+
+	-- 显示加载提示
+	vim.notify("Scanning repos...", vim.log.levels.INFO)
+
+	-- 异步执行 find 命令
+	vim.system(
+		{ "find", cwd, "-maxdepth", "2", "-name", ".git", "-type", "d" },
+		{ text = true },
+		function(find_result)
+			if find_result.code ~= 0 or not find_result.stdout or find_result.stdout == "" then
+				vim.schedule(function()
+					vim.notify("No git repos found in " .. cwd, vim.log.levels.WARN)
+				end)
+				return
+			end
+
+			-- 解析 repo 路径
+			local repos = {}
+			for line in find_result.stdout:gmatch("[^\n]+") do
+				local repo_path = line:gsub("/.git$", "")
+				table.insert(repos, repo_path)
+			end
+
+			if #repos == 0 then
+				vim.schedule(function()
+					vim.notify("No git repos found in " .. cwd, vim.log.levels.WARN)
+				end)
+				return
+			end
+
+			-- 异步获取每个 repo 的变更
+			local repos_with_changes = {}
+			local pending = #repos
+
+			for _, repo_path in ipairs(repos) do
+				vim.system(
+					{ "git", "-C", repo_path, "status", "--porcelain" },
+					{ text = true },
+					function(status_result)
+						local changes = {}
+						if status_result.code == 0 and status_result.stdout then
+							for line in status_result.stdout:gmatch("[^\n]+") do
+								if line ~= "" then
+									local status = line:sub(1, 2):gsub("%s", "")
+									local file = line:sub(4)
+									table.insert(changes, { status = status, file = file })
+								end
+							end
+						end
+						table.insert(repos_with_changes, { path = repo_path, changes = changes })
+
+						pending = pending - 1
+						if pending == 0 then
+							-- 所有 repo 处理完成，渲染结果
+							vim.schedule(function()
+								-- 按路径排序
+								table.sort(repos_with_changes, function(a, b) return a.path < b.path end)
+								render_multi_repo_viewer(repos_with_changes, #repos)
+							end)
+						end
+					end
+				)
+			end
+		end
+	)
+end
+
+-- 显示所有 repo 的变更概览（简化版，异步）
 function M.diffview_multi_repo_status()
 	local cwd = vim.fn.getcwd()
-	local repos = find_git_repos(cwd)
 
-	if #repos == 0 then
-		vim.notify("No git repos found in " .. cwd, vim.log.levels.WARN)
-		return
-	end
+	vim.system(
+		{ "find", cwd, "-maxdepth", "2", "-name", ".git", "-type", "d" },
+		{ text = true },
+		function(find_result)
+			if find_result.code ~= 0 or not find_result.stdout or find_result.stdout == "" then
+				vim.schedule(function()
+					vim.notify("No git repos found in " .. cwd, vim.log.levels.WARN)
+				end)
+				return
+			end
 
-	local lines = { "# Git Repos Status", "" }
-	local total_changes = 0
+			local repos = {}
+			for line in find_result.stdout:gmatch("[^\n]+") do
+				local repo_path = line:gsub("/.git$", "")
+				table.insert(repos, repo_path)
+			end
 
-	for _, repo in ipairs(repos) do
-		local changes = get_repo_changes(repo)
-		local name = vim.fn.fnamemodify(repo, ":t")
-		if #changes > 0 then
-			table.insert(lines, string.format("  %s: %d changes", name, #changes))
-			total_changes = total_changes + #changes
-		else
-			table.insert(lines, string.format("  %s: clean", name))
+			if #repos == 0 then
+				vim.schedule(function()
+					vim.notify("No git repos found in " .. cwd, vim.log.levels.WARN)
+				end)
+				return
+			end
+
+			local results = {}
+			local pending = #repos
+
+			for _, repo_path in ipairs(repos) do
+				vim.system(
+					{ "git", "-C", repo_path, "status", "--porcelain" },
+					{ text = true },
+					function(status_result)
+						local count = 0
+						if status_result.code == 0 and status_result.stdout then
+							for _ in status_result.stdout:gmatch("[^\n]+") do
+								count = count + 1
+							end
+						end
+						table.insert(results, { path = repo_path, count = count })
+
+						pending = pending - 1
+						if pending == 0 then
+							vim.schedule(function()
+								table.sort(results, function(a, b) return a.path < b.path end)
+
+								local lines = { "# Git Repos Status", "" }
+								local total_changes = 0
+
+								for _, r in ipairs(results) do
+									local name = vim.fn.fnamemodify(r.path, ":t")
+									if r.count > 0 then
+										table.insert(lines, string.format("  %s: %d changes", name, r.count))
+										total_changes = total_changes + r.count
+									else
+										table.insert(lines, string.format("  %s: clean", name))
+									end
+								end
+
+								table.insert(lines, "")
+								table.insert(lines, string.format("Total: %d repos, %d changes", #repos, total_changes))
+
+								local buf = vim.api.nvim_create_buf(false, true)
+								vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+								vim.api.nvim_buf_set_option(buf, "modifiable", false)
+
+								local width = 50
+								local height = #lines + 2
+								local win = vim.api.nvim_open_win(buf, true, {
+									relative = "editor",
+									width = width,
+									height = height,
+									row = math.floor((vim.o.lines - height) / 2),
+									col = math.floor((vim.o.columns - width) / 2),
+									style = "minimal",
+									border = "rounded",
+									title = " Multi-Repo Status ",
+									title_pos = "center",
+								})
+
+								vim.keymap.set("n", "q", function() vim.api.nvim_win_close(win, true) end, { buffer = buf })
+								vim.keymap.set("n", "<Esc>", function() vim.api.nvim_win_close(win, true) end, { buffer = buf })
+							end)
+						end
+					end
+				)
+			end
 		end
-	end
-
-	table.insert(lines, "")
-	table.insert(lines, string.format("Total: %d repos, %d changes", #repos, total_changes))
-
-	local buf = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-	vim.api.nvim_buf_set_option(buf, "modifiable", false)
-
-	local width = 50
-	local height = #lines + 2
-	local win = vim.api.nvim_open_win(buf, true, {
-		relative = "editor",
-		width = width,
-		height = height,
-		row = math.floor((vim.o.lines - height) / 2),
-		col = math.floor((vim.o.columns - width) / 2),
-		style = "minimal",
-		border = "rounded",
-		title = " Multi-Repo Status ",
-		title_pos = "center",
-	})
-
-	vim.keymap.set("n", "q", function() vim.api.nvim_win_close(win, true) end, { buffer = buf })
-	vim.keymap.set("n", "<Esc>", function() vim.api.nvim_win_close(win, true) end, { buffer = buf })
+	)
 end
 
 -- ============================================================================
