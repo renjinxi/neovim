@@ -72,14 +72,29 @@ overseer.setup({
 		max_width = { 100, 0.5 },
 		default_detail = 2,
 		render = format_with_cmd, -- 使用自定义渲染
-		bindings = {
-			["<CR>"] = "RunAction",
-			["o"] = "Open",
-			["<C-f>"] = "OpenFloat", -- 浮动窗口查看输出
-			["r"] = "Restart",
-			["d"] = "Dispose",
-			["q"] = "Close",
-			["<Esc>"] = "Close",
+		-- overseer 2.0 使用 keymaps 而不是 bindings
+		keymaps = {
+			["?"] = "keymap.show_help",
+			["g?"] = "keymap.show_help",
+			["<CR>"] = "keymap.run_action",
+			["o"] = "keymap.open",
+			["p"] = "keymap.toggle_preview",
+			["<C-f>"] = { "keymap.open", opts = { dir = "float" }, desc = "Open in float" },
+			["<C-v>"] = { "keymap.open", opts = { dir = "vsplit" }, desc = "Open in vsplit" },
+			["<C-s>"] = { "keymap.open", opts = { dir = "split" }, desc = "Open in split" },
+			-- 快捷操作 (注意: start 只对 PENDING 状态任务有效)
+			["r"] = { "keymap.run_action", opts = { action = "restart" }, desc = "Restart task" },
+			["R"] = { "keymap.run_action", opts = { action = "restart" }, desc = "Restart task" },
+			["x"] = { "keymap.run_action", opts = { action = "stop" }, desc = "Stop task" },
+			["dd"] = { "keymap.run_action", opts = { action = "dispose" }, desc = "Dispose task" },
+			["w"] = { "keymap.run_action", opts = { action = "watch" }, desc = "Watch (restart on save)" },
+			["W"] = { "keymap.run_action", opts = { action = "unwatch" }, desc = "Unwatch" },
+			-- 导航
+			["}"] = "keymap.next_task",
+			["{"] = "keymap.prev_task",
+			["<C-j>"] = "keymap.scroll_output_down",
+			["<C-k>"] = "keymap.scroll_output_up",
+			-- 关闭用默认的 q
 		},
 	},
 	-- 浮动窗口样式
@@ -87,6 +102,7 @@ overseer.setup({
 		border = "rounded",
 		win_opts = { winblend = 0 },
 	},
+	-- 任务输出窗口配置
 	task_win = {
 		border = "rounded",
 		win_opts = { winblend = 0 },

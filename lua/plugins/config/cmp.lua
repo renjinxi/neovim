@@ -101,6 +101,14 @@ cmp.setup.filetype("tex", {
   })
 })
 
+-- 为 SQL 文件类型添加 dadbod 补全源
+cmp.setup.filetype({ "sql", "mysql", "plsql" }, {
+  sources = cmp.config.sources({
+    { name = "vim-dadbod-completion" },
+    { name = "buffer" },
+  })
+})
+
 -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
 cmp.setup.cmdline({ "/", "?" }, {
 	mapping = cmp.mapping.preset.cmdline(),
