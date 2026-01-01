@@ -641,6 +641,27 @@ return {
 	},
 
 	-- ================================
+	-- GitLab 集成
+	-- ================================
+	{
+		"harrisoncramer/gitlab.nvim",
+		dependencies = {
+			"MunifTanjim/nui.nvim",
+			"nvim-lua/plenary.nvim",
+			"sindrets/diffview.nvim",
+			"stevearc/dressing.nvim",
+			"nvim-tree/nvim-web-devicons",
+		},
+		build = function()
+			require("gitlab.server").build(true)
+		end,
+		cmd = { "GitLabToggle", "GitLabOpen" },
+		config = function()
+			require("plugins.config.gitlab")
+		end,
+	},
+
+	-- ================================
 	-- 远程开发
 	-- ================================
 	{

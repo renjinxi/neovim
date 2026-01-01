@@ -344,6 +344,18 @@ M.mappings = {
 	{ "<leader>sT", function() require('gitsigns').toggle_deleted() end, desc = "Toggle Deleted" },
 	{ "<leader>se", fn.git_compare_head, desc = "Compare with HEAD" },
 	{ "<leader>sv", fn.show_multi_repo_branches, desc = "View Multi-Repo Branches" },
+	-- GitLab MR 操作
+	{ "<leader>sx", group = "GitLab MR" },
+	{ "<leader>sxr", function() require("gitlab").review() end, desc = "Review MR" },
+	{ "<leader>sxs", function() require("gitlab").summary() end, desc = "MR Summary" },
+	{ "<leader>sxa", function() require("gitlab").approve() end, desc = "Approve MR" },
+	{ "<leader>sxm", function() require("gitlab").merge() end, desc = "Merge MR" },
+	{ "<leader>sxc", function() require("gitlab").create_comment() end, desc = "Create Comment" },
+	{ "<leader>sxn", function() require("gitlab").create_note() end, desc = "Create Note" },
+	{ "<leader>sxd", function() require("gitlab").toggle_discussions() end, desc = "Toggle Discussions" },
+	{ "<leader>sxp", function() require("gitlab").pipeline() end, desc = "View Pipeline" },
+	{ "<leader>sxo", function() require("gitlab").open_in_browser() end, desc = "Open in Browser" },
+	{ "<leader>sxl", function() require("gitlab").choose_merge_request() end, desc = "List MRs" },
 
 	-- ========================================================================
 	-- <leader>t - Tree / Tab
