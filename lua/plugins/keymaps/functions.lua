@@ -400,7 +400,11 @@ local function create_float_terminal(key, cmd_fn, cfg)
 	if cfg.cwd then
 		cmd = "cd " .. vim.fn.expand(cfg.cwd) .. " && " .. cmd
 	end
+	-- 确保 PATH 包含常用路径 (解决 node 找不到问题)
+	local env = vim.fn.environ()
+	env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
 	vim.fn.termopen(cmd, {
+		env = env,
 		on_exit = function()
 			if float_terminals[key] then
 				float_terminals[key].buf = nil
@@ -409,7 +413,8 @@ local function create_float_terminal(key, cmd_fn, cfg)
 	})
 	vim.cmd("startinsert")
 
-	vim.keymap.set("t", "q", function()
+	-- terminal normal mode 下 q 关闭 (先 <C-\><C-n> 退出输入模式，再按 q)
+	vim.keymap.set("n", "q", function()
 		if float_terminals[key] and float_terminals[key].win and vim.api.nvim_win_is_valid(float_terminals[key].win) then
 			vim.api.nvim_win_close(float_terminals[key].win, true)
 			float_terminals[key].win = nil
@@ -1312,11 +1317,16 @@ function M.nvim_tree_float()
 		view.View.float.enable = false
 	end)
 
-	-- 设置 enter 后自动关闭浮动窗口
+	-- 设置 enter 行为：目录展开，文件才关闭浮动窗口
 	local bufnr = vim.api.nvim_get_current_buf()
 	vim.keymap.set("n", "<CR>", function()
-		api.node.open.edit()
-		api.tree.close()
+		local node = api.tree.get_node_under_cursor()
+		if node and node.type == "directory" then
+			api.node.open.edit() -- 展开目录，不关闭
+		else
+			api.node.open.edit()
+			api.tree.close() -- 打开文件后关闭
+		end
 	end, { buffer = bufnr, nowait = true })
 end
 
