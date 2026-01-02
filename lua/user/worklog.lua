@@ -2,7 +2,7 @@
 -- 用于记录「卡住」「不爽」「灵感」三类事件
 local M = {}
 
-local log_dir = vim.fn.expand('~/.local/share/worklog')
+local log_dir = vim.fn.expand('~/notes/worklog')
 local float_win = nil
 local float_buf = nil
 
@@ -22,6 +22,24 @@ local function close_float()
   end
   float_win = nil
   float_buf = nil
+end
+
+-- 生成唯一 ID: 类型首字母 + 短 UUID (如 F-a1b2c3d4)
+local function generate_id(type)
+  local prefix = type:sub(1, 1):upper() -- F/S/I
+  -- 使用 uuidgen 生成 UUID，取前 8 位
+  local handle = io.popen('uuidgen | cut -c1-8 | tr A-Z a-z')
+  local uuid = handle:read('*a'):gsub('%s+', '')
+  handle:close()
+  return prefix .. '-' .. uuid
+end
+
+local function insert_template(type)
+  local id = generate_id(type)
+  local entry = '\n[ ] ' .. os.date('%Y-%m-%d %H:%M') .. ' ' .. type .. ' [' .. id .. ']\n'
+  local lines = vim.split(entry, '\n')
+  vim.api.nvim_put(lines, 'l', true, true)
+  vim.cmd('startinsert!')
 end
 
 local function open_log()
@@ -66,25 +84,12 @@ local function open_log()
   -- q 关闭浮动窗口
   vim.keymap.set('n', 'q', close_float, { buffer = float_buf, nowait = true })
 
+  -- buffer 内快捷键：快速插入模板
+  vim.keymap.set('n', 'gs', function() insert_template('stuck') end, { buffer = float_buf, nowait = true, desc = 'Insert stuck' })
+  vim.keymap.set('n', 'gf', function() insert_template('friction') end, { buffer = float_buf, nowait = true, desc = 'Insert friction' })
+  vim.keymap.set('n', 'gi', function() insert_template('idea') end, { buffer = float_buf, nowait = true, desc = 'Insert idea' })
+
   vim.cmd('normal! G')
-end
-
--- 生成唯一 ID: 类型首字母 + 短 UUID (如 F-a1b2c3d4)
-local function generate_id(type)
-  local prefix = type:sub(1, 1):upper() -- F/S/I
-  -- 使用 uuidgen 生成 UUID，取前 8 位
-  local handle = io.popen('uuidgen | cut -c1-8 | tr A-Z a-z')
-  local uuid = handle:read('*a'):gsub('%s+', '')
-  handle:close()
-  return prefix .. '-' .. uuid
-end
-
-local function insert_template(type)
-  local id = generate_id(type)
-  local entry = os.date('\n%Y-%m-%d %H:%M') .. ' ' .. type .. ' [' .. id .. ']\n'
-  local lines = vim.split(entry, '\n')
-  vim.api.nvim_put(lines, 'l', true, true)
-  vim.cmd('startinsert!')
 end
 
 function M.setup()
