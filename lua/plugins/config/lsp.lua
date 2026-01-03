@@ -397,3 +397,14 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 -- Java 语言服务器使用特殊的 nvim-jdtls 插件配置
 -- 配置会在打开 Java/Kotlin 文件时自动加载（见 jdtls.lua 中的 autocmd）
+
+-- Swift 语言服务器配置 (sourcekit-lsp)
+vim.lsp.config('sourcekit', {
+	cmd = { 'sourcekit-lsp' },
+	root_markers = { 'Package.swift', '.git', 'compile_commands.json' },
+	filetypes = { 'swift', 'objc', 'objcpp' },
+	settings = {},
+})
+
+-- 启用 sourcekit
+vim.lsp.enable('sourcekit')
