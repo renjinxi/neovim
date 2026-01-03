@@ -3,26 +3,41 @@
 
 local gitlab = require("gitlab")
 
--- 读取 glab 配置获取 token
-local function get_gitlab_token()
+local GITLAB_URL = "https://g.ktvsky.com"
+
+-- 读取 glab 配置获取 token，返回 token, gitlab_url, err
+local function get_gitlab_auth()
 	local config_path = vim.fn.expand("~/.config/glab-cli/config.yml")
 	if vim.fn.filereadable(config_path) == 1 then
 		local content = vim.fn.readfile(config_path)
+		local in_host_section = false
 		for _, line in ipairs(content) do
-			local token = line:match("^%s*token:%s*(.+)$")
-			if token then
-				return token
+			-- 检查是否进入 g.ktvsky.com 配置段
+			if line:match("^%s+g%.ktvsky%.com:") then
+				in_host_section = true
+			elseif in_host_section and line:match("^%s+%S") and not line:match("^%s+token:") then
+				-- 离开当前 host 配置段
+				in_host_section = false
+			end
+			-- 在正确的 host 段内匹配 token
+			if in_host_section then
+				local token = line:match("^%s+token:%s*(.+)$")
+				if token then
+					return token, GITLAB_URL, nil
+				end
 			end
 		end
 	end
-	return vim.env.GITLAB_TOKEN
+	local token = vim.env.GITLAB_TOKEN
+	if token then
+		return token, GITLAB_URL, nil
+	end
+	return nil, nil, "No GitLab token found"
 end
 
 gitlab.setup({
-	-- GitLab 地址 (自建实例)
-	gitlab_url = "https://g.ktvsky.com",
-	-- 认证 token
-	auth_provider = get_gitlab_token,
+	-- 认证 provider (返回 token, gitlab_url, err)
+	auth_provider = get_gitlab_auth,
 	-- 调试模式
 	debug = { go_request = false, go_response = false },
 	-- 附件保存位置

@@ -344,10 +344,11 @@ local function find_free_position(preferred_row, preferred_col, width, height)
 	return row, col
 end
 
-local function get_float_config(id, type)
+local function get_float_config(id, type, tabpage)
 	local width = 60
 	local height = 16
 	local screen_w = vim.o.columns
+	local tab_nr = vim.api.nvim_tabpage_get_number(tabpage or vim.api.nvim_get_current_tabpage())
 
 	local configs = {
 		claude = {
@@ -369,12 +370,15 @@ local function get_float_config(id, type)
 	local cfg = (configs[type] or {})[id] or { title = " Float " .. id }
 	local row, col = find_free_position(1, screen_w - width - 1, width, height)
 
+	-- 在标题中显示 tab 编号
+	local title = cfg.title:gsub(" $", "") .. " [T" .. tab_nr .. "] "
+
 	return {
 		width = width,
 		height = height,
 		row = row,
 		col = col,
-		title = cfg.title,
+		title = title,
 		cwd = cfg.cwd,
 	}
 end
@@ -448,7 +452,8 @@ local function select_api_and_run(callback)
 end
 
 local function float_toggle(id, type)
-	local key = type .. "_" .. id
+	local tabpage = vim.api.nvim_get_current_tabpage()
+	local key = string.format("tab_%d_%s_%s", tabpage, type, id)
 	local state = float_terminals[key]
 
 	-- 如果窗口已存在，关闭它
@@ -458,7 +463,7 @@ local function float_toggle(id, type)
 		return
 	end
 
-	local cfg = get_float_config(id, type)
+	local cfg = get_float_config(id, type, tabpage)
 
 	-- buffer 不存在，需要创建
 	if not state or not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
@@ -491,9 +496,12 @@ function M.term_float_3_toggle() float_toggle(3, "term") end
 function M.term_float_4_toggle() float_toggle(4, "term") end
 
 function M.claude_float_toggle_all()
+	local tabpage = vim.api.nvim_get_current_tabpage()
+	local prefix = string.format("tab_%d_claude_", tabpage)
+
 	local any_open = false
 	for key, state in pairs(float_terminals) do
-		if key:match("^claude_") and state.win and vim.api.nvim_win_is_valid(state.win) then
+		if key:match("^" .. prefix) and state.win and vim.api.nvim_win_is_valid(state.win) then
 			any_open = true
 			break
 		end
@@ -501,25 +509,28 @@ function M.claude_float_toggle_all()
 
 	if any_open then
 		for key, state in pairs(float_terminals) do
-			if key:match("^claude_") and state.win and vim.api.nvim_win_is_valid(state.win) then
+			if key:match("^" .. prefix) and state.win and vim.api.nvim_win_is_valid(state.win) then
 				vim.api.nvim_win_close(state.win, true)
 				float_terminals[key].win = nil
 			end
 		end
 	else
 		for key, state in pairs(float_terminals) do
-			if key:match("^claude_") and state.buf and vim.api.nvim_buf_is_valid(state.buf) then
-				local id = tonumber(key:match("claude_(%d+)"))
-				if id then float_toggle(id, "claude") end
+			if key:match("^" .. prefix) and state.buf and vim.api.nvim_buf_is_valid(state.buf) then
+				local id = key:match(prefix .. "(%d+)")
+				if id then float_toggle(tonumber(id), "claude") end
 			end
 		end
 	end
 end
 
 function M.term_float_toggle_all()
+	local tabpage = vim.api.nvim_get_current_tabpage()
+	local prefix = string.format("tab_%d_term_", tabpage)
+
 	local any_open = false
 	for key, state in pairs(float_terminals) do
-		if key:match("^term_") and state.win and vim.api.nvim_win_is_valid(state.win) then
+		if key:match("^" .. prefix) and state.win and vim.api.nvim_win_is_valid(state.win) then
 			any_open = true
 			break
 		end
@@ -527,16 +538,16 @@ function M.term_float_toggle_all()
 
 	if any_open then
 		for key, state in pairs(float_terminals) do
-			if key:match("^term_") and state.win and vim.api.nvim_win_is_valid(state.win) then
+			if key:match("^" .. prefix) and state.win and vim.api.nvim_win_is_valid(state.win) then
 				vim.api.nvim_win_close(state.win, true)
 				float_terminals[key].win = nil
 			end
 		end
 	else
 		for key, state in pairs(float_terminals) do
-			if key:match("^term_") and state.buf and vim.api.nvim_buf_is_valid(state.buf) then
-				local id = tonumber(key:match("term_(%d+)"))
-				if id then float_toggle(id, "term") end
+			if key:match("^" .. prefix) and state.buf and vim.api.nvim_buf_is_valid(state.buf) then
+				local id = key:match(prefix .. "(%d+)")
+				if id then float_toggle(tonumber(id), "term") end
 			end
 		end
 	end
@@ -769,6 +780,73 @@ function M.git_lazygit_multi_repo()
 			return true
 		end,
 	}):find()
+end
+
+-- 通用多 repo 选择器，选择后在该 repo 目录下执行回调
+local function select_repo_and_run(callback, prompt_title)
+	local git_dirs = vim.fn.systemlist("find . -maxdepth 3 -type d -name '.git' 2>/dev/null | sed 's|/.git||' | sort")
+	if #git_dirs == 0 then
+		vim.notify("未找到任何 git 仓库", vim.log.levels.WARN)
+		return
+	end
+	-- 只有一个 repo 时直接执行
+	if #git_dirs == 1 then
+		local repo_path = vim.fn.fnamemodify(git_dirs[1], ":p")
+		callback(repo_path)
+		return
+	end
+	require("telescope.pickers").new({}, {
+		prompt_title = prompt_title or "选择 Git 仓库",
+		finder = require("telescope.finders").new_table({
+			results = git_dirs,
+			entry_maker = function(entry)
+				local display = entry:gsub("^%./", "")
+				if entry == last_selected_repo then display = "★ " .. display end
+				return { value = entry, display = display, ordinal = display }
+			end,
+		}),
+		sorter = require("telescope.config").values.generic_sorter({}),
+		attach_mappings = function(prompt_bufnr, map)
+			require("telescope.actions").select_default:replace(function()
+				require("telescope.actions").close(prompt_bufnr)
+				local selection = require("telescope.actions.state").get_selected_entry()
+				if selection then
+					last_selected_repo = selection.value
+					local repo_path = vim.fn.fnamemodify(selection.value, ":p")
+					callback(repo_path)
+				end
+			end)
+			return true
+		end,
+	}):find()
+end
+
+-- GitLab: 选择 repo 后执行 gitlab 操作
+function M.gitlab_with_repo(action)
+	select_repo_and_run(function(repo_path)
+		-- 临时切换目录执行 gitlab 操作
+		local old_cwd = vim.fn.getcwd()
+		vim.cmd("cd " .. vim.fn.fnameescape(repo_path))
+		-- 重新初始化 gitlab.nvim 的项目设置
+		vim.defer_fn(function()
+			local ok, gitlab = pcall(require, "gitlab")
+			if ok then
+				if action == "create_mr" then
+					gitlab.create_mr()
+				elseif action == "review" then
+					gitlab.review()
+				elseif action == "summary" then
+					gitlab.summary()
+				elseif action == "choose_merge_request" then
+					gitlab.choose_merge_request()
+				elseif action == "pipeline" then
+					gitlab.pipeline()
+				elseif action == "open_in_browser" then
+					gitlab.open_in_browser()
+				end
+			end
+		end, 100)
+	end, "选择仓库 - GitLab " .. action)
 end
 
 function M.git_compare_head()

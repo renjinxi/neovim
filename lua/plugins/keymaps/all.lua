@@ -125,26 +125,26 @@ M.mappings = {
 	{ "<leader>f", group = "Telescope" },
 	{ "<leader>fF", "<cmd>lua require('telescope.builtin').find_files({no_ignore=true, hidden=true})<cr>", desc = "Find Files (all)" },
 	{ "<leader>fG", "<cmd>Telescope live_grep<cr>", desc = "Builtin Live Grep" },
-	-- Claude 配置目录快速访问
+	-- Dotfiles 快速访问 (~/dotfiles: claude, nvim, kitty, notes)
 	{
 		"<leader>fv",
 		function()
 			require("fzf-lua").files({
-				prompt = "Claude Config> ",
-				cwd = vim.fn.expand("~/.claude"),
+				prompt = "Dotfiles> ",
+				cwd = vim.fn.expand("~/dotfiles"),
 			})
 		end,
-		desc = "Claude Config Files",
+		desc = "Dotfiles",
 	},
 	{
 		"<leader>fw",
 		function()
 			require("fzf-lua").live_grep({
-				prompt = "Grep Claude> ",
-				cwd = vim.fn.expand("~/.claude"),
+				prompt = "Grep Dotfiles> ",
+				cwd = vim.fn.expand("~/dotfiles"),
 			})
 		end,
-		desc = "Grep Claude Config",
+		desc = "Grep Dotfiles",
 	},
 	{ "<leader>fa", "<cmd>Telescope neoclip<cr>", desc = "NeoClip" },
 	{ "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
@@ -344,18 +344,22 @@ M.mappings = {
 	{ "<leader>sT", function() require('gitsigns').toggle_deleted() end, desc = "Toggle Deleted" },
 	{ "<leader>se", fn.git_compare_head, desc = "Compare with HEAD" },
 	{ "<leader>sv", fn.show_multi_repo_branches, desc = "View Multi-Repo Branches" },
-	-- GitLab MR 操作
-	{ "<leader>sx", group = "GitLab MR" },
-	{ "<leader>sxr", function() require("gitlab").review() end, desc = "Review MR" },
-	{ "<leader>sxs", function() require("gitlab").summary() end, desc = "MR Summary" },
-	{ "<leader>sxa", function() require("gitlab").approve() end, desc = "Approve MR" },
-	{ "<leader>sxm", function() require("gitlab").merge() end, desc = "Merge MR" },
-	{ "<leader>sxc", function() require("gitlab").create_comment() end, desc = "Create Comment" },
-	{ "<leader>sxn", function() require("gitlab").create_note() end, desc = "Create Note" },
-	{ "<leader>sxd", function() require("gitlab").toggle_discussions() end, desc = "Toggle Discussions" },
-	{ "<leader>sxp", function() require("gitlab").pipeline() end, desc = "View Pipeline" },
-	{ "<leader>sxo", function() require("gitlab").open_in_browser() end, desc = "Open in Browser" },
-	{ "<leader>sxl", function() require("gitlab").choose_merge_request() end, desc = "List MRs" },
+
+	-- ========================================================================
+	-- <leader>x - GitLab MR
+	-- ========================================================================
+	{ "<leader>x", group = "GitLab" },
+	{ "<leader>xr", function() fn.gitlab_with_repo("review") end, desc = "Review MR" },
+	{ "<leader>xs", function() fn.gitlab_with_repo("summary") end, desc = "MR Summary" },
+	{ "<leader>xa", function() require("gitlab").approve() end, desc = "Approve MR" },
+	{ "<leader>xm", function() require("gitlab").merge() end, desc = "Merge MR" },
+	{ "<leader>xc", function() require("gitlab").create_comment() end, desc = "Create Comment" },
+	{ "<leader>xn", function() require("gitlab").create_note() end, desc = "Create Note" },
+	{ "<leader>xd", function() require("gitlab").toggle_discussions() end, desc = "Toggle Discussions" },
+	{ "<leader>xp", function() fn.gitlab_with_repo("pipeline") end, desc = "View Pipeline" },
+	{ "<leader>xo", function() fn.gitlab_with_repo("open_in_browser") end, desc = "Open in Browser" },
+	{ "<leader>xl", function() fn.gitlab_with_repo("choose_merge_request") end, desc = "List MRs" },
+	{ "<leader>xe", function() fn.gitlab_with_repo("create_mr") end, desc = "Create MR" },
 
 	-- ========================================================================
 	-- <leader>t - Tree / Tab
@@ -560,26 +564,30 @@ for i = 1, 9 do
 end
 
 -- ============================================================================
--- macOS Option 键映射
+-- Alt 键映射 (macOS Option 键)
 -- ============================================================================
-M.option_mappings = {}
-local option_chars = {
-	-- 数字键 -> 窗口
-	{ "¡", 1 }, { "™", 2 }, { "£", 3 }, { "¢", 4 }, { "∞", 5 },
-	{ "§", 6 }, { "¶", 7 }, { "•", 8 }, { "ª", 9 },
+M.alt_mappings = {
+	-- Claude Float (Alt+1~4, n, k)
+	{ "<A-1>", fn.claude_float_1_toggle, desc = "Claude Float 1", mode = { "n", "i", "v", "t" } },
+	{ "<A-2>", fn.claude_float_2_toggle, desc = "Claude Float 2", mode = { "n", "i", "v", "t" } },
+	{ "<A-3>", fn.claude_float_3_toggle, desc = "Claude Float 3", mode = { "n", "i", "v", "t" } },
+	{ "<A-4>", fn.claude_float_4_toggle, desc = "Claude Float 4", mode = { "n", "i", "v", "t" } },
+	{ "<A-n>", fn.claude_float_nvim_toggle, desc = "Claude [nvim]", mode = { "n", "i", "v", "t" } },
+	{ "<A-k>", fn.claude_float_kitty_toggle, desc = "Claude [kitty]", mode = { "n", "i", "v", "t" } },
+	-- 窗口跳转 (Alt+5~9)
+	{ "<A-5>", "<cmd>5wincmd w<cr>", desc = "Window 5", mode = { "n", "i", "v", "t" } },
+	{ "<A-6>", "<cmd>6wincmd w<cr>", desc = "Window 6", mode = { "n", "i", "v", "t" } },
+	{ "<A-7>", "<cmd>7wincmd w<cr>", desc = "Window 7", mode = { "n", "i", "v", "t" } },
+	{ "<A-8>", "<cmd>8wincmd w<cr>", desc = "Window 8", mode = { "n", "i", "v", "t" } },
+	{ "<A-9>", "<cmd>9wincmd w<cr>", desc = "Window 9", mode = { "n", "i", "v", "t" } },
+	-- 字母键快捷操作
+	{ "<A-s>", "<cmd>w<cr>", desc = "Quick Save", mode = { "n", "i" } },
+	{ "<A-q>", "<cmd>q<cr>", desc = "Quick Quit", mode = "n" },
+	{ "<A-w>", "<cmd>bdelete<cr>", desc = "Close Buffer", mode = "n" },
+	{ "<A-t>", "<cmd>NvimTreeToggle<cr>", desc = "Toggle Tree", mode = { "n", "i", "v", "t" } },
+	{ "<A-g>", "<cmd>OverseerToggle<cr>", desc = "Toggle Overseer", mode = { "n", "i", "v", "t" } },
+	{ "<A-l>", "<cmd>OverseerRestartLast<cr>", desc = "Restart Last", mode = { "n", "i", "v", "t" } },
 }
-for _, item in ipairs(option_chars) do
-	local char, win = item[1], item[2]
-	local cmd = string.format("<cmd>%dwincmd w<cr>", win)
-	table.insert(M.option_mappings, { char, cmd, desc = "Window " .. win, mode = { "n", "i", "v", "t" } })
-end
--- 字母键快捷操作
-table.insert(M.option_mappings, { "ß", "<cmd>w<cr>", desc = "Quick Save (Option+s)", mode = { "n", "i" } })
-table.insert(M.option_mappings, { "œ", "<cmd>q<cr>", desc = "Quick Quit (Option+q)", mode = "n" })
-table.insert(M.option_mappings, { "∑", "<cmd>bdelete<cr>", desc = "Close Buffer (Option+w)", mode = "n" })
-table.insert(M.option_mappings, { "†", "<cmd>NvimTreeToggle<cr>", desc = "Toggle Tree (Option+t)", mode = { "n", "i", "v", "t" } })
-table.insert(M.option_mappings, { "©", "<cmd>OverseerToggle<cr>", desc = "Toggle Overseer (Option+g)", mode = { "n", "i", "v", "t" } })
-table.insert(M.option_mappings, { "¬", "<cmd>OverseerRestartLast<cr>", desc = "Restart Last (Option+l)", mode = { "n", "i", "v", "t" } })
 
 -- ============================================================================
 -- Terminal 模式特殊键 (通过 toggleterm 的 TermOpen autocmd 注册，见 config/toggleterm.lua)
@@ -622,13 +630,11 @@ function M.setup()
 		vim.keymap.set(map.mode, map[1], map[2], { desc = map.desc, silent = true })
 	end
 
-	-- 注册 Option 键映射 (仅 macOS)
-	if vim.fn.has("mac") == 1 then
-		for _, map in ipairs(M.option_mappings) do
-			local modes = type(map.mode) == "table" and map.mode or { map.mode }
-			for _, mode in ipairs(modes) do
-				vim.keymap.set(mode, map[1], map[2], { desc = map.desc, silent = true })
-			end
+	-- 注册 Alt 键映射
+	for _, map in ipairs(M.alt_mappings) do
+		local modes = type(map.mode) == "table" and map.mode or { map.mode }
+		for _, mode in ipairs(modes) do
+			vim.keymap.set(mode, map[1], map[2], { desc = map.desc, silent = true })
 		end
 	end
 
