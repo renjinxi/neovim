@@ -171,7 +171,7 @@ vim.api.nvim_create_user_command("OverseerRunMulti", function()
 				finder = make_finder(),
 				sorter = conf.generic_sorter({}),
 				attach_mappings = function(prompt_bufnr, map)
-					-- Tab 切换选中
+					-- Tab 切换选中并保存到 cache
 					map("i", "<Tab>", function()
 						local entry = action_state.get_selected_entry()
 						if entry then
@@ -181,8 +181,20 @@ vim.api.nvim_create_user_command("OverseerRunMulti", function()
 							else
 								selected[name] = true
 							end
+							save_last_tasks(vim.tbl_keys(selected))
 							local picker = action_state.get_current_picker(prompt_bufnr)
 							picker:refresh(make_finder(), { reset_prompt = false })
+						end
+					end)
+
+					-- Ctrl+o 仅启动当前光标所在任务，不改变 cache
+					map("i", "<C-o>", function()
+						local entry = action_state.get_selected_entry()
+						if entry then
+							actions.close(prompt_bufnr)
+							local name = entry.value or entry[1]
+							overseer.run_task({ name = name })
+							vim.notify("Started: " .. name, vim.log.levels.INFO)
 						end
 					end)
 
@@ -196,8 +208,6 @@ vim.api.nvim_create_user_command("OverseerRunMulti", function()
 								to_run = { entry.value or entry[1] }
 							end
 						end
-						-- 保存这次选择
-						save_last_tasks(to_run)
 						for _, name in ipairs(to_run) do
 							overseer.run_task({ name = name })
 						end
