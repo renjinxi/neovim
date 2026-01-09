@@ -229,7 +229,7 @@ vim.lsp.config('nginx_language_server', {
 })
 
 -- Vue 语言服务器配置 (Volar)
-vim.lsp.config('volar', {
+vim.lsp.config('vue_ls', {
 	cmd = { 'vue-language-server', '--stdio' },
 	root_markers = { 'package.json', 'vue.config.js', 'vite.config.js', 'nuxt.config.js', '.git' },
 	filetypes = { 'vue' },

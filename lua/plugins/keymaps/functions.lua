@@ -1408,4 +1408,34 @@ function M.nvim_tree_float()
 	end, { buffer = bufnr, nowait = true })
 end
 
+-- ============================================================================
+-- Mail: aerc
+-- ============================================================================
+function M.mail_aerc()
+	local tabpage = vim.api.nvim_get_current_tabpage()
+	local key = string.format("tab_%d_mail_aerc", tabpage)
+	local state = float_terminals[key]
+
+	-- 如果窗口已存在，关闭它
+	if state and state.win and vim.api.nvim_win_is_valid(state.win) then
+		vim.api.nvim_win_close(state.win, true)
+		float_terminals[key].win = nil
+		return
+	end
+
+	local cfg = {
+		width = math.floor(vim.o.columns * 0.8),
+		height = math.floor(vim.o.lines * 0.8),
+		row = math.floor(vim.o.lines * 0.1),
+		col = math.floor(vim.o.columns * 0.1),
+		title = " aerc - Mail ",
+	}
+
+	if not state or not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
+		create_float_terminal(key, function() return "aerc" end, cfg)
+	else
+		reopen_float_window(key, cfg)
+	end
+end
+
 return M

@@ -278,6 +278,12 @@ M.mappings = {
 	{ "<leader>mt", fn.session_telescope, desc = "Telescope sessions" },
 
 	-- ========================================================================
+	-- <leader>e - Email (aerc)
+	-- ========================================================================
+	{ "<leader>e", group = "Email" },
+	{ "<leader>ea", fn.mail_aerc, desc = "Open aerc" },
+
+	-- ========================================================================
 	-- <leader>o - Neotest
 	-- ========================================================================
 	{ "<leader>o", group = "Neotest" },
@@ -509,6 +515,9 @@ M.non_leader_mappings = {
 
 	-- gF - Open path:line
 	{ "gF", fn.open_path_at_cursor, desc = "Open path:line under cursor", mode = "n" },
+
+	-- gV - Open file under cursor in vsplit
+	{ "gV", "<C-w>vgf", desc = "Open file in vsplit", mode = "n" },
 
 	-- zR, zM, zr - Fold
 	{ "zR", function() require("ufo").openAllFolds() end, desc = "Open All Folds", mode = "n" },

@@ -4,12 +4,14 @@ local actions = require("fzf-lua.actions")
 -- fzf-lua setup
 fzf_lua.setup({
 	files = {
+		fd_opts = "--color=never --type f --hidden --follow --exclude .git",
 		actions = {
 			-- ctrl-g 切换 gitignore (用内置 action，支持状态显示)
 			["ctrl-g"] = { fn = actions.toggle_ignore, reuse = true, header = false },
 		},
 	},
 	grep = {
+		rg_opts = "--column --line-number --no-heading --color=always --smart-case --follow --max-columns=4096 -e",
 		actions = {
 			["ctrl-g"] = { fn = actions.toggle_ignore, reuse = true, header = false },
 		},
@@ -27,7 +29,7 @@ function ChangeDirectory(opts)
 			vim.cmd("cd " .. selected[1])
 		end,
 	}
-	fzf_lua.fzf_exec("fd --type d", opts)
+	fzf_lua.fzf_exec("fd --type d --follow", opts)
 end
 
 -- 注册Neovim命令

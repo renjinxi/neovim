@@ -13,7 +13,7 @@ local function ensure_dir()
 end
 
 local function get_week_file()
-  return log_dir .. '/' .. os.date('%Y-W%W') .. '.md'
+  return log_dir .. '/' .. os.date('%G-W%V') .. '.md'
 end
 
 local function close_float()
@@ -47,7 +47,7 @@ local function open_log()
   local file = get_week_file()
   -- 如果文件不存在，创建时加入周标题
   if vim.fn.filereadable(file) == 0 then
-    local header = '# Week ' .. os.date('%Y-W%W')
+    local header = '# Week ' .. os.date('%G-W%V')
     vim.fn.writefile({ header }, file)
   end
 

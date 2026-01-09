@@ -23,7 +23,7 @@ function M.setup()
 		tabstop = 4, -- 制表符等于4个空格
 		softtabstop = 4, -- 软制表符
 		shiftwidth = 4, -- 缩进宽度
-		textwidth = 79, -- 文本宽度
+		textwidth = 0, -- 禁用自动换行
 		fileformat = "unix", -- 使用 UNIX 文件格式
 		fileencoding = "utf-8", -- 文件编码
 		splitright = true, -- 垂直分割时新窗口在右边
