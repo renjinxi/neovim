@@ -132,6 +132,46 @@ function M.copy_word_with_location()
 	copy_to_clipboard(content, "复制 word 和位置信息到剪贴板")
 end
 
+function M.copy_selection_with_location()
+	local mode = vim.fn.mode()
+	local start_line, end_line
+	local is_visual = false
+
+	if mode == 'v' or mode == 'V' or mode == '\22' then
+		-- Visual mode
+		is_visual = true
+		start_line = vim.fn.line('v')
+		end_line = vim.fn.line('.')
+		if start_line > end_line then
+			start_line, end_line = end_line, start_line
+		end
+	else
+		-- Normal mode - use current line
+		start_line = vim.fn.line('.')
+		end_line = start_line
+	end
+
+	local file_path = vim.fn.expand('%:p')
+	local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+	local selected_text = table.concat(lines, '\n')
+
+	local location_info
+	if start_line == end_line then
+		location_info = string.format("%s:%d", file_path, start_line)
+	else
+		location_info = string.format("%s:%d-%d", file_path, start_line, end_line)
+	end
+
+	local content = string.format("%s\n\n%s", location_info, selected_text)
+
+	-- 退出 visual 模式
+	if is_visual then
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+	end
+
+	copy_to_clipboard(content, "复制内容和位置信息到剪贴板")
+end
+
 function M.open_path_at_cursor()
 	local current_line = vim.api.nvim_get_current_line()
 	local cursor_col = vim.api.nvim_win_get_cursor(0)[2] + 1
@@ -568,7 +608,10 @@ local function get_open_positions()
 	for _, state in pairs(float_terminals) do
 		if state.win and vim.api.nvim_win_is_valid(state.win) then
 			local cfg = vim.api.nvim_win_get_config(state.win)
-			table.insert(positions, { row = cfg.row, col = cfg.col })
+			-- 只收集浮动窗口的位置（relative 不为空且 row/col 存在）
+			if cfg.relative and cfg.relative ~= "" and cfg.row and cfg.col then
+				table.insert(positions, { row = cfg.row, col = cfg.col })
+			end
 		end
 	end
 	return positions
