@@ -151,7 +151,7 @@ Modern, highly customizable status bar with components:
 ### Productivity
 - **Overseer**: Task runner
 - **Neotest**: Testing framework
-- **toggleterm**: Terminal management
+- **原生终端**: 使用 nvim API 实现的终端管理（float/horizontal/vertical/tab）
 - **possession**: Session management
 - **浮动终端**: 支持多个 Claude/普通终端浮动窗口，智能避让布局
 - **多 Git Repo**: 支持在一个目录下管理多个 Git 仓库的变更

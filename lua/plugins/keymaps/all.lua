@@ -1,5 +1,3 @@
--- ============================================================================
--- 统一的 Keymap 注册中心
 -- 所有快捷键集中在此文件定义，方便查看和避免冲突
 -- ============================================================================
 local M = {}
@@ -39,30 +37,6 @@ M.mappings = {
 	{ "<leader>b", group = "Messages" },
 	{ "<leader>ba", "<cmd>messages<CR>", desc = "All Messages" },
 	{ "<leader>bl", "<cmd>echo v:statusmsg<CR>", desc = "Last Message" },
-
-	-- ========================================================================
-	-- <leader>c - QuickFix / Workspace
-	-- ========================================================================
-	{ "<leader>c", group = "QuickFix/Workspace" },
-	-- QuickFix
-	{ "<leader>cl", "<cmd>cclose<cr>", desc = "QF: Close" },
-	{ "<leader>cn", "<cmd>cnext<cr>", desc = "QF: Next item" },
-	{ "<leader>co", "<cmd>copen<cr>", desc = "QF: Open" },
-	{ "<leader>cp", "<cmd>cprevious<cr>", desc = "QF: Previous item" },
-	-- Workspace
-	{ "<leader>ca", fn.workspace_add_project, desc = "WS: Add project" },
-	{ "<leader>cA", fn.workspace_add_project_path, desc = "WS: Add project (path)" },
-	{ "<leader>cr", fn.workspace_remove_project, desc = "WS: Remove project" },
-	-- { "<leader>cl", fn.workspace_list_projects, desc = "WS: List projects" }, -- 与 QF close 冲突
-	{ "<leader>cs", fn.workspace_switch_root, desc = "WS: Switch root" },
-	{ "<leader>cw", fn.workspace_search_all, desc = "WS: Find files (all)" },
-	{ "<leader>cW", fn.workspace_search_all_hidden, desc = "WS: Find files (hidden)" },
-	{ "<leader>cg", fn.workspace_grep_all, desc = "WS: Grep (all)" },
-	{ "<leader>cG", fn.workspace_grep_all_hidden, desc = "WS: Grep (hidden)" },
-	{ "<leader>caf", function() vim.lsp.buf.add_workspace_folder() end, desc = "WS: Add LSP folder" },
-	{ "<leader>crf", function() vim.lsp.buf.remove_workspace_folder() end, desc = "WS: Remove LSP folder" },
-	{ "<leader>clf", function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, desc = "WS: List LSP folders" },
-	{ "<leader>cws", "<cmd>Telescope workspaces<cr>", desc = "WS: Telescope" },
 
 	-- ========================================================================
 	-- <leader>d - Debug (DAP)
@@ -108,6 +82,7 @@ M.mappings = {
 	{ "<leader>cfk", fn.claude_float_kitty_toggle, desc = "Claude [kitty config]" },
 	{ "<leader>cfa", fn.claude_float_toggle_all, desc = "Toggle All Claude" },
 	{ "<leader>cfs", fn.float_toggle_api_select, desc = "Toggle API Select" },
+	{ "<leader>cfh", fn.claude_half_screen_toggle, desc = "Claude Half Screen" },
 
 	-- ========================================================================
 	-- <leader>ct - Terminal Float (智能避让布局)
@@ -174,13 +149,13 @@ M.mappings = {
 	-- ========================================================================
 	{ "<leader>g", group = "Terminal" },
 	{ "<leader>ga", fn.terminal_lua_toggle, desc = "Lua" },
-	{ "<leader>gc", fn.terminal_claude_code_1_toggle, desc = "Claude Code" },
-	{ "<leader>gc1", fn.terminal_claude_code_1_toggle, desc = "Claude Code API 1" },
-	{ "<leader>gc2", fn.terminal_claude_code_2_toggle, desc = "Claude Code API 2" },
-	{ "<leader>gcn", fn.terminal_create_new_claude_tab, desc = "New Claude Code Tab" },
-	{ "<leader>gcn1", fn.terminal_create_new_claude_tab_api1, desc = "New Claude Tab (API 1)" },
-	{ "<leader>gcn2", fn.terminal_create_new_claude_tab_api2, desc = "New Claude Tab (API 2)" },
-	{ "<leader>gd", fn.terminal_codex_toggle, desc = "Codex" },
+	{ "<leader>gc", fn.claude_launcher, desc = "Claude Launcher (灵活)" },
+	{ "<leader>gc1", function() fn.tab_terminal_claude(1) end, desc = "Claude Code API 1" },
+	{ "<leader>gc2", function() fn.tab_terminal_claude(2) end, desc = "Claude Code API 2" },
+	{ "<leader>gcn", fn.tab_terminal_claude_new, desc = "New Claude Code Tab" },
+	{ "<leader>gcn1", function() fn.tab_terminal_claude_new(1) end, desc = "New Claude Tab (API 1)" },
+	{ "<leader>gcn2", function() fn.tab_terminal_claude_new(2) end, desc = "New Claude Tab (API 2)" },
+	{ "<leader>gd", fn.tab_terminal_codex, desc = "Codex" },
 	{ "<leader>gg", fn.terminal_cursor_agent_toggle, desc = "Cursor Agent" },
 	{ "<leader>gh", fn.terminal_htop_toggle, desc = "Htop" },
 	{ "<leader>gi", fn.terminal_ipython_toggle, desc = "IPython" },
@@ -255,10 +230,6 @@ M.mappings = {
 	{ "<leader>lwa", "<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", desc = "LSP: Add Workspace Folder" },
 	{ "<leader>lwl", "<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>", desc = "LSP: List Workspace Folders" },
 	{ "<leader>lwr", "<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", desc = "LSP: Remove Workspace Folder" },
-	-- LeetCode (使用 <leader>L 避免冲突，或保持原样)
-	{ "<leader>ll", "<cmd>Leet<CR>", desc = "LeetCode: Dashboard" },
-	{ "<leader>lm", "<cmd>Leet menu<CR>", desc = "LeetCode: Menu" },
-	-- 其他 LeetCode 键位与 LSP 冲突，建议迁移到 <leader>L
 
 	-- ========================================================================
 	-- <leader>m - Sessions
@@ -352,22 +323,6 @@ M.mappings = {
 	{ "<leader>sv", fn.show_multi_repo_branches, desc = "View Multi-Repo Branches" },
 
 	-- ========================================================================
-	-- <leader>x - GitLab MR
-	-- ========================================================================
-	{ "<leader>x", group = "GitLab" },
-	{ "<leader>xr", function() fn.gitlab_with_repo("review") end, desc = "Review MR" },
-	{ "<leader>xs", function() fn.gitlab_with_repo("summary") end, desc = "MR Summary" },
-	{ "<leader>xa", function() require("gitlab").approve() end, desc = "Approve MR" },
-	{ "<leader>xm", function() require("gitlab").merge() end, desc = "Merge MR" },
-	{ "<leader>xc", function() require("gitlab").create_comment() end, desc = "Create Comment" },
-	{ "<leader>xn", function() require("gitlab").create_note() end, desc = "Create Note" },
-	{ "<leader>xd", function() require("gitlab").toggle_discussions() end, desc = "Toggle Discussions" },
-	{ "<leader>xp", function() fn.gitlab_with_repo("pipeline") end, desc = "View Pipeline" },
-	{ "<leader>xo", function() fn.gitlab_with_repo("open_in_browser") end, desc = "Open in Browser" },
-	{ "<leader>xl", function() fn.gitlab_with_repo("choose_merge_request") end, desc = "List MRs" },
-	{ "<leader>xe", function() fn.gitlab_with_repo("create_mr") end, desc = "Create MR" },
-
-	-- ========================================================================
 	-- <leader>t - Tree / Tab
 	-- ========================================================================
 	{ "<leader>t", group = "Tree/Tab" },
@@ -384,8 +339,6 @@ M.mappings = {
 	-- <leader>v - Various (Some Thing)
 	-- ========================================================================
 	{ "<leader>v", group = "Various" },
-	{ "<leader>vE", "<cmd>edit %<cr>", desc = "Reload Current File" },
-	{ "<leader>vL", fn.open_path_at_cursor, desc = "Open path:line" },
 	{ "<leader>va", "<cmd>qa<cr>", desc = "Exit" },
 	{ "<leader>vb", "<cmd>%bd|e#<cr>", desc = "Delete Other Buffers" },
 	{ "<leader>vc", "<cmd>DiffviewClose<cr>", desc = "Close Diff" },
@@ -393,30 +346,24 @@ M.mappings = {
 	{ "<leader>vD", "<cmd>DiffviewOpen<cr>", desc = "Open Diff (current)" },
 	{ "<leader>ve", "<cmd>bufdo edit %<cr>", desc = "Reload All Buffers" },
 	{ "<leader>vf", "<cmd>ASToggle<cr>", desc = "Toggle Auto Save" },
-	{ "<leader>vg", "<cmd>ToggleTermToggleAll<cr>", desc = "Toggle All Terms" },
 	{ "<leader>vh", fn.toggle_hlsearch, desc = "Toggle Hlsearch" },
 	{ "<leader>vi", fn.reload_config, desc = "Reload Neovim Config" },
-	{ "<leader>vj", "<cmd>set relativenumber<cr>", desc = "Set Relative Number" },
-	{ "<leader>vk", "<cmd>set norelativenumber<cr>", desc = "Cancel Relative Number" },
 	{ "<leader>vlr", fn.rename_current_file, desc = "Rename Current File" },
 	{ "<leader>vla", fn.create_new_file, desc = "Create New File" },
 	{ "<leader>vm", ":%bd!|e#|bd#<cr>", desc = "Remove Other Buffers" },
-	{ "<leader>vn", "<cmd>lua = vim.api.nvim_buf_get_name(0)<cr>", desc = "Get File Abs Path" },
 	{ "<leader>vo", "<cmd>only<cr>", desc = "Only Window" },
 	{ "<leader>vp", fn.copy_file_path, desc = "Copy File Path" },
 	{ "<leader>vq", "<cmd>q<cr>", desc = "Close Current Tab" },
 	{ "<leader>vr", "<cmd>LspRestart<cr>", desc = "Lsp Restart" },
 	{ "<leader>vs", "<cmd>only<cr><cmd>tabo<cr>", desc = "Only Window/Tab" },
-	{ "<leader>vt", fn.toggle_neovide, desc = "Toggle Neovide" },
 	{ "<leader>vu", ":UndotreeToggle<cr>", desc = "Undo Tree Toggle" },
 	{ "<leader>vv", fn.open_project_in_new_tab, desc = "Open Project In New Tab" },
 	{ "<leader>vw", ":DiffviewFileHistory %<cr>", desc = "File History" },
-	{ "<leader>vy", "viw:Translate zh-CN<cr>", desc = "Translate" },
 	{ "<leader>vz", ":ZenMode<cr>", desc = "Toggle Zen Mode" },
 	{ "<leader>vx", fn.copy_message, desc = "Copy Message" },
 	{ "<leader>vxl", fn.copy_last_message, desc = "Copy Last Message" },
 	{ "<leader>vxa", fn.copy_all_messages, desc = "Copy All Messages" },
-	{ "<leader>vxw", fn.copy_word_with_location, desc = "Copy Word with Location" },
+	{ "<leader>yw", fn.copy_word_with_location, desc = "Copy Word with Location" },
 
 	-- ========================================================================
 	-- <leader>w - Window
@@ -529,10 +476,6 @@ M.non_leader_mappings = {
 -- Ctrl 键映射
 -- ============================================================================
 M.ctrl_mappings = {
-	-- Terminal toggle
-	{ "<C-q>", fn.toggle_current_term, desc = "Toggle Current Terminal", mode = { "n", "i", "t" } },
-	{ "<C-k>", fn.toggle_all_terms, desc = "Toggle All Terminals", mode = { "n", "i", "t" } },
-
 	-- Overseer
 	{ "<C-S-r>", "<cmd>OverseerRun<cr>", desc = "Overseer Run", mode = "n" },
 	{ "<C-S-t>", "<cmd>OverseerToggle<cr>", desc = "Overseer Toggle", mode = "n" },
@@ -563,7 +506,7 @@ for i = 1, 9 do
 end
 
 -- ============================================================================
--- Tab 导航 (动态生成) - Terminal 模式通过 toggleterm TermOpen autocmd 注册
+-- Tab 导航 (动态生成) - Terminal 模式通过 TermOpen autocmd 注册
 -- ============================================================================
 M.tab_nav_mappings = {}
 for i = 1, 9 do
@@ -576,13 +519,15 @@ end
 -- Alt 键映射 (macOS Option 键)
 -- ============================================================================
 M.alt_mappings = {
-	-- Claude Float (Alt+1~4, n, k)
+	-- Claude Float (Alt+1~2)
 	{ "<A-1>", fn.claude_float_1_toggle, desc = "Claude Float 1", mode = { "n", "i", "v", "t" } },
 	{ "<A-2>", fn.claude_float_2_toggle, desc = "Claude Float 2", mode = { "n", "i", "v", "t" } },
-	{ "<A-3>", fn.claude_float_3_toggle, desc = "Claude Float 3", mode = { "n", "i", "v", "t" } },
-	{ "<A-4>", fn.claude_float_4_toggle, desc = "Claude Float 4", mode = { "n", "i", "v", "t" } },
+	-- Terminal Float (Alt+3~4)
+	{ "<A-3>", fn.term_float_1_toggle, desc = "Terminal Float 1", mode = { "n", "i", "v", "t" } },
+	{ "<A-4>", fn.term_float_2_toggle, desc = "Terminal Float 2", mode = { "n", "i", "v", "t" } },
 	{ "<A-n>", fn.claude_float_nvim_toggle, desc = "Claude [nvim]", mode = { "n", "i", "v", "t" } },
 	{ "<A-k>", fn.claude_float_kitty_toggle, desc = "Claude [kitty]", mode = { "n", "i", "v", "t" } },
+	{ "<A-a>", fn.float_hide_all, desc = "Hide All Float", mode = { "n", "i", "v", "t" } },
 	-- 窗口跳转 (Alt+5~9)
 	{ "<A-5>", "<cmd>5wincmd w<cr>", desc = "Window 5", mode = { "n", "i", "v", "t" } },
 	{ "<A-6>", "<cmd>6wincmd w<cr>", desc = "Window 6", mode = { "n", "i", "v", "t" } },
@@ -599,7 +544,7 @@ M.alt_mappings = {
 }
 
 -- ============================================================================
--- Terminal 模式特殊键 (通过 toggleterm 的 TermOpen autocmd 注册，见 config/toggleterm.lua)
+-- Terminal 模式特殊键 (通过 TermOpen autocmd 注册，见 config/terminal.lua)
 -- ============================================================================
 
 -- ============================================================================
@@ -651,6 +596,94 @@ function M.setup()
 	for _, map in ipairs(M.insert_tab_mappings) do
 		vim.keymap.set(map.mode, map[1], map[2], { desc = map.desc, silent = true })
 	end
+
+	-- 创建 Claude 启动器命令
+	-- 简化版：直接用命令名指定显示方式
+	local function create_claude_term(api_num, display_type)
+		local env_mod = require("core.env")
+		local cmd
+		if api_num then
+			local base_url = env_mod.get("CLAUDE_API" .. api_num .. "_BASE_URL") or ""
+			local token = env_mod.get("CLAUDE_API" .. api_num .. "_TOKEN") or ""
+			if base_url ~= "" and token ~= "" then
+				cmd = string.format("ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude", base_url, token)
+			else
+				cmd = "claude"
+			end
+		else
+			cmd = "claude"
+		end
+
+		local env = vim.fn.environ()
+		env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
+
+		if display_type == "tab" then
+			vim.cmd("tabnew")
+			vim.fn.termopen(cmd, { env = env })
+			vim.cmd("startinsert")
+		elseif display_type == "float" then
+			local width = math.floor(vim.o.columns * 0.8)
+			local height = math.floor(vim.o.lines * 0.8)
+			local buf = vim.api.nvim_create_buf(false, true)
+			local win = vim.api.nvim_open_win(buf, true, {
+				relative = "editor",
+				width = width,
+				height = height,
+				row = math.floor((vim.o.lines - height) / 2),
+				col = math.floor((vim.o.columns - width) / 2),
+				style = "minimal",
+				border = "rounded",
+				title = " Claude ",
+				title_pos = "center",
+			})
+			vim.fn.termopen(cmd, { env = env })
+			vim.cmd("startinsert")
+			vim.keymap.set("n", "q", function()
+				if vim.api.nvim_win_is_valid(win) then vim.api.nvim_win_close(win, true) end
+			end, { buffer = buf, noremap = true, silent = true })
+		elseif display_type == "half" then
+			local width = math.floor(vim.o.columns * 0.5)
+			local height = vim.o.lines - 4
+			local buf = vim.api.nvim_create_buf(false, true)
+			local win = vim.api.nvim_open_win(buf, true, {
+				relative = "editor",
+				width = width,
+				height = height,
+				row = 1,
+				col = vim.o.columns - width - 1,
+				style = "minimal",
+				border = "rounded",
+				title = " Claude ",
+				title_pos = "center",
+			})
+			vim.fn.termopen(cmd, { env = env })
+			vim.cmd("startinsert")
+			vim.keymap.set("n", "q", function()
+				if vim.api.nvim_win_is_valid(win) then vim.api.nvim_win_close(win, true) end
+			end, { buffer = buf, noremap = true, silent = true })
+		elseif display_type == "hsplit" then
+			vim.cmd("botright " .. math.floor(vim.o.lines * 0.4) .. "split")
+			local buf = vim.api.nvim_create_buf(false, true)
+			vim.api.nvim_win_set_buf(0, buf)
+			vim.fn.termopen(cmd, { env = env })
+			vim.cmd("startinsert")
+		elseif display_type == "vsplit" then
+			vim.cmd("botright " .. math.floor(vim.o.columns * 0.4) .. "vsplit")
+			local buf = vim.api.nvim_create_buf(false, true)
+			vim.api.nvim_win_set_buf(0, buf)
+			vim.fn.termopen(cmd, { env = env })
+			vim.cmd("startinsert")
+		end
+	end
+
+	-- 创建简洁的命令
+	vim.api.nvim_create_user_command("Claude", function() create_claude_term(1, "tab") end, { desc = "Claude (API 1, Tab)" })
+	vim.api.nvim_create_user_command("Claude1", function() create_claude_term(1, "tab") end, { desc = "Claude API 1 (Tab)" })
+	vim.api.nvim_create_user_command("Claude2", function() create_claude_term(2, "tab") end, { desc = "Claude API 2 (Tab)" })
+	vim.api.nvim_create_user_command("ClaudeFloat", function() create_claude_term(1, "float") end, { desc = "Claude (Float)" })
+	vim.api.nvim_create_user_command("ClaudeHalf", function() create_claude_term(1, "half") end, { desc = "Claude (Half Screen)" })
+	vim.api.nvim_create_user_command("ClaudeVsplit", function() create_claude_term(1, "vsplit") end, { desc = "Claude (Vsplit)" })
+	vim.api.nvim_create_user_command("ClaudeHsplit", function() create_claude_term(1, "hsplit") end, { desc = "Claude (Hsplit)" })
 end
 
 return M

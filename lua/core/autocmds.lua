@@ -124,14 +124,22 @@ function M.setup()
 		im_switch.setup()
 	end
 
-	-- Scratch buffer 命令
+	-- 终端模式快捷键
+	require("plugins.config.terminal")
+
+	-- Scratch buffer 命令 - 保存到 ~/notes/scratch/
 	vim.api.nvim_create_user_command("Scratch", function()
-		vim.cmd("vnew")
-		vim.bo.buftype = "nofile"
+		local scratch_dir = vim.fn.expand("~/notes/scratch")
+		vim.fn.mkdir(scratch_dir, "p")
+		local filename = os.date("%Y-%m-%d_%H%M%S") .. ".md"
+		local filepath = scratch_dir .. "/" .. filename
+		vim.cmd("vnew " .. filepath)
 		vim.bo.filetype = "markdown"
 	end, {})
 
 	-- Send 命令：发送内容到指定窗口的终端
+	-- 用法: :Send [win_nr] - 发送并跳转
+	--       :Send! [win_nr] - 发送但不跳转（后台发送）
 	vim.api.nvim_create_user_command("Send", function(opts)
 		local text
 		if opts.range > 0 then
@@ -152,22 +160,31 @@ function M.setup()
 
 		if chan then
 			vim.fn.chansend(chan, text)
+			vim.defer_fn(function()
+				vim.fn.chansend(chan, "\x0d")
+			end, 50)
 		end
 
-		vim.fn.win_gotoid(win_id)
-		if vim.bo.buftype == "terminal" then
-			vim.cmd("startinsert!")
+		-- bang (!) 表示后台发送，不跳转
+		if not opts.bang then
+			vim.fn.win_gotoid(win_id)
+			if vim.bo.buftype == "terminal" then
+				vim.cmd("startinsert!")
+			end
 		end
-	end, { nargs = "?", range = true })
+	end, { nargs = "?", range = true, bang = true })
 
 	-- Windows 命令：临时显示所有窗口号
+	-- 浮动窗口用 [N] 标记，普通窗口用 N 标记
 	vim.api.nvim_create_user_command("Windows", function()
 		local wins = vim.api.nvim_tabpage_list_wins(0)
 		local popups = {}
 		for _, win in ipairs(wins) do
+			local config = vim.api.nvim_win_get_config(win)
 			local nr = vim.api.nvim_win_get_number(win)
+			local label = tostring(nr)
 			local buf = vim.api.nvim_create_buf(false, true)
-			vim.api.nvim_buf_set_lines(buf, 0, -1, false, { " " .. nr .. " " })
+			vim.api.nvim_buf_set_lines(buf, 0, -1, false, { " " .. label .. " " })
 			local width = vim.api.nvim_win_get_width(win)
 			local height = vim.api.nvim_win_get_height(win)
 			local popup = vim.api.nvim_open_win(buf, false, {
@@ -175,7 +192,7 @@ function M.setup()
 				win = win,
 				row = height / 2 - 1,
 				col = width / 2 - 2,
-				width = 3,
+				width = #label + 2,
 				height = 1,
 				style = "minimal",
 				border = "rounded",
@@ -187,6 +204,12 @@ function M.setup()
 				pcall(vim.api.nvim_win_close, p, true)
 			end
 		end, 1500)
+	end, {})
+
+	-- Claude 命令：启动半屏 Claude
+	vim.api.nvim_create_user_command("Claude", function()
+		local fn = require("plugins.keymaps.functions")
+		fn.claude_half_screen_toggle()
 	end, {})
 
 	-- R 命令：在 float 窗口显示 shell 命令输出
@@ -214,6 +237,50 @@ function M.setup()
 		vim.keymap.set("n", "q", ":close<CR>", { buffer = buf, silent = true })
 		vim.keymap.set("n", "<Esc>", ":close<CR>", { buffer = buf, silent = true })
 	end, { nargs = "+", complete = "shellcmd" })
+
+	-- Claude 命令：在新 tab 启动 Claude
+	-- :Claude      - 默认 API 1
+	-- :Claude1     - API 1
+	-- :Claude2     - API 2
+	vim.api.nvim_create_user_command("Claude", function()
+		local fn = require("plugins.keymaps.functions")
+		fn.tab_terminal_claude(1)
+	end, {})
+
+	vim.api.nvim_create_user_command("Claude1", function()
+		local fn = require("plugins.keymaps.functions")
+		fn.tab_terminal_claude(1)
+	end, {})
+
+	vim.api.nvim_create_user_command("Claude2", function()
+		local fn = require("plugins.keymaps.functions")
+		fn.tab_terminal_claude(2)
+	end, {})
+
+	-- ClaudeNew 命令：新建 Claude 实例
+	-- :ClaudeNew   - 默认 API 1
+	-- :ClaudeNew1  - API 1
+	-- :ClaudeNew2  - API 2
+	vim.api.nvim_create_user_command("ClaudeNew", function()
+		local fn = require("plugins.keymaps.functions")
+		fn.tab_terminal_claude_new(1)
+	end, {})
+
+	vim.api.nvim_create_user_command("ClaudeNew1", function()
+		local fn = require("plugins.keymaps.functions")
+		fn.tab_terminal_claude_new(1)
+	end, {})
+
+	vim.api.nvim_create_user_command("ClaudeNew2", function()
+		local fn = require("plugins.keymaps.functions")
+		fn.tab_terminal_claude_new(2)
+	end, {})
+
+	-- Codex 命令：在新 tab 启动 Codex
+	vim.api.nvim_create_user_command("Codex", function()
+		local fn = require("plugins.keymaps.functions")
+		fn.tab_terminal_codex()
+	end, {})
 end
 
 return M

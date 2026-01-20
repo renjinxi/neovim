@@ -193,29 +193,9 @@ function M.reload_config()
 end
 
 -- ============================================================================
--- Editor: Terminal
+-- Editor: Terminal（原生 API 实现）
 -- ============================================================================
-local terminals = {}
-local next_claude_count = 20
-
-local function get_terminal(name, cmd, direction, count)
-	if not terminals[name] then
-		local Terminal = require("toggleterm.terminal").Terminal
-		terminals[name] = Terminal:new({
-			cmd = cmd,
-			hidden = true,
-			direction = direction or "float",
-			count = count,
-			on_open = function(term)
-				if direction == "tab" then
-					vim.opt_local.relativenumber = false
-					vim.opt_local.number = false
-				end
-			end,
-		})
-	end
-	return terminals[name]
-end
+local native_terminals = {}  -- { [name] = { buf = buf, win = win } }
 
 local function build_claude_cmd(api_num)
 	local env = require("core.env")
@@ -227,45 +207,323 @@ local function build_claude_cmd(api_num)
 	return "claude"
 end
 
-function M.terminal_ncdu_toggle() get_terminal("ncdu", "ncdu --color dark", "float", 2):toggle() end
-function M.terminal_htop_toggle() get_terminal("htop", "htop", "float", 3):toggle() end
-function M.terminal_ipython_toggle() get_terminal("ipython", "ipython", "horizontal", 4):toggle() end
-function M.terminal_lua_toggle() get_terminal("lua", "lua", "horizontal", 5):toggle() end
-function M.terminal_newterm_toggle() get_terminal("newterm", "/bin/zsh", "float", 7):toggle() end
-function M.terminal_newsboat_toggle() get_terminal("newsboat", "newsboat", "tab", 10):toggle() end
-function M.terminal_newterm_tab() get_terminal("newtab", "/bin/zsh", "tab", 9):toggle() end
+local function get_term_env()
+	local env = vim.fn.environ()
+	env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
+	return env
+end
 
-function M.terminal_claude_code_1_toggle() get_terminal("claude1", build_claude_cmd(1), "tab", 17):toggle() end
-function M.terminal_claude_code_2_toggle() get_terminal("claude2", build_claude_cmd(2), "tab", 18):toggle() end
-function M.terminal_codex_toggle() get_terminal("codex", "codex", "tab", 16):toggle() end
+-- 创建浮动终端
+local function create_float_term(name, cmd, opts)
+	opts = opts or {}
+	local width = opts.width or math.floor(vim.o.columns * 0.8)
+	local height = opts.height or math.floor(vim.o.lines * 0.8)
+	local row = math.floor((vim.o.lines - height) / 2)
+	local col = math.floor((vim.o.columns - width) / 2)
+
+	local buf = vim.api.nvim_create_buf(false, true)
+	local win = vim.api.nvim_open_win(buf, true, {
+		relative = "editor",
+		width = width,
+		height = height,
+		row = row,
+		col = col,
+		style = "minimal",
+		border = "rounded",
+		title = opts.title or (" " .. name .. " "),
+		title_pos = "center",
+	})
+
+	vim.fn.termopen(cmd, {
+		env = get_term_env(),
+		on_exit = function()
+			native_terminals[name] = nil
+		end,
+	})
+
+	native_terminals[name] = { buf = buf, win = win, type = "float" }
+	vim.cmd("startinsert")
+
+	-- q 关闭
+	vim.keymap.set("n", "q", function()
+		if native_terminals[name] and native_terminals[name].win and vim.api.nvim_win_is_valid(native_terminals[name].win) then
+			vim.api.nvim_win_close(native_terminals[name].win, true)
+			native_terminals[name].win = nil
+		end
+	end, { buffer = buf, noremap = true, silent = true })
+end
+
+-- 创建水平分割终端
+local function create_horizontal_term(name, cmd, opts)
+	opts = opts or {}
+	local height = opts.height or 15
+
+	vim.cmd("botright " .. height .. "split")
+	local win = vim.api.nvim_get_current_win()
+	local buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_win_set_buf(win, buf)
+
+	vim.fn.termopen(cmd, {
+		env = get_term_env(),
+		on_exit = function()
+			native_terminals[name] = nil
+		end,
+	})
+
+	native_terminals[name] = { buf = buf, win = win, type = "horizontal" }
+	vim.cmd("startinsert")
+end
+
+-- 创建垂直分割终端
+local function create_vertical_term(name, cmd, opts)
+	opts = opts or {}
+	local width = opts.width or math.floor(vim.o.columns * 0.4)
+
+	vim.cmd("botright " .. width .. "vsplit")
+	local win = vim.api.nvim_get_current_win()
+	local buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_win_set_buf(win, buf)
+
+	vim.fn.termopen(cmd, {
+		env = get_term_env(),
+		on_exit = function()
+			native_terminals[name] = nil
+		end,
+	})
+
+	native_terminals[name] = { buf = buf, win = win, type = "vertical" }
+	vim.cmd("startinsert")
+end
+
+-- 创建 tab 终端
+local function create_tab_term(name, cmd)
+	vim.cmd("tabnew")
+	local buf = vim.api.nvim_get_current_buf()
+
+	vim.fn.termopen(cmd, {
+		env = get_term_env(),
+		on_exit = function()
+			native_terminals[name] = nil
+		end,
+	})
+
+	native_terminals[name] = { buf = buf, type = "tab" }
+	vim.cmd("startinsert")
+end
+
+-- 通用终端 toggle
+local function toggle_term(name, cmd, direction, opts)
+	local state = native_terminals[name]
+
+	-- 检查 buffer 是否有效
+	if state and state.buf and vim.api.nvim_buf_is_valid(state.buf) then
+		-- 检查窗口是否存在
+		if state.win and vim.api.nvim_win_is_valid(state.win) then
+			-- 关闭窗口
+			vim.api.nvim_win_close(state.win, true)
+			native_terminals[name].win = nil
+			return
+		end
+
+		-- 窗口不存在，重新打开
+		if direction == "float" then
+			opts = opts or {}
+			local width = opts.width or math.floor(vim.o.columns * 0.8)
+			local height = opts.height or math.floor(vim.o.lines * 0.8)
+			local row = math.floor((vim.o.lines - height) / 2)
+			local col = math.floor((vim.o.columns - width) / 2)
+
+			local win = vim.api.nvim_open_win(state.buf, true, {
+				relative = "editor",
+				width = width,
+				height = height,
+				row = row,
+				col = col,
+				style = "minimal",
+				border = "rounded",
+				title = opts.title or (" " .. name .. " "),
+				title_pos = "center",
+			})
+			native_terminals[name].win = win
+			vim.cmd("startinsert")
+		elseif direction == "horizontal" then
+			opts = opts or {}
+			local height = opts.height or 15
+			vim.cmd("botright " .. height .. "split")
+			local win = vim.api.nvim_get_current_win()
+			vim.api.nvim_win_set_buf(win, state.buf)
+			native_terminals[name].win = win
+			vim.cmd("startinsert")
+		elseif direction == "vertical" then
+			opts = opts or {}
+			local width = opts.width or math.floor(vim.o.columns * 0.4)
+			vim.cmd("botright " .. width .. "vsplit")
+			local win = vim.api.nvim_get_current_win()
+			vim.api.nvim_win_set_buf(win, state.buf)
+			native_terminals[name].win = win
+			vim.cmd("startinsert")
+		elseif direction == "tab" then
+			-- 找到包含该 buffer 的 tab
+			for _, tabnr in ipairs(vim.api.nvim_list_tabpages()) do
+				local wins = vim.api.nvim_tabpage_list_wins(tabnr)
+				for _, win in ipairs(wins) do
+					if vim.api.nvim_win_get_buf(win) == state.buf then
+						vim.api.nvim_set_current_tabpage(tabnr)
+						vim.api.nvim_set_current_win(win)
+						vim.cmd("startinsert")
+						return
+					end
+				end
+			end
+			-- 没找到，新建 tab
+			vim.cmd("tabnew")
+			vim.api.nvim_win_set_buf(0, state.buf)
+			vim.cmd("startinsert")
+		end
+		return
+	end
+
+	-- 创建新终端
+	if direction == "float" then
+		create_float_term(name, cmd, opts)
+	elseif direction == "horizontal" then
+		create_horizontal_term(name, cmd, opts)
+	elseif direction == "vertical" then
+		create_vertical_term(name, cmd, opts)
+	elseif direction == "tab" then
+		create_tab_term(name, cmd)
+	end
+end
+
+-- 终端函数
+function M.terminal_ncdu_toggle() toggle_term("ncdu", "ncdu --color dark", "float", { title = " Ncdu " }) end
+function M.terminal_htop_toggle() toggle_term("htop", "htop", "float", { title = " Htop " }) end
+function M.terminal_ipython_toggle() toggle_term("ipython", "ipython", "horizontal") end
+function M.terminal_lua_toggle() toggle_term("lua", "lua", "horizontal") end
+function M.terminal_newterm_toggle() toggle_term("newterm", vim.o.shell, "float", { title = " Terminal " }) end
+function M.terminal_newsboat_toggle() toggle_term("newsboat", "newsboat", "tab") end
+function M.terminal_newterm_tab() toggle_term("newtab", vim.o.shell, "tab") end
+function M.terminal_qwen_toggle() toggle_term("qwen", "qwen", "vertical") end
+function M.terminal_gemini_toggle() toggle_term("gemini", "gemini", "vertical") end
+function M.terminal_cursor_agent_toggle() toggle_term("cursor", "cursor-agent", "vertical") end
 function M.terminal_kimi_claude_code_toggle()
 	local cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude"
-	get_terminal("kimi", cmd, "tab", 12):toggle()
-end
-function M.terminal_qwen_toggle() get_terminal("qwen", "qwen", "vertical", 13):toggle() end
-function M.terminal_gemini_toggle() get_terminal("gemini", "gemini", "vertical", 14):toggle() end
-function M.terminal_cursor_agent_toggle() get_terminal("cursor", "cursor-agent", "vertical", 15):toggle() end
-
-function M.terminal_create_new_claude_tab()
-	local Terminal = require("toggleterm.terminal").Terminal
-	local count = next_claude_count
-	next_claude_count = next_claude_count + 1
-	Terminal:new({ cmd = "claude", hidden = true, direction = "tab", count = count }):toggle()
+	toggle_term("kimi", cmd, "tab")
 end
 
-function M.terminal_create_new_claude_tab_api1()
-	local Terminal = require("toggleterm.terminal").Terminal
-	local count = next_claude_count
-	next_claude_count = next_claude_count + 1
-	Terminal:new({ cmd = build_claude_cmd(1), hidden = true, direction = "tab", count = count }):toggle()
+-- Tab 终端（Claude/Codex）
+function M.tab_terminal_claude(api_num)
+	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	toggle_term("claude_" .. (api_num or "default"), cmd, "tab")
 end
 
-function M.terminal_create_new_claude_tab_api2()
-	local Terminal = require("toggleterm.terminal").Terminal
-	local count = next_claude_count
-	next_claude_count = next_claude_count + 1
-	Terminal:new({ cmd = build_claude_cmd(2), hidden = true, direction = "tab", count = count }):toggle()
+function M.tab_terminal_claude_new(api_num)
+	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local name = "claude_new_" .. os.time()
+	create_tab_term(name, cmd)
 end
+
+function M.tab_terminal_codex()
+	toggle_term("codex", "codex", "tab")
+end
+
+-- 灵活的 Claude 启动器（支持多种显示方式）
+function M.claude_launcher()
+	-- 第一步：选择 API
+	vim.ui.select(
+		{ "API 1", "API 2", "Default" },
+		{ prompt = "选择 Claude API:" },
+		function(api_choice)
+			if not api_choice then return end
+			local api_num = api_choice == "API 1" and 1 or (api_choice == "API 2" and 2 or nil)
+
+			-- 第二步：选择显示方式
+			vim.ui.select(
+				{ "新 Tab", "浮动窗口 (大)", "半屏 (右侧)", "水平分割", "垂直分割" },
+				{ prompt = "选择显示方式:" },
+				function(display_choice)
+					if not display_choice then return end
+
+					local cmd = api_num and build_claude_cmd(api_num) or "claude"
+
+					if display_choice == "新 Tab" then
+						local name = "claude_new_" .. os.time()
+						create_tab_term(name, cmd)
+					elseif display_choice == "浮动窗口 (大)" then
+						local name = "claude_float_temp_" .. os.time()
+						create_float_term(name, cmd, {
+							width = math.floor(vim.o.columns * 0.8),
+							height = math.floor(vim.o.lines * 0.8),
+							title = " Claude [" .. (api_choice or "Default") .. "] "
+						})
+					elseif display_choice == "半屏 (右侧)" then
+						local tabpage = vim.api.nvim_get_current_tabpage()
+						local key = string.format("tab_%d_claude_half", tabpage)
+						local width = math.floor(vim.o.columns * 0.5)
+						local height = vim.o.lines - 4
+						local tab_nr = vim.api.nvim_tabpage_get_number(tabpage)
+
+						local cfg = {
+							width = width,
+							height = height,
+							row = 1,
+							col = vim.o.columns - width - 1,
+							title = " Claude [T" .. tab_nr .. "] ",
+						}
+
+						local state = float_terminals[key]
+						if not state or not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
+							create_float_terminal(key, function() return cmd end, cfg)
+						else
+							reopen_float_window(key, cfg)
+						end
+					elseif display_choice == "水平分割" then
+						local name = "claude_hsplit_" .. os.time()
+						create_horizontal_term(name, cmd, { height = math.floor(vim.o.lines * 0.4) })
+					elseif display_choice == "垂直分割" then
+						local name = "claude_vsplit_" .. os.time()
+						create_vertical_term(name, cmd, { width = math.floor(vim.o.columns * 0.4) })
+					end
+				end
+			)
+		end
+	)
+end
+
+-- 启动 lazygit 浮动终端（原生实现）
+local function open_lazygit_float(dir)
+	local width = math.floor(vim.o.columns * 0.9)
+	local height = math.floor(vim.o.lines * 0.9)
+	local row = math.floor((vim.o.lines - height) / 2)
+	local col = math.floor((vim.o.columns - width) / 2)
+
+	local buf = vim.api.nvim_create_buf(false, true)
+	local win = vim.api.nvim_open_win(buf, true, {
+		relative = "editor",
+		width = width,
+		height = height,
+		row = row,
+		col = col,
+		style = "minimal",
+		border = "rounded",
+		title = " Lazygit ",
+		title_pos = "center",
+	})
+
+	local cmd = "lazygit"
+	if dir then
+		cmd = "cd " .. vim.fn.shellescape(dir) .. " && lazygit"
+	end
+
+	vim.fn.termopen(cmd, {
+		env = get_term_env(),
+		on_exit = function()
+			pcall(vim.api.nvim_win_close, win, true)
+		end,
+	})
+	vim.cmd("startinsert")
+end
+M.open_lazygit_float = open_lazygit_float
 
 -- ============================================================================
 -- 浮动终端（原生 API 实现，智能避让布局）
@@ -490,6 +748,36 @@ function M.claude_float_4_toggle() float_toggle(4, "claude") end
 function M.claude_float_nvim_toggle() float_toggle(5, "claude") end
 function M.claude_float_kitty_toggle() float_toggle(6, "claude") end
 
+function M.claude_half_screen_toggle()
+	local tabpage = vim.api.nvim_get_current_tabpage()
+	local key = string.format("tab_%d_claude_half", tabpage)
+	local state = float_terminals[key]
+
+	if state and state.win and vim.api.nvim_win_is_valid(state.win) then
+		vim.api.nvim_win_close(state.win, true)
+		float_terminals[key].win = nil
+		return
+	end
+
+	local width = math.floor(vim.o.columns * 0.5)
+	local height = vim.o.lines - 4
+	local tab_nr = vim.api.nvim_tabpage_get_number(tabpage)
+
+	local cfg = {
+		width = width,
+		height = height,
+		row = 1,
+		col = vim.o.columns - width - 1,
+		title = " Claude [T" .. tab_nr .. "] ",
+	}
+
+	if not state or not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
+		create_float_terminal(key, function() return build_claude_cmd(1) end, cfg)
+	else
+		reopen_float_window(key, cfg)
+	end
+end
+
 function M.term_float_1_toggle() float_toggle(1, "term") end
 function M.term_float_2_toggle() float_toggle(2, "term") end
 function M.term_float_3_toggle() float_toggle(3, "term") end
@@ -549,6 +837,17 @@ function M.term_float_toggle_all()
 				local id = key:match(prefix .. "(%d+)")
 				if id then float_toggle(tonumber(id), "term") end
 			end
+		end
+	end
+end
+
+function M.float_hide_all()
+	local tabpage = vim.api.nvim_get_current_tabpage()
+	local prefix = string.format("tab_%d_", tabpage)
+	for key, state in pairs(float_terminals) do
+		if key:match("^" .. prefix) and state.win and vim.api.nvim_win_is_valid(state.win) then
+			vim.api.nvim_win_close(state.win, true)
+			float_terminals[key].win = nil
 		end
 	end
 end
@@ -630,48 +929,9 @@ function M.show_multi_repo_branches()
 		local repo_idx = math.floor((cursor_line - 2) / 2) + 1
 		if repos[repo_idx] then
 			close_win()
-			local Terminal = require("toggleterm.terminal").Terminal
-			local lazygit = Terminal:new({
-				cmd = "lazygit",
-				dir = repos[repo_idx].path,
-				direction = "float",
-				float_opts = { border = "rounded" },
-			})
-			lazygit:toggle()
-			vim.cmd("startinsert!")
+			open_lazygit_float(repos[repo_idx].path)
 		end
 	end, { buffer = buf, nowait = true })
-end
-
-local last_terminal_id = nil
-function M.toggle_current_term()
-	local buf_ft = vim.bo.filetype
-	if buf_ft == "toggleterm" then
-		last_terminal_id = vim.b.toggle_number
-		vim.cmd("close")
-	elseif last_terminal_id then
-		vim.cmd(last_terminal_id .. "ToggleTerm")
-	else
-		vim.notify("No terminal to restore", vim.log.levels.WARN)
-	end
-end
-
-local all_terms_hidden = false
-function M.toggle_all_terms()
-	local terms = require("toggleterm.terminal")
-	local all = terms.get_all(true)
-	if not all or vim.tbl_isempty(all) then
-		vim.notify("No terminals found", vim.log.levels.INFO)
-		return
-	end
-	all_terms_hidden = not all_terms_hidden
-	for _, term in pairs(all) do
-		if all_terms_hidden then
-			if term:is_open() then term:close() end
-		else
-			if not term:is_open() then term:open() end
-		end
-	end
 end
 
 function M.terminal_scroll_up()
@@ -734,14 +994,7 @@ function M.git_lazygit_last_repo()
 		vim.notify("还没有选择过仓库", vim.log.levels.WARN)
 		return
 	end
-	local Terminal = require("toggleterm.terminal").Terminal
-	Terminal:new({
-		cmd = "lazygit",
-		dir = vim.fn.fnamemodify(last_selected_repo, ":p"),
-		direction = "float",
-		float_opts = { border = "curved" },
-	}):toggle()
-	vim.cmd("startinsert!")
+	open_lazygit_float(vim.fn.fnamemodify(last_selected_repo, ":p"))
 end
 
 function M.git_lazygit_multi_repo()
@@ -767,14 +1020,7 @@ function M.git_lazygit_multi_repo()
 				local selection = require("telescope.actions.state").get_selected_entry()
 				if selection then
 					last_selected_repo = selection.value
-					local Terminal = require("toggleterm.terminal").Terminal
-					Terminal:new({
-						cmd = "lazygit",
-						dir = vim.fn.fnamemodify(selection.value, ":p"),
-						direction = "float",
-						float_opts = { border = "curved" },
-					}):toggle()
-					vim.cmd("startinsert!")
+					open_lazygit_float(vim.fn.fnamemodify(selection.value, ":p"))
 				end
 			end)
 			return true
@@ -847,6 +1093,17 @@ function M.gitlab_with_repo(action)
 			end
 		end, 100)
 	end, "选择仓库 - GitLab " .. action)
+end
+
+-- GitLab: 在浏览器打开创建 MR 页面
+function M.gitlab_create_mr_web()
+	local branch = vim.fn.systemlist("git branch --show-current")[1]
+	if not branch or branch == "" then
+		vim.notify("未找到当前分支", vim.log.levels.ERROR)
+		return
+	end
+	vim.fn.jobstart("glab mr create --web", { detach = true })
+	vim.notify("正在浏览器打开创建 MR 页面...", vim.log.levels.INFO)
 end
 
 function M.git_compare_head()
@@ -1176,14 +1433,7 @@ local function render_multi_repo_viewer(repos_with_changes, total_repos)
 			repo_path = item.path
 		end
 		if repo_path then
-			local Terminal = require("toggleterm.terminal").Terminal
-			Terminal:new({
-				cmd = "lazygit",
-				dir = repo_path,
-				direction = "float",
-				float_opts = { border = "curved" },
-			}):toggle()
-			vim.cmd("startinsert!")
+			open_lazygit_float(repo_path)
 		end
 	end, opts)
 

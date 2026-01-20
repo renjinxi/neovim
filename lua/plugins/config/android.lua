@@ -5,18 +5,13 @@
 
 local M = {}
 
--- 在 ToggleTerm 中运行命令
+-- 在水平分割终端中运行命令（原生实现）
 local function run_in_terminal(cmd)
-	local Terminal = require("toggleterm.terminal").Terminal
-	local term = Terminal:new({
-		cmd = cmd,
-		direction = "horizontal",
-		close_on_exit = false,
-		on_open = function(term)
-			vim.cmd("startinsert!")
-		end,
-	})
-	term:toggle()
+	vim.cmd("botright 15split")
+	local buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_win_set_buf(0, buf)
+	vim.fn.termopen(cmd)
+	vim.cmd("startinsert")
 end
 
 -- ADB 命令定义

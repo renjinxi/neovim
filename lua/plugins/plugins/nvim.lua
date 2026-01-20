@@ -473,12 +473,6 @@ return {
 	-- 终端和工具集成
 	-- ================================
 	{
-		"akinsho/toggleterm.nvim",
-		config = function()
-			require("plugins.config.toggleterm")
-		end,
-	},
-	{
 		"mikesmithgh/kitty-scrollback.nvim",
 		enabled = true,
 		lazy = true,
