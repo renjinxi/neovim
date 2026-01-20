@@ -364,6 +364,7 @@ M.mappings = {
 	{ "<leader>vxl", fn.copy_last_message, desc = "Copy Last Message" },
 	{ "<leader>vxa", fn.copy_all_messages, desc = "Copy All Messages" },
 	{ "<leader>yw", fn.copy_word_with_location, desc = "Copy Word with Location" },
+	{ "<leader>yl", fn.copy_selection_with_location, desc = "Copy with Location", mode = { "n", "v" } },
 
 	-- ========================================================================
 	-- <leader>w - Window
@@ -384,15 +385,20 @@ M.mappings = {
 	{ "<leader>wu", "<C-w>]", desc = "Split And Jump" },
 
 	-- ========================================================================
-	-- <leader>x - Trouble
+	-- <leader>x - Trouble / Quickfix
 	-- ========================================================================
-	{ "<leader>x", group = "Trouble" },
+	{ "<leader>x", group = "Trouble/Quickfix" },
 	{ "<leader>xj", "<cmd>Trouble loclist toggle<cr>", desc = "Location List" },
 	{ "<leader>xl", "<cmd>Trouble lsp toggle focus=false win.position=right<cr>", desc = "LSP Definitions" },
 	{ "<leader>xm", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List" },
 	{ "<leader>xs", "<cmd>Trouble symbols toggle focus=false<cr>", desc = "Symbols" },
 	{ "<leader>xu", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", desc = "Buffer Diagnostics" },
 	{ "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics" },
+	-- Quickfix 导航
+	{ "<leader>xn", "<cmd>cnext<cr>", desc = "Next Quickfix" },
+	{ "<leader>xp", "<cmd>cprev<cr>", desc = "Prev Quickfix" },
+	{ "<leader>xo", "<cmd>copen<cr>", desc = "Open Quickfix" },
+	{ "<leader>xc", "<cmd>cclose<cr>", desc = "Close Quickfix" },
 
 	-- ========================================================================
 	-- <leader>z - Ufo Fold

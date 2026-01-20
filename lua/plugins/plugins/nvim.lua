@@ -264,6 +264,16 @@ return {
 			require("gitignore")
 		end,
 	},
+	{
+		"ThePrimeagen/git-worktree.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-telescope/telescope.nvim",
+		},
+		config = function()
+			require("plugins.config.git-worktree")
+		end,
+	},
 
 	-- ================================
 	-- 代码编辑增强
