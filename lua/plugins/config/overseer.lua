@@ -59,7 +59,7 @@ local function format_with_cmd(task)
 end
 
 overseer.setup({
-	templates = { "builtin", "user" },
+	templates = { "builtin", "user", ".nvim" }, -- 添加 .nvim 支持项目级配置
 	strategy = "terminal",
 	-- 任务列表面板配置 - 底部面板
 	task_list = {
