@@ -188,7 +188,7 @@ vim.lsp.config('ts_ls', {
 })
 
 vim.lsp.config('gopls', {
-	cmd = { 'gopls' },
+	cmd = { 'gopls', '-remote=auto' },
 	root_markers = { 'go.work', 'go.mod', '.git' },
 	filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
 	settings = {

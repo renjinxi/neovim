@@ -174,6 +174,54 @@ function M.setup()
 		end
 	end, { nargs = "?", range = true, bang = true })
 
+	-- SendBuf 命令：发送内容到指定窗口的普通 buffer
+	-- 用法: :SendBuf [win_nr] - 发送并跳转
+	--       :SendBuf! [win_nr] - 发送但不跳转（后台发送）
+	-- 默认追加到末尾，可用 @行号 指定插入位置，如 :SendBuf 2@10
+	vim.api.nvim_create_user_command("SendBuf", function(opts)
+		local text
+		if opts.range > 0 then
+			local lines = vim.api.nvim_buf_get_lines(0, opts.line1 - 1, opts.line2, false)
+			text = lines
+		else
+			text = vim.split(vim.fn.getreg("+"), "\n", { plain = true })
+		end
+
+		-- 解析参数：win_nr@line_nr 或 win_nr
+		local args = opts.args or ""
+		local win_nr, target_line = args:match("^(%d*)@?(%d*)$")
+		win_nr = tonumber(win_nr) or 1
+		target_line = tonumber(target_line)
+
+		local win_id = vim.fn.win_getid(win_nr)
+		if win_id == 0 then
+			print("Invalid window number: " .. win_nr)
+			return
+		end
+
+		local buf = vim.api.nvim_win_get_buf(win_id)
+
+		-- 确定插入位置
+		local insert_at
+		if target_line then
+			insert_at = target_line - 1
+		else
+			insert_at = vim.api.nvim_buf_line_count(buf)
+		end
+
+		-- 插入内容
+		vim.api.nvim_buf_set_lines(buf, insert_at, insert_at, false, text)
+
+		-- 滚动目标窗口到插入位置
+		local new_cursor_line = insert_at + #text
+		vim.api.nvim_win_set_cursor(win_id, { new_cursor_line, 0 })
+
+		-- bang (!) 表示后台发送，不跳转
+		if not opts.bang then
+			vim.fn.win_gotoid(win_id)
+		end
+	end, { nargs = "?", range = true, bang = true })
+
 	-- Windows 命令：临时显示所有窗口号
 	-- 浮动窗口用 [N] 标记，普通窗口用 N 标记
 	vim.api.nvim_create_user_command("Windows", function()
