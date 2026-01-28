@@ -27,37 +27,39 @@ vim.diagnostic.config({
 })
 
 -- LSP 服务器配置 (使用新的 vim.lsp.config API)
-vim.lsp.config('lua_ls', {
-	cmd = { 'lua-language-server' },
-	root_markers = { '.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', 'selene.toml', 'selene.yml', '.git' },
-	filetypes = { 'lua' },
-	settings = {
-		Lua = {
-			runtime = {
-				version = "LuaJIT",
-				path = vim.split(package.path, ";"),
-			},
-			diagnostics = {
-				globals = { "vim", "use" },
-			},
-			workspace = {
-				library = {
-					[vim.fn.expand("$VIMRUNTIME/lua")] = true,
-					[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
-					[vim.fn.stdpath("data") .. "/lazy/lazy.nvim/lua/lazy"] = true,
-				},
-				maxPreload = 100000,
-				preloadFileSize = 10000,
-			},
-			telemetry = {
-				enable = false,
-			},
-			completion = {
-				callSnippet = "Replace",
-			},
-		},
-	},
-})
+
+-- lua_ls 已禁用 (CPU 占用过高)
+-- vim.lsp.config('lua_ls', {
+-- 	cmd = { 'lua-language-server' },
+-- 	root_markers = { '.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', 'selene.toml', 'selene.yml', '.git' },
+-- 	filetypes = { 'lua' },
+-- 	settings = {
+-- 		Lua = {
+-- 			runtime = {
+-- 				version = "LuaJIT",
+-- 				path = vim.split(package.path, ";"),
+-- 			},
+-- 			diagnostics = {
+-- 				globals = { "vim", "use" },
+-- 			},
+-- 			workspace = {
+-- 				library = {
+-- 					[vim.fn.expand("$VIMRUNTIME/lua")] = true,
+-- 					[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
+-- 					[vim.fn.stdpath("data") .. "/lazy/lazy.nvim/lua/lazy"] = true,
+-- 				},
+-- 				maxPreload = 100000,
+-- 				preloadFileSize = 10000,
+-- 			},
+-- 			telemetry = {
+-- 				enable = false,
+-- 			},
+-- 			completion = {
+-- 				callSnippet = "Replace",
+-- 			},
+-- 		},
+-- 	},
+-- })
 
 vim.lsp.config('clangd', {
 	cmd = {

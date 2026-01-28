@@ -287,12 +287,12 @@ function M.setup()
 	end, { nargs = "+", complete = "shellcmd" })
 
 	-- Claude 命令：在新 tab 启动 Claude
-	-- :Claude      - 默认 API 1
+	-- :Claude      - 默认不带 API
 	-- :Claude1     - API 1
 	-- :Claude2     - API 2
 	vim.api.nvim_create_user_command("Claude", function()
 		local fn = require("plugins.keymaps.functions")
-		fn.tab_terminal_claude(1)
+		fn.tab_terminal_claude()
 	end, {})
 
 	vim.api.nvim_create_user_command("Claude1", function()
@@ -306,12 +306,12 @@ function M.setup()
 	end, {})
 
 	-- ClaudeNew 命令：新建 Claude 实例
-	-- :ClaudeNew   - 默认 API 1
+	-- :ClaudeNew   - 默认不带 API
 	-- :ClaudeNew1  - API 1
 	-- :ClaudeNew2  - API 2
 	vim.api.nvim_create_user_command("ClaudeNew", function()
 		local fn = require("plugins.keymaps.functions")
-		fn.tab_terminal_claude_new(1)
+		fn.tab_terminal_claude_new()
 	end, {})
 
 	vim.api.nvim_create_user_command("ClaudeNew1", function()

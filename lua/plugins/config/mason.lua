@@ -42,7 +42,7 @@ function M.setup()
 			"gopls", -- Go
 
 			-- 脚本语言
-			"lua_ls", -- Lua
+			-- "lua_ls", -- Lua (已禁用，CPU 占用过高)
 			"pyright", -- Python
 			"ruff", -- Python linting/formatting (2025年新增)
 			"bashls", -- Bash

@@ -803,7 +803,7 @@ local function float_toggle(id, type)
 				end, cfg)
 			end)
 		elseif type == "claude" then
-			create_float_terminal(key, function() return build_claude_cmd(1) end, cfg)
+			create_float_terminal(key, function() return "claude" end, cfg)
 		else
 			create_float_terminal(key, function() return vim.o.shell end, cfg)
 		end
@@ -843,7 +843,7 @@ function M.claude_half_screen_toggle()
 	}
 
 	if not state or not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
-		create_float_terminal(key, function() return build_claude_cmd(1) end, cfg)
+		create_float_terminal(key, function() return "claude" end, cfg)
 	else
 		reopen_float_window(key, cfg)
 	end

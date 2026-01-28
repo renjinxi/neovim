@@ -683,13 +683,22 @@ function M.setup()
 	end
 
 	-- 创建简洁的命令
-	vim.api.nvim_create_user_command("Claude", function() create_claude_term(1, "tab") end, { desc = "Claude (API 1, Tab)" })
+	vim.api.nvim_create_user_command("Claude", function() create_claude_term(nil, "tab") end, { desc = "Claude (Tab)" })
 	vim.api.nvim_create_user_command("Claude1", function() create_claude_term(1, "tab") end, { desc = "Claude API 1 (Tab)" })
 	vim.api.nvim_create_user_command("Claude2", function() create_claude_term(2, "tab") end, { desc = "Claude API 2 (Tab)" })
-	vim.api.nvim_create_user_command("ClaudeFloat", function() create_claude_term(1, "float") end, { desc = "Claude (Float)" })
-	vim.api.nvim_create_user_command("ClaudeHalf", function() create_claude_term(1, "half") end, { desc = "Claude (Half Screen)" })
-	vim.api.nvim_create_user_command("ClaudeVsplit", function() create_claude_term(1, "vsplit") end, { desc = "Claude (Vsplit)" })
-	vim.api.nvim_create_user_command("ClaudeHsplit", function() create_claude_term(1, "hsplit") end, { desc = "Claude (Hsplit)" })
+	vim.api.nvim_create_user_command("ClaudeFloat", function() create_claude_term(nil, "float") end, { desc = "Claude (Float)" })
+	vim.api.nvim_create_user_command("ClaudeHalf", function() create_claude_term(nil, "half") end, { desc = "Claude (Half Screen)" })
+	vim.api.nvim_create_user_command("ClaudeVsplit", function() create_claude_term(nil, "vsplit") end, { desc = "Claude (Vsplit)" })
+	vim.api.nvim_create_user_command("ClaudeHsplit", function() create_claude_term(nil, "hsplit") end, { desc = "Claude (Hsplit)" })
+
+	-- GitLab MR 命令
+	vim.api.nvim_create_user_command("MR", function(opts)
+		fn.gitlab_create_mr_web(opts.args)
+	end, { nargs = 1, desc = "创建 MR 到指定分支", complete = function()
+		-- 补全远程分支
+		local branches = vim.fn.systemlist("git branch -r --format='%(refname:short)' | sed 's|origin/||'")
+		return branches
+	end })
 end
 
 return M
