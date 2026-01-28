@@ -329,6 +329,31 @@ function M.setup()
 		local fn = require("plugins.keymaps.functions")
 		fn.tab_terminal_codex()
 	end, {})
+
+	-- 终端 buffer 关闭时终止进程
+	vim.api.nvim_create_autocmd("BufUnload", {
+		group = create_group("CleanupTerminals"),
+		callback = function(args)
+			local buf = args.buf
+			if vim.bo[buf].buftype == "terminal" then
+				local chan = vim.bo[buf].channel
+				if chan and chan > 0 then
+					pcall(vim.fn.jobstop, chan)
+				end
+			end
+		end,
+	})
+
+	-- 退出 nvim 时关闭所有终端进程
+	vim.api.nvim_create_autocmd("VimLeavePre", {
+		group = create_group("CleanupTerminalsOnExit"),
+		callback = function()
+			local ok, fn = pcall(require, "plugins.keymaps.functions")
+			if ok and fn.shutdown_all_terminals then
+				fn.shutdown_all_terminals()
+			end
+		end,
+	})
 end
 
 return M

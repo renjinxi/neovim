@@ -235,7 +235,20 @@ end
 -- ============================================================================
 -- Editor: Terminal（原生 API 实现）
 -- ============================================================================
-local native_terminals = {}  -- { [name] = { buf = buf, win = win } }
+local native_terminals = {}  -- { [name] = { buf = buf, win = win, job_id = job_id } }
+
+-- 关闭终端并杀死进程
+local function shutdown_term(name)
+	local state = native_terminals[name]
+	if not state then return end
+	if state.job_id then
+		pcall(vim.fn.jobstop, state.job_id)
+	end
+	if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
+		pcall(vim.api.nvim_buf_delete, state.buf, { force = true })
+	end
+	native_terminals[name] = nil
+end
 
 local function build_claude_cmd(api_num)
 	local env = require("core.env")
@@ -274,14 +287,14 @@ local function create_float_term(name, cmd, opts)
 		title_pos = "center",
 	})
 
-	vim.fn.termopen(cmd, {
+	local job_id = vim.fn.termopen(cmd, {
 		env = get_term_env(),
 		on_exit = function()
 			native_terminals[name] = nil
 		end,
 	})
 
-	native_terminals[name] = { buf = buf, win = win, type = "float" }
+	native_terminals[name] = { buf = buf, win = win, type = "float", job_id = job_id }
 	vim.cmd("startinsert")
 
 	-- q 关闭
@@ -303,14 +316,14 @@ local function create_horizontal_term(name, cmd, opts)
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(win, buf)
 
-	vim.fn.termopen(cmd, {
+	local job_id = vim.fn.termopen(cmd, {
 		env = get_term_env(),
 		on_exit = function()
 			native_terminals[name] = nil
 		end,
 	})
 
-	native_terminals[name] = { buf = buf, win = win, type = "horizontal" }
+	native_terminals[name] = { buf = buf, win = win, type = "horizontal", job_id = job_id }
 	vim.cmd("startinsert")
 end
 
@@ -324,14 +337,14 @@ local function create_vertical_term(name, cmd, opts)
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(win, buf)
 
-	vim.fn.termopen(cmd, {
+	local job_id = vim.fn.termopen(cmd, {
 		env = get_term_env(),
 		on_exit = function()
 			native_terminals[name] = nil
 		end,
 	})
 
-	native_terminals[name] = { buf = buf, win = win, type = "vertical" }
+	native_terminals[name] = { buf = buf, win = win, type = "vertical", job_id = job_id }
 	vim.cmd("startinsert")
 end
 
@@ -340,14 +353,14 @@ local function create_tab_term(name, cmd)
 	vim.cmd("tabnew")
 	local buf = vim.api.nvim_get_current_buf()
 
-	vim.fn.termopen(cmd, {
+	local job_id = vim.fn.termopen(cmd, {
 		env = get_term_env(),
 		on_exit = function()
 			native_terminals[name] = nil
 		end,
 	})
 
-	native_terminals[name] = { buf = buf, type = "tab" }
+	native_terminals[name] = { buf = buf, type = "tab", job_id = job_id }
 	vim.cmd("startinsert")
 end
 
@@ -572,6 +585,19 @@ M.open_lazygit_float = open_lazygit_float
 local float_terminals = {}
 local float_api_select_enabled = false  -- API 选择开关
 
+-- 关闭浮动终端并杀死进程
+local function shutdown_float_term(key)
+	local state = float_terminals[key]
+	if not state then return end
+	if state.job_id then
+		pcall(vim.fn.jobstop, state.job_id)
+	end
+	if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
+		pcall(vim.api.nvim_buf_delete, state.buf, { force = true })
+	end
+	float_terminals[key] = nil
+end
+
 -- 获取当前目录下所有 git 仓库的分支信息
 local function get_multi_repo_branches()
 	local cwd = vim.fn.getcwd()
@@ -708,14 +734,16 @@ local function create_float_terminal(key, cmd_fn, cfg)
 	-- 确保 PATH 包含常用路径 (解决 node 找不到问题)
 	local env = vim.fn.environ()
 	env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
-	vim.fn.termopen(cmd, {
+	local job_id = vim.fn.termopen(cmd, {
 		env = env,
 		on_exit = function()
 			if float_terminals[key] then
 				float_terminals[key].buf = nil
+				float_terminals[key].job_id = nil
 			end
 		end,
 	})
+	float_terminals[key].job_id = job_id
 	vim.cmd("startinsert")
 
 	-- terminal normal mode 下 q 关闭 (先 <C-\><C-n> 退出输入模式，再按 q)
@@ -1139,14 +1167,20 @@ function M.gitlab_with_repo(action)
 end
 
 -- GitLab: 在浏览器打开创建 MR 页面
-function M.gitlab_create_mr_web()
+-- target_branch: 目标分支，必须指定
+function M.gitlab_create_mr_web(target_branch)
+	if not target_branch or target_branch == "" then
+		vim.notify("请指定目标分支，如 :MR develop", vim.log.levels.ERROR)
+		return
+	end
 	local branch = vim.fn.systemlist("git branch --show-current")[1]
 	if not branch or branch == "" then
 		vim.notify("未找到当前分支", vim.log.levels.ERROR)
 		return
 	end
-	vim.fn.jobstart("glab mr create --web", { detach = true })
-	vim.notify("正在浏览器打开创建 MR 页面...", vim.log.levels.INFO)
+	local cmd = string.format("glab mr create --fill --web --target-branch %s", target_branch)
+	vim.fn.jobstart(cmd, { detach = true })
+	vim.notify(string.format("创建 MR: %s -> %s", branch, target_branch), vim.log.levels.INFO)
 end
 
 function M.git_compare_head()
@@ -1728,6 +1762,16 @@ function M.mail_aerc()
 		create_float_terminal(key, function() return "aerc" end, cfg)
 	else
 		reopen_float_window(key, cfg)
+	end
+end
+
+-- 关闭所有终端并杀死进程（供 VimLeavePre 调用）
+function M.shutdown_all_terminals()
+	for name, _ in pairs(native_terminals) do
+		shutdown_term(name)
+	end
+	for key, _ in pairs(float_terminals) do
+		shutdown_float_term(key)
 	end
 end
 
