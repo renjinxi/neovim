@@ -467,6 +467,31 @@ function M.tab_terminal_codex()
 	toggle_term("codex", "codex", "tab")
 end
 
+-- Claude 垂直分割
+function M.claude_vsplit(api_num)
+	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local name = "claude_vsplit_" .. (api_num or "default")
+	toggle_term(name, cmd, "vertical", { width = math.floor(vim.o.columns * 0.4) })
+end
+
+-- Claude 水平分割
+function M.claude_hsplit(api_num)
+	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local name = "claude_hsplit_" .. (api_num or "default")
+	toggle_term(name, cmd, "horizontal", { height = math.floor(vim.o.lines * 0.4) })
+end
+
+-- Claude 浮动窗口
+function M.claude_float(api_num)
+	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local name = "claude_float_" .. (api_num or "default")
+	toggle_term(name, cmd, "float", {
+		width = math.floor(vim.o.columns * 0.8),
+		height = math.floor(vim.o.lines * 0.8),
+		title = " Claude " .. (api_num and "[API " .. api_num .. "]" or "") .. " ",
+	})
+end
+
 -- 灵活的 Claude 启动器（支持多种显示方式）
 function M.claude_launcher()
 	-- 第一步：选择 API
@@ -1728,6 +1753,78 @@ function M.mail_aerc()
 		create_float_terminal(key, function() return "aerc" end, cfg)
 	else
 		reopen_float_window(key, cfg)
+	end
+end
+
+-- ============================================================================
+-- Daily Notes: 浮动窗口打开每日笔记
+-- ============================================================================
+function M.open_daily_note()
+	local date_str = os.date("%Y-%m-%d")
+	local notes_dir = vim.fn.expand("~/notes/daily")
+	local file_path = notes_dir .. "/" .. date_str .. ".md"
+
+	-- 确保目录存在
+	vim.fn.mkdir(notes_dir, "p")
+
+	-- 计算浮动窗口位置
+	local width = math.floor(vim.o.columns * 0.7)
+	local height = math.floor(vim.o.lines * 0.7)
+	local row = math.floor((vim.o.lines - height) / 2)
+	local col = math.floor((vim.o.columns - width) / 2)
+
+	-- 创建 buffer
+	local buf = vim.fn.bufnr(file_path, true)
+	vim.fn.bufload(buf)
+	vim.bo[buf].buflisted = true
+
+	-- 打开浮动窗口
+	local win = vim.api.nvim_open_win(buf, true, {
+		relative = "editor",
+		width = width,
+		height = height,
+		row = row,
+		col = col,
+		style = "minimal",
+		border = "rounded",
+		title = " Daily: " .. date_str .. " ",
+		title_pos = "center",
+	})
+
+	-- q 关闭窗口
+	vim.keymap.set("n", "q", function()
+		if vim.api.nvim_win_is_valid(win) then
+			vim.api.nvim_win_close(win, false)
+		end
+	end, { buffer = buf, noremap = true, silent = true })
+end
+
+-- ============================================================================
+-- Global Mark: 跳转到全局 mark，优先使用已打开的 tab/window
+-- ============================================================================
+function M.goto_global_mark(mark)
+	local info = vim.api.nvim_get_mark(mark, {})
+	if info[1] == 0 then
+		vim.notify("Mark " .. mark .. " not set", vim.log.levels.WARN)
+		return
+	end
+	local file = info[4]
+	if file == "" then
+		-- 本地 mark 或无效，使用默认行为
+		vim.cmd("normal! '" .. mark)
+		return
+	end
+	vim.cmd("tab drop " .. vim.fn.fnameescape(file))
+	vim.api.nvim_win_set_cursor(0, { info[1], info[2] })
+end
+
+-- 注册全局 mark 跳转映射 (A-Z)
+function M.setup_global_mark_keymaps()
+	for i = 65, 90 do
+		local mark = string.char(i)
+		vim.keymap.set("n", "'" .. mark, function()
+			M.goto_global_mark(mark)
+		end, { desc = "Jump to mark " .. mark })
 	end
 end
 

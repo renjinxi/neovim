@@ -286,43 +286,43 @@ function M.setup()
 		vim.keymap.set("n", "<Esc>", ":close<CR>", { buffer = buf, silent = true })
 	end, { nargs = "+", complete = "shellcmd" })
 
-	-- Claude 命令：在新 tab 启动 Claude
-	-- :Claude      - 默认不带 API
-	-- :Claude1     - API 1
-	-- :Claude2     - API 2
-	vim.api.nvim_create_user_command("Claude", function()
+	-- Claude 命令：支持可选数字参数指定 API
+	-- :Claude      - 默认
+	-- :Claude 1    - API 1
+	-- :Claude 2    - API 2
+	vim.api.nvim_create_user_command("Claude", function(opts)
 		local fn = require("plugins.keymaps.functions")
-		fn.tab_terminal_claude()
-	end, {})
-
-	vim.api.nvim_create_user_command("Claude1", function()
-		local fn = require("plugins.keymaps.functions")
-		fn.tab_terminal_claude(1)
-	end, {})
-
-	vim.api.nvim_create_user_command("Claude2", function()
-		local fn = require("plugins.keymaps.functions")
-		fn.tab_terminal_claude(2)
-	end, {})
+		local api_num = tonumber(opts.args)
+		fn.tab_terminal_claude(api_num)
+	end, { nargs = "?" })
 
 	-- ClaudeNew 命令：新建 Claude 实例
-	-- :ClaudeNew   - 默认不带 API
-	-- :ClaudeNew1  - API 1
-	-- :ClaudeNew2  - API 2
-	vim.api.nvim_create_user_command("ClaudeNew", function()
+	vim.api.nvim_create_user_command("ClaudeNew", function(opts)
 		local fn = require("plugins.keymaps.functions")
-		fn.tab_terminal_claude_new()
-	end, {})
+		local api_num = tonumber(opts.args)
+		fn.tab_terminal_claude_new(api_num)
+	end, { nargs = "?" })
 
-	vim.api.nvim_create_user_command("ClaudeNew1", function()
+	-- ClaudeVsplit 命令：垂直分割启动 Claude
+	vim.api.nvim_create_user_command("ClaudeVsplit", function(opts)
 		local fn = require("plugins.keymaps.functions")
-		fn.tab_terminal_claude_new(1)
-	end, {})
+		local api_num = tonumber(opts.args)
+		fn.claude_vsplit(api_num)
+	end, { nargs = "?" })
 
-	vim.api.nvim_create_user_command("ClaudeNew2", function()
+	-- ClaudeHsplit 命令：水平分割启动 Claude
+	vim.api.nvim_create_user_command("ClaudeHsplit", function(opts)
 		local fn = require("plugins.keymaps.functions")
-		fn.tab_terminal_claude_new(2)
-	end, {})
+		local api_num = tonumber(opts.args)
+		fn.claude_hsplit(api_num)
+	end, { nargs = "?" })
+
+	-- ClaudeFloat 命令：浮动窗口启动 Claude
+	vim.api.nvim_create_user_command("ClaudeFloat", function(opts)
+		local fn = require("plugins.keymaps.functions")
+		local api_num = tonumber(opts.args)
+		fn.claude_float(api_num)
+	end, { nargs = "?" })
 
 	-- Codex 命令：在新 tab 启动 Codex
 	vim.api.nvim_create_user_command("Codex", function()
