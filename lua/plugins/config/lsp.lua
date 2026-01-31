@@ -154,36 +154,48 @@ vim.lsp.config('cssls', {
 	},
 })
 
-vim.lsp.config('ts_ls', {
-	cmd = { 'typescript-language-server', '--stdio' },
+-- 使用 vtsls 替代 ts_ls（更好的 Vue 集成）
+vim.lsp.config('vtsls', {
+	cmd = { 'vtsls', '--stdio' },
 	root_markers = { 'package.json', 'tsconfig.json', 'jsconfig.json' },
+	-- 不包含 vue，通过 Vue TypeScript 插件处理
 	filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
-	init_options = {
-		preferences = {
-			disableSuggestions = false,
-		},
-	},
 	settings = {
 		typescript = {
 			inlayHints = {
-				includeInlayParameterNameHints = "literal",
-				includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-				includeInlayFunctionParameterTypeHints = true,
-				includeInlayVariableTypeHints = false,
-				includeInlayPropertyDeclarationTypeHints = true,
-				includeInlayFunctionLikeReturnTypeHints = true,
-				includeInlayEnumMemberValueHints = true,
+				parameterNames = { enabled = "literals" },
+				parameterTypes = { enabled = true },
+				variableTypes = { enabled = false },
+				propertyDeclarationTypes = { enabled = true },
+				functionLikeReturnTypes = { enabled = true },
+				enumMemberValues = { enabled = true },
+			},
+			tsserver = {
+				pluginPaths = { 'node_modules/@vue/typescript-plugin' },
 			},
 		},
 		javascript = {
 			inlayHints = {
-				includeInlayParameterNameHints = "all",
-				includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-				includeInlayFunctionParameterTypeHints = true,
-				includeInlayVariableTypeHints = true,
-				includeInlayPropertyDeclarationTypeHints = true,
-				includeInlayFunctionLikeReturnTypeHints = true,
-				includeInlayEnumMemberValueHints = true,
+				parameterNames = { enabled = "all" },
+				parameterTypes = { enabled = true },
+				variableTypes = { enabled = true },
+				propertyDeclarationTypes = { enabled = true },
+				functionLikeReturnTypes = { enabled = true },
+				enumMemberValues = { enabled = true },
+			},
+		},
+		vtsls = {
+			autoUseWorkspaceTsdk = true,
+			tsserver = {
+				globalPlugins = {
+					{
+						name = '@vue/typescript-plugin',
+						location = vim.fn.stdpath('data') .. '/mason/packages/vue-language-server/node_modules/@vue/language-server',
+						languages = { 'vue' },
+						configNamespace = 'typescript',
+						enableForWorkspaceTypeScriptVersions = true,
+					},
+				},
 			},
 		},
 	},
@@ -230,15 +242,12 @@ vim.lsp.config('nginx_language_server', {
 	settings = {},
 })
 
--- Vue 语言服务器配置 (Volar)
+-- Vue 语言服务器配置 (Volar) - 配合 vtsls 使用 hybrid mode
 vim.lsp.config('vue_ls', {
 	cmd = { 'vue-language-server', '--stdio' },
 	root_markers = { 'package.json', 'vue.config.js', 'vite.config.js', 'nuxt.config.js', '.git' },
 	filetypes = { 'vue' },
 	init_options = {
-		typescript = {
-			tsdk = vim.fn.getcwd() .. '/node_modules/typescript/lib',
-		},
 		vue = {
 			hybridMode = true,
 		},
@@ -366,6 +375,9 @@ end
 vim.api.nvim_create_autocmd("LspAttach", {
 	callback = function(args)
 		local client = vim.lsp.get_client_by_id(args.data.client_id)
+		local ft = vim.bo[args.buf].filetype
+		-- Vue 文件跳过（vtsls 不支持 documentHighlight）
+		if ft == "vue" then return end
 		if client and client.server_capabilities.documentHighlightProvider then
 			vim.api.nvim_create_augroup("lsp_document_highlight", {
 				clear = false,
@@ -377,7 +389,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
 			vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 				group = "lsp_document_highlight",
 				buffer = args.buf,
-				callback = vim.lsp.buf.document_highlight,
+				callback = function()
+					pcall(vim.lsp.buf.document_highlight)
+				end,
 			})
 			vim.api.nvim_create_autocmd({ "CursorMoved" }, {
 				group = "lsp_document_highlight",

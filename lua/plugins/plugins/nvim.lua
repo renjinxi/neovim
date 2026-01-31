@@ -166,6 +166,15 @@ return {
 		end,
 		-- keys 已迁移到 keymaps/all.lua
 	},
+	{
+		"ThePrimeagen/harpoon",
+		branch = "harpoon2",
+		dependencies = { "nvim-lua/plenary.nvim" },
+		config = function()
+			require("plugins.config.harpoon")
+		end,
+		-- keys 在 keymaps/all.lua 中定义
+	},
 
 	-- ================================
 	-- 文件管理和浏览

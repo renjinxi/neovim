@@ -28,7 +28,7 @@ function M.setup()
 		-- 确保安装这些LSP服务器
 		ensure_installed = {
 			-- Web 开发
-			"ts_ls", -- TypeScript (2025年重命名，原 tsserver)
+			"vtsls", -- TypeScript (更好的 Vue 集成)
 			"html",
 			"cssls",
 			"jsonls",

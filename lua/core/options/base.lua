@@ -39,6 +39,7 @@ function M.setup()
 		completeopt = "menuone,noselect", -- 补全设置
 		autoread = true, -- 自动读取外部更改的文件
 		exrc = true, -- 启用项目本地配置 (.nvim.lua)
+		switchbuf = "usetab,useopen", -- 跳转时优先使用已有 tab/窗口
 	}
 
 	-- 代码折叠配置

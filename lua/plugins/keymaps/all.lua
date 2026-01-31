@@ -453,6 +453,11 @@ M.mappings = {
 	{ "<leader>vvs", "<cmd>VenvSelect<cr>", desc = "Select Venv" },
 	{ "<leader>vvc", "<cmd>VenvSelectCached<cr>", desc = "Select Cached" },
 	{ "<leader>vvu", "<cmd>VenvSelectCurrent<cr>", desc = "Select Current" },
+
+	-- ========================================================================
+	-- <leader>nd - Notes Daily
+	-- ========================================================================
+	{ "<leader>nd", fn.open_daily_note, desc = "Daily Note" },
 }
 
 -- ============================================================================
@@ -602,6 +607,9 @@ function M.setup()
 	for _, map in ipairs(M.insert_tab_mappings) do
 		vim.keymap.set(map.mode, map[1], map[2], { desc = map.desc, silent = true })
 	end
+
+	-- 注册全局 mark 跳转映射 (跨 tab 跳转)
+	fn.setup_global_mark_keymaps()
 
 	-- 创建 Claude 启动器命令
 	-- 简化版：直接用命令名指定显示方式
