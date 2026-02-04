@@ -577,7 +577,7 @@ local Tabpage = {
 		local tabpages = vim.api.nvim_list_tabpages()
 		local tabid = tabpages[self.tabnr]
 		local tab_name = tabid and vim.t[tabid].tab_name or nil
-		local display = tab_name or self.tabnr
+		local display = tab_name and (self.tabnr .. ":" .. tab_name) or self.tabnr
 		return "%" .. self.tabnr .. "T " .. display .. " %T"
 	end,
 	hl = function(self)
