@@ -65,6 +65,17 @@ require("rose-pine").setup({
 		-- StatusLine = { fg = "love", bg = "love", blend = 15 },
 		-- VertSplit = { fg = "muted", bg = "muted" },
 		-- Visual = { fg = "base", bg = "text", inherit = false },
+
+		-- Diffview light 主题高亮
+		DiffAdd = { fg = "NONE", bg = "#c8e6c9" },
+		DiffChange = { fg = "NONE", bg = "#fff9c4" },
+		DiffDelete = { fg = "#ffcdd2", bg = "#ffcdd2" },
+		DiffText = { fg = "NONE", bg = "#ffcc80" },
+		DiffviewDiffAdd = { bg = "#c8e6c9" },
+		DiffviewDiffChange = { bg = "#fff9c4" },
+		DiffviewDiffDelete = { bg = "#ffcdd2" },
+		DiffviewDiffAddAsDelete = { bg = "#ffcdd2" },
+		DiffviewDiffText = { bg = "#ffcc80" },
 	},
 
 	before_highlight = function(group, highlight, palette)
