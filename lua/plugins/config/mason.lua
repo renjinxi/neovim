@@ -53,7 +53,7 @@ function M.setup()
 
 			-- 配置文件
 			"yamlls",
-			"nginx_language_server",
+			-- "nginx_language_server", -- 已通过 uv tool install 安装
 
 			-- 标记语言
 			"marksman", -- Markdown

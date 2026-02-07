@@ -699,6 +699,43 @@ function M.setup()
 	vim.api.nvim_create_user_command("ClaudeVsplit", function() create_claude_term(nil, "vsplit") end, { desc = "Claude (Vsplit)" })
 	vim.api.nvim_create_user_command("ClaudeHsplit", function() create_claude_term(nil, "hsplit") end, { desc = "Claude (Hsplit)" })
 
+	-- AI 统一命令: :AI → claude tab, :AI cv → claude vsplit, :AI help → 帮助
+	vim.api.nvim_create_user_command("AI", function(opts)
+		if opts.args == "" then
+			fn.ai_open("cv")
+		elseif opts.args == "help" then
+			fn.ai_status()
+		else
+			fn.ai_open(opts.args)
+		end
+	end, {
+		nargs = "?",
+		desc = "AI 统一启动",
+		complete = function(arg_lead)
+			local list = vim.list_extend({ "help" }, fn.ai_completions)
+			return vim.tbl_filter(function(item)
+				return item:find(arg_lead, 1, true) == 1
+			end, list)
+		end,
+	})
+
+	-- AI 默认配置: :AiSet c1 → claude 默认用 api1, :AiSet ct → claude 默认 tab
+	vim.api.nvim_create_user_command("AiSet", function(opts)
+		if opts.args == "" then
+			fn.ai_status()
+		else
+			fn.ai_set(opts.args)
+		end
+	end, {
+		nargs = "?",
+		desc = "设置 AI 默认配置",
+		complete = function(arg_lead)
+			return vim.tbl_filter(function(item)
+				return item:find(arg_lead, 1, true) == 1
+			end, fn.ai_completions)
+		end,
+	})
+
 	-- GitLab MR 命令
 	vim.api.nvim_create_user_command("MR", function(opts)
 		fn.gitlab_create_mr_web(opts.args)

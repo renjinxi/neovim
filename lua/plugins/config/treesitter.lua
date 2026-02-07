@@ -1,4 +1,4 @@
-require("nvim-treesitter.configs").setup({
+require("nvim-treesitter").setup({
 	-- 安装所有可用的 parser，并确保 Java 和 Kotlin 被优先安装
 	ensure_installed = "all",
 	sync_install = false,

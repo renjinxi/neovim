@@ -258,8 +258,8 @@ local function create_float_term(name, cmd, opts)
 	opts = opts or {}
 	local width = opts.width or math.floor(vim.o.columns * 0.8)
 	local height = opts.height or math.floor(vim.o.lines * 0.8)
-	local row = math.floor((vim.o.lines - height) / 2)
-	local col = math.floor((vim.o.columns - width) / 2)
+	local row = opts.row or math.floor((vim.o.lines - height) / 2)
+	local col = opts.col or math.floor((vim.o.columns - width) / 2)
 
 	local buf = vim.api.nvim_create_buf(false, true)
 	local win = vim.api.nvim_open_win(buf, true, {
@@ -370,8 +370,8 @@ local function toggle_term(name, cmd, direction, opts)
 			opts = opts or {}
 			local width = opts.width or math.floor(vim.o.columns * 0.8)
 			local height = opts.height or math.floor(vim.o.lines * 0.8)
-			local row = math.floor((vim.o.lines - height) / 2)
-			local col = math.floor((vim.o.columns - width) / 2)
+			local row = opts.row or math.floor((vim.o.lines - height) / 2)
+			local col = opts.col or math.floor((vim.o.columns - width) / 2)
 
 			local win = vim.api.nvim_open_win(state.buf, true, {
 				relative = "editor",
@@ -440,7 +440,11 @@ function M.terminal_ncdu_toggle() toggle_term("ncdu", "ncdu --color dark", "floa
 function M.terminal_htop_toggle() toggle_term("htop", "htop", "float", { title = " Htop " }) end
 function M.terminal_ipython_toggle() toggle_term("ipython", "ipython", "horizontal") end
 function M.terminal_lua_toggle() toggle_term("lua", "lua", "horizontal") end
-function M.terminal_newterm_toggle() toggle_term("newterm", vim.o.shell, "float", { title = " Terminal " }) end
+function M.terminal_newterm_toggle()
+	local tab_id = vim.api.nvim_get_current_tabpage()
+	local name = "newterm_tab" .. tab_id
+	toggle_term(name, vim.o.shell, "float", { title = " Terminal " })
+end
 function M.terminal_newsboat_toggle() toggle_term("newsboat", "newsboat", "tab") end
 function M.terminal_newterm_tab() toggle_term("newtab", vim.o.shell, "tab") end
 function M.terminal_qwen_toggle() toggle_term("qwen", "qwen", "vertical") end
@@ -1826,6 +1830,140 @@ function M.setup_global_mark_keymaps()
 			M.goto_global_mark(mark)
 		end, { desc = "Jump to mark " .. mark })
 	end
+end
+
+-- ============================================================================
+-- AI Provider 统一管理
+-- 格式: :Ai <别名>[api][模式]
+-- 别名: c=claude g=gemini d=codex k=kimi q=qwen a=cursor
+-- 模式: t=tab f=float v=vsplit h=hsplit s=half(side)
+-- 示例: :Ai c  :Ai c1v  :Ai gf  :Ai k
+-- ============================================================================
+local ai_providers = {
+	claude = {
+		cmd = function(api)
+			if api then return build_claude_cmd(tonumber(api)) end
+			return "claude"
+		end,
+		apis = { "1", "2" },
+		default_api = nil,
+		default_mode = "vsplit",
+	},
+	gemini = { cmd = "gemini", default_mode = "vsplit" },
+	codex  = { cmd = "codex", default_mode = "vsplit" },
+	kimi   = {
+		cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude",
+		default_mode = "vsplit",
+	},
+	qwen   = { cmd = "qwen", default_mode = "vsplit" },
+	cursor = { cmd = "cursor-agent", default_mode = "vsplit" },
+}
+
+local provider_aliases = {
+	c = "claude", g = "gemini", d = "codex",
+	k = "kimi", q = "qwen", a = "cursor",
+}
+
+local mode_aliases = {
+	t = "tab", f = "float", v = "vsplit", h = "hsplit", s = "half",
+}
+
+-- 解析: c1v → claude, api="1", mode=vsplit
+local function parse_ai_arg(input)
+	if ai_providers[input] then return input, nil, nil end
+	local alias, api_str, mode_char = input:match("^(%a)(%d?)(%a?)$")
+	if not alias then return input, nil, nil end
+	local provider = provider_aliases[alias]
+	if not provider then return input, nil, nil end
+	local api = api_str ~= "" and api_str or nil
+	local mode = mode_char ~= "" and mode_aliases[mode_char] or nil
+	return provider, api, mode
+end
+
+-- 补全列表（别名 + 别名+api + 全名）
+M.ai_completions = (function()
+	local list = {}
+	for alias, name in pairs(provider_aliases) do
+		table.insert(list, alias)
+		local p = ai_providers[name]
+		if p.apis then
+			for _, n in ipairs(p.apis) do table.insert(list, alias .. n) end
+		end
+	end
+	for name in pairs(ai_providers) do table.insert(list, name) end
+	table.sort(list)
+	return list
+end)()
+
+local function ai_launch(provider, effective_api, display_mode)
+	local p = ai_providers[provider]
+	local cmd = type(p.cmd) == "function" and p.cmd(effective_api) or p.cmd
+	local name = "ai_" .. provider .. "_" .. os.time() .. "_" .. math.random(1000)
+	local label = " " .. provider .. (effective_api and (" [" .. effective_api .. "]") or "") .. " "
+
+	if display_mode == "half" then
+		local width = math.floor(vim.o.columns * 0.5)
+		create_float_term(name, cmd, {
+			width = width, height = vim.o.lines - 4,
+			row = 1, col = vim.o.columns - width - 1, title = label,
+		})
+	elseif display_mode == "float" then
+		create_float_term(name, cmd, {
+			width = math.floor(vim.o.columns * 0.8),
+			height = math.floor(vim.o.lines * 0.8), title = label,
+		})
+	elseif display_mode == "vsplit" then
+		create_vertical_term(name, cmd, { width = math.floor(vim.o.columns * 0.4) })
+	elseif display_mode == "hsplit" then
+		create_horizontal_term(name, cmd, { height = math.floor(vim.o.lines * 0.4) })
+	else
+		create_tab_term(name, cmd)
+	end
+end
+
+function M.ai_open(input)
+	local provider, api, mode = parse_ai_arg(input)
+	local p = ai_providers[provider]
+	if not p then
+		vim.notify("Unknown: " .. input .. "\n用法: :Ai <别名>[api][模式]\n别名: c g d k q a  模式: t f v h s", vim.log.levels.ERROR)
+		return
+	end
+	ai_launch(provider, api or p.default_api, mode or p.default_mode)
+end
+
+function M.ai_set(input)
+	-- 解析: c1 → claude default_api=1, ct → claude default_mode=tab, c → claude 清除 default_api
+	local provider, api, mode = parse_ai_arg(input)
+	local resolved = ai_providers[provider] and provider or (provider_aliases[provider] or provider)
+	local p = ai_providers[resolved]
+	if not p then
+		vim.notify("Unknown: " .. input, vim.log.levels.ERROR)
+		return
+	end
+	if api then
+		p.default_api = api
+		vim.notify(resolved .. " default api → " .. api)
+	elseif mode then
+		p.default_mode = mode
+		vim.notify(resolved .. " default mode → " .. mode)
+	else
+		p.default_api = nil
+		vim.notify(resolved .. " default api → cleared")
+	end
+end
+
+function M.ai_status()
+	local lines = {}
+	local alias_map = {}
+	for a, n in pairs(provider_aliases) do alias_map[n] = a end
+	for name, p in pairs(ai_providers) do
+		local a = alias_map[name] or "?"
+		local api_str = p.default_api and (" api=" .. p.default_api) or ""
+		local apis_str = p.apis and (" [" .. table.concat(p.apis, ",") .. "]") or ""
+		table.insert(lines, string.format("  %s %-8s %s%s%s", a, name, p.default_mode, api_str, apis_str))
+	end
+	table.sort(lines)
+	vim.notify("AI Providers:\n" .. table.concat(lines, "\n") .. "\n\n:Ai <别名>[api][模式]  :AiSet <别名>[api|模式]")
 end
 
 return M

@@ -123,11 +123,6 @@ return {
 		"nvim-treesitter/nvim-treesitter",
 		config = function()
 			require("plugins.config.treesitter")
-			-- 确保 latex 语法高亮
-			local ts = require("nvim-treesitter.configs")
-			ts.setup({
-				ensure_installed = { "latex" },
-			})
 		end,
 	},
 	"nvim-treesitter/nvim-treesitter-context",
@@ -625,6 +620,14 @@ return {
 	-- REST API
 	{
 		"rest-nvim/rest.nvim",
+		dependencies = {
+			"j-hui/fidget.nvim", -- 进度消息显示
+		},
+		rocks = { "xml2lua", "mimetypes" }, -- luarocks 依赖
+		ft = { "http" },
+		config = function()
+			require("rest-nvim").setup()
+		end,
 	},
 
 	-- ================================

@@ -1,7 +1,8 @@
-plugin/ 
-local_* 
+plugin/
+local_*
 .DS_Store
 lazy-lock.json
 .env
+.venv-nvim/
 .specstory
 settings.local.json
