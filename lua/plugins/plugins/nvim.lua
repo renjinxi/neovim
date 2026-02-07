@@ -558,13 +558,28 @@ return {
 		end,
 	},
 	{
-		"AckslD/nvim-neoclip.lua", -- 剪贴板历史
-		dependencies = {
-			-- {'nvim-telescope/telescope.nvim'},
-			-- {'ibhagwan/fzf-lua'},
-		},
+		"gbprod/yanky.nvim", -- 剪贴板历史（持久化 + 系统剪贴板 + yank ring）
+		dependencies = { "kkharji/sqlite.lua" },
 		config = function()
-			require("neoclip").setup()
+			require("yanky").setup({
+				ring = {
+					history_length = 100,
+					storage = "sqlite",
+					sync_with_numbered_registers = true,
+				},
+				system_clipboard = {
+					sync_with_ring = true, -- 系统剪贴板同步到 ring
+				},
+				highlight = {
+					on_put = true,
+					on_yank = true,
+					timer = 200,
+				},
+			})
+			-- Telescope 集成
+			pcall(function()
+				require("telescope").load_extension("yank_history")
+			end)
 		end,
 	},
 	"mbbill/undotree", -- 撤销树

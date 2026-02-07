@@ -1966,4 +1966,75 @@ function M.ai_status()
 	vim.notify("AI Providers:\n" .. table.concat(lines, "\n") .. "\n\n:Ai <别名>[api][模式]  :AiSet <别名>[api|模式]")
 end
 
+-- ============================================================================
+-- Clipboard: 多选拼接粘贴（基于 neoclip 历史）
+-- ============================================================================
+function M.clipboard_multi_paste()
+	local ok, yanky_history = pcall(require, "yanky.history")
+	if not ok then
+		vim.notify("yanky not loaded", vim.log.levels.ERROR)
+		return
+	end
+
+	local history = yanky_history.all()
+	if #history == 0 then
+		vim.notify("剪贴板历史为空", vim.log.levels.WARN)
+		return
+	end
+
+	local pickers = require("telescope.pickers")
+	local finders = require("telescope.finders")
+	local conf = require("telescope.config").values
+	local actions = require("telescope.actions")
+	local action_state = require("telescope.actions.state")
+
+	local entries = {}
+	for i, item in ipairs(history) do
+		local text = item.regcontents or ""
+		local preview = text:gsub("\n", "\\n"):sub(1, 80)
+		table.insert(entries, { idx = i, text = text, preview = preview })
+	end
+
+	pickers.new({}, {
+		prompt_title = "剪贴板历史 (Tab 多选, Enter 拼接粘贴)",
+		finder = finders.new_table({
+			results = entries,
+			entry_maker = function(entry)
+				return {
+					value = entry,
+					display = string.format("%d: %s", entry.idx, entry.preview),
+					ordinal = entry.preview,
+				}
+			end,
+		}),
+		sorter = conf.generic_sorter({}),
+		attach_mappings = function(prompt_bufnr)
+			actions.select_default:replace(function()
+				local picker = action_state.get_current_picker(prompt_bufnr)
+				local selections = picker:get_multi_selection()
+
+				if #selections == 0 then
+					local entry = action_state.get_selected_entry()
+					if entry then selections = { entry } end
+				end
+
+				actions.close(prompt_bufnr)
+				if #selections == 0 then return end
+
+				table.sort(selections, function(a, b) return a.value.idx < b.value.idx end)
+				local parts = {}
+				for _, sel in ipairs(selections) do
+					table.insert(parts, sel.value.text)
+				end
+				local result = table.concat(parts, "\n")
+
+				vim.fn.setreg("+", result)
+				vim.api.nvim_put(vim.split(result, "\n"), "l", true, true)
+				vim.notify(string.format("已拼接 %d 条记录并粘贴", #selections))
+			end)
+			return true
+		end,
+	}):find()
+end
+
 return M

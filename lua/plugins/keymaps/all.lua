@@ -121,7 +121,8 @@ M.mappings = {
 		end,
 		desc = "Grep Dotfiles",
 	},
-	{ "<leader>fa", "<cmd>Telescope neoclip<cr>", desc = "NeoClip" },
+	{ "<leader>fa", "<cmd>Telescope yank_history<cr>", desc = "Yank History" },
+	{ "<leader>fq", fn.clipboard_multi_paste, desc = "Yank Multi-Paste" },
 	{ "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
 	{ "<leader>fc", fn.telescope_copy_file_content, desc = "Copy File Content" },
 	{ "<leader>fd", "<cmd>Telescope commands<cr>", desc = "Commands" },
@@ -470,6 +471,12 @@ M.non_leader_mappings = {
 	{ "r", function() require("flash").remote() end, desc = "Remote Flash", mode = "o" },
 	{ "R", function() require("flash").treesitter_search() end, desc = "Treesitter Search", mode = { "o", "x" } },
 	{ "<c-s>", function() require("flash").toggle() end, desc = "Toggle Flash Search", mode = "c" },
+
+	-- Yanky: yank ring 循环
+	{ "p", "<Plug>(YankyPutAfter)", desc = "Put After", mode = { "n", "x" } },
+	{ "P", "<Plug>(YankyPutBefore)", desc = "Put Before", mode = { "n", "x" } },
+	{ "<C-p>", "<Plug>(YankyPreviousEntry)", desc = "Yank Prev", mode = "n" },
+	{ "<C-n>", "<Plug>(YankyNextEntry)", desc = "Yank Next", mode = "n" },
 
 	-- gF - Open path:line
 	{ "gF", fn.open_path_at_cursor, desc = "Open path:line under cursor", mode = "n" },
