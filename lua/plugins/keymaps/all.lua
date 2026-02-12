@@ -169,28 +169,54 @@ M.mappings = {
 	{ "<leader>gu", fn.terminal_ncdu_toggle, desc = "Ncdu" },
 
 	-- ========================================================================
-	-- <leader>i - FzfLua
+	-- <leader>i - FzfLua (镜像 <leader>f)
 	-- ========================================================================
 	{ "<leader>i", group = "FzfLua" },
-	{ "<leader>if", ":FzfLua files<cr>", desc = "Find Files" },
-	{ "<leader>ig", ":FzfLua live_grep<cr>", desc = "Live Grep" },
+	{ "<leader>iF", function() require("fzf-lua").files({ no_ignore = true, hidden = true }) end, desc = "Find Files (all)" },
+	{ "<leader>iG", ":FzfLua live_grep<cr>", desc = "Builtin Live Grep" },
+	{
+		"<leader>iv",
+		function()
+			require("fzf-lua").files({
+				prompt = "Dotfiles> ",
+				cwd = vim.fn.expand("~/dotfiles"),
+			})
+		end,
+		desc = "Dotfiles",
+	},
+	{
+		"<leader>iw",
+		function()
+			require("fzf-lua").live_grep({
+				prompt = "Grep Dotfiles> ",
+				cwd = vim.fn.expand("~/dotfiles"),
+			})
+		end,
+		desc = "Grep Dotfiles",
+	},
+	{ "<leader>ia", "<cmd>Telescope yank_history<cr>", desc = "Yank History" },
+	{ "<leader>iq", fn.clipboard_multi_paste, desc = "Yank Multi-Paste" },
 	{ "<leader>ib", ":FzfLua buffers<cr>", desc = "Buffers" },
+	{ "<leader>ic", fn.telescope_copy_file_content, desc = "Copy File Content" },
 	{ "<leader>id", ":FzfLua commands<cr>", desc = "Commands" },
 	{ "<leader>ie", ":FzfLua oldfiles<cr>", desc = "Recent Files" },
+	{ "<leader>if", ":FzfLua files<cr>", desc = "Find Files" },
+	{ "<leader>ig", ":FzfLua live_grep<cr>", desc = "Live Grep" },
 	{ "<leader>ih", ":FzfLua help_tags<cr>", desc = "Help Tags" },
-	{ "<leader>ii", ":FzfLua dir live_grep<cr>", desc = "Dir Live Grep" },
-	{ "<leader>ij", ":FzfLua diagnostics<cr>", desc = "Diagnostics" },
-	{ "<leader>ik", "<cmd>lua require('telescope-live-grep-args.shortcuts').grep_word_under_cursor()<cr>", desc = "Grep Word" },
-	{ "<leader>il", ":FzfLua file_browser<cr>", desc = "File Browser" },
+	{ "<leader>ii", ":FzfLua live_grep<cr>", desc = "Dir Live Grep" },
+	{ "<leader>ij", ":FzfLua diagnostics_workspace<cr>", desc = "Diagnostics" },
+	{ "<leader>ik", function() require("fzf-lua").grep_cword() end, desc = "Grep Word" },
+	{ "<leader>il", ":FzfLua files<cr>", desc = "File Browser" },
 	{ "<leader>im", ":FzfLua marks<cr>", desc = "Marks" },
 	{ "<leader>in", ":FzfLua command_history<cr>", desc = "Command History" },
-	{ "<leader>io", ":FzfLua projects<cr>", desc = "Recent Projects" },
-	{ "<leader>ip", ":FzfLua jumplist<cr>", desc = "Jumplist" },
-	{ "<leader>ir", "<cmd>lua require'telescope'.extensions.project.project{}<cr>", desc = "Project History" },
+	{ "<leader>io", "<cmd>Telescope projects<cr>", desc = "Recent Projects" },
+	{ "<leader>ip", ":FzfLua jumps<cr>", desc = "Jumplist" },
+	{ "<leader>ir", "<cmd>Telescope projects<cr>", desc = "Recent Project History" },
 	{ "<leader>is", ":FzfLua search_history<cr>", desc = "Search History" },
 	{ "<leader>it", ":FzfLua git_status<cr>", desc = "Git status" },
-	{ "<leader>iu", ":FzfLua dir find_files<cr>", desc = "Dir Find Files" },
-	{ "<leader>iy", ":FzfLua session-lens<cr>", desc = "Session" },
+	{ "<leader>iu", ":FzfLua files<cr>", desc = "Dir Find Files" },
+	{ "<leader>iy", "<cmd>Telescope session-lens<cr>", desc = "Session" },
+	{ "<leader>iz", ":FzfLua keymaps<cr>", desc = "Search Keymaps" },
 
 	-- ========================================================================
 	-- <leader>j - goto_preview
