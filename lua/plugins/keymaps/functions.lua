@@ -1168,14 +1168,42 @@ function M.gitlab_with_repo(action)
 end
 
 -- GitLab: 在浏览器打开创建 MR 页面
-function M.gitlab_create_mr_web()
+function M.gitlab_create_mr_web(target_branch)
 	local branch = vim.fn.systemlist("git branch --show-current")[1]
 	if not branch or branch == "" then
-		vim.notify("未找到当前分支", vim.log.levels.ERROR)
+		vim.notify("[MR] 未找到当前分支，请确认在 git 仓库内", vim.log.levels.ERROR)
 		return
 	end
-	vim.fn.jobstart("glab mr create --web", { detach = true })
-	vim.notify("正在浏览器打开创建 MR 页面...", vim.log.levels.INFO)
+	local remote_url = vim.fn.systemlist("git remote get-url origin")[1] or ""
+	if remote_url == "" then
+		vim.notify("[MR] git remote get-url origin 返回空，请检查 remote 配置", vim.log.levels.ERROR)
+		return
+	end
+	-- 支持 SSH 和 HTTPS 格式
+	local base_url = remote_url
+		:gsub("%.git$", "")
+		:gsub("^git@([^:]+):", "https://%1/")
+		:gsub("^ssh://git@", "https://")
+	if base_url == "" then
+		vim.notify("[MR] 无法解析远程 URL: " .. remote_url, vim.log.levels.ERROR)
+		return
+	end
+	local target = (target_branch and target_branch ~= "") and target_branch or "main"
+	local url = base_url .. "/-/merge_requests/new?merge_request[source_branch]=" .. branch
+		.. "&merge_request[target_branch]=" .. target
+	local open_cmd = vim.fn.has("mac") == 1 and "open" or "xdg-open"
+	vim.notify(("[MR] %s → %s\n%s"):format(branch, target, url), vim.log.levels.INFO)
+	vim.fn.jobstart({ open_cmd, url }, {
+		detach = true,
+		on_stderr = function(_, data)
+			local msg = table.concat(data, "\n")
+			if msg ~= "" then
+				vim.schedule(function()
+					vim.notify("[MR] 打开浏览器失败: " .. msg, vim.log.levels.ERROR)
+				end)
+			end
+		end,
+	})
 end
 
 function M.git_compare_head()

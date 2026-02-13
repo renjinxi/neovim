@@ -772,7 +772,7 @@ function M.setup()
 	-- GitLab MR 命令
 	vim.api.nvim_create_user_command("MR", function(opts)
 		fn.gitlab_create_mr_web(opts.args)
-	end, { nargs = 1, desc = "创建 MR 到指定分支", complete = function()
+	end, { nargs = "?", desc = "创建 MR 到指定分支（默认 main）", complete = function()
 		-- 补全远程分支
 		local branches = vim.fn.systemlist("git branch -r --format='%(refname:short)' | sed 's|origin/||'")
 		return branches
