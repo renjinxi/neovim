@@ -183,7 +183,11 @@ vim.api.nvim_create_user_command("OverseerRunMulti", function()
 							end
 							save_last_tasks(vim.tbl_keys(selected))
 							local picker = action_state.get_current_picker(prompt_bufnr)
+							local row = picker:get_selection_row()
 							picker:refresh(make_finder(), { reset_prompt = false })
+							vim.schedule(function()
+								picker:set_selection(row)
+							end)
 						end
 					end)
 

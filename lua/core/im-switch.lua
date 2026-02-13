@@ -1,12 +1,14 @@
 -- 简单的输入法切换模块
 local M = {}
 
+local env = require("core.env")
+
 -- 配置
 local config = {
 	default_im = "com.apple.keylayout.ABC",
 	saved_im = nil, -- 保存的输入法状态
 	insert_im = nil, -- 记录进入插入模式时设置的输入法
-	macism_cmd = "macism",
+	macism_cmd = env.get("MACISM_CMD", "macism"),
 }
 
 -- 获取当前输入法
