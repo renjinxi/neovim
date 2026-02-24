@@ -237,14 +237,15 @@ end
 -- ============================================================================
 local native_terminals = {}  -- { [name] = { buf = buf, win = win } }
 
-local function build_claude_cmd(api_num)
+local function build_claude_cmd(api_num, auto_accept)
 	local env = require("core.env")
 	local base_url = env.get("CLAUDE_API" .. api_num .. "_BASE_URL")
 	local token = env.get("CLAUDE_API" .. api_num .. "_TOKEN")
+	local flags = auto_accept and " --dangerously-skip-permissions --permission-mode acceptEdits" or ""
 	if base_url and token then
-		return string.format("ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude", base_url, token)
+		return string.format("ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude%s", base_url, token, flags)
 	end
-	return "claude"
+	return "claude" .. flags
 end
 
 local function get_term_env()
@@ -1869,9 +1870,10 @@ end
 -- ============================================================================
 local ai_providers = {
 	claude = {
-		cmd = function(api)
-			if api then return build_claude_cmd(tonumber(api)) end
-			return "claude"
+		cmd = function(api, auto_accept)
+			if api then return build_claude_cmd(tonumber(api), auto_accept) end
+			local flags = auto_accept and " --dangerously-skip-permissions --permission-mode acceptEdits" or ""
+			return "claude" .. flags
 		end,
 		apis = { "1", "2" },
 		default_api = nil,
@@ -1896,26 +1898,37 @@ local mode_aliases = {
 	t = "tab", f = "float", v = "vsplit", h = "hsplit", s = "half",
 }
 
--- 解析: c1v → claude, api="1", mode=vsplit
+-- 解析: c1v → claude, api="1", mode=vsplit, c1! → auto_accept=true
 local function parse_ai_arg(input)
-	if ai_providers[input] then return input, nil, nil end
-	local alias, api_str, mode_char = input:match("^(%a)(%d?)(%a?)$")
-	if not alias then return input, nil, nil end
+	if ai_providers[input] then return input, nil, nil, false end
+	local auto_accept = input:sub(-1) == "!"
+	local s = auto_accept and input:sub(1, -2) or input
+	local alias, api_str, mode_char = s:match("^(%a)(%d?)(%a?)$")
+	if not alias then return input, nil, nil, false end
 	local provider = provider_aliases[alias]
-	if not provider then return input, nil, nil end
+	if not provider then return input, nil, nil, false end
 	local api = api_str ~= "" and api_str or nil
 	local mode = mode_char ~= "" and mode_aliases[mode_char] or nil
-	return provider, api, mode
+	return provider, api, mode, auto_accept
 end
 
--- 补全列表（别名 + 别名+api + 全名）
+-- 补全列表（别名 + 别名+api + 全名，claude 额外加 ! 后缀）
 M.ai_completions = (function()
 	local list = {}
 	for alias, name in pairs(provider_aliases) do
 		table.insert(list, alias)
 		local p = ai_providers[name]
 		if p.apis then
-			for _, n in ipairs(p.apis) do table.insert(list, alias .. n) end
+			for _, n in ipairs(p.apis) do
+				table.insert(list, alias .. n)
+				-- claude 支持 ! 后缀（自动接受）
+				if name == "claude" then
+					table.insert(list, alias .. n .. "!")
+				end
+			end
+		end
+		if name == "claude" then
+			table.insert(list, alias .. "!")
 		end
 	end
 	for name in pairs(ai_providers) do table.insert(list, name) end
@@ -1923,9 +1936,9 @@ M.ai_completions = (function()
 	return list
 end)()
 
-local function ai_launch(provider, effective_api, display_mode)
+local function ai_launch(provider, effective_api, display_mode, auto_accept)
 	local p = ai_providers[provider]
-	local cmd = type(p.cmd) == "function" and p.cmd(effective_api) or p.cmd
+	local cmd = type(p.cmd) == "function" and p.cmd(effective_api, auto_accept) or p.cmd
 	local name = "ai_" .. provider .. "_" .. os.time() .. "_" .. math.random(1000)
 	local label = " " .. provider .. (effective_api and (" [" .. effective_api .. "]") or "") .. " "
 
@@ -1950,13 +1963,13 @@ local function ai_launch(provider, effective_api, display_mode)
 end
 
 function M.ai_open(input)
-	local provider, api, mode = parse_ai_arg(input)
+	local provider, api, mode, auto_accept = parse_ai_arg(input)
 	local p = ai_providers[provider]
 	if not p then
-		vim.notify("Unknown: " .. input .. "\n用法: :Ai <别名>[api][模式]\n别名: c g d k q a  模式: t f v h s", vim.log.levels.ERROR)
+		vim.notify("Unknown: " .. input .. "\n用法: :Ai <别名>[api][模式][!]\n别名: c g d k q a  模式: t f v h s  !: 自动接受", vim.log.levels.ERROR)
 		return
 	end
-	ai_launch(provider, api or p.default_api, mode or p.default_mode)
+	ai_launch(provider, api or p.default_api, mode or p.default_mode, auto_accept)
 end
 
 function M.ai_set(input)
