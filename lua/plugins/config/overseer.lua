@@ -170,6 +170,7 @@ vim.api.nvim_create_user_command("OverseerRunMulti", function()
 				prompt_title = "Run Tasks (Tab 选择, Enter 启动)",
 				finder = make_finder(),
 				sorter = conf.generic_sorter({}),
+				selection_strategy = "row", -- 保持当前 row，不自动重置
 				attach_mappings = function(prompt_bufnr, map)
 					-- Tab 切换选中并保存到 cache
 					map("i", "<Tab>", function()
@@ -186,7 +187,9 @@ vim.api.nvim_create_user_command("OverseerRunMulti", function()
 							local row = picker:get_selection_row()
 							picker:refresh(make_finder(), { reset_prompt = false })
 							vim.schedule(function()
-								picker:set_selection(row)
+								-- 移动到上一个位置（如果在第一个则保持）
+								local target_row = row > 0 and row - 1 or row
+								picker:set_selection(target_row)
 							end)
 						end
 					end)
@@ -227,14 +230,35 @@ vim.api.nvim_create_user_command("OverseerRunMulti", function()
 end, {})
 
 -- 直接启动上次的任务组合
-vim.api.nvim_create_user_command("OverseerRunLast", function()
+-- autostart: 传 true 时静默启动，不弹 warn
+local function run_last_tasks(opts)
+	opts = opts or {}
 	local last_tasks = load_last_tasks()
 	if #last_tasks == 0 then
-		vim.notify("No saved tasks for this directory", vim.log.levels.WARN)
+		if not opts.silent then
+			vim.notify("No saved tasks for this directory", vim.log.levels.WARN)
+		end
 		return
 	end
 	for _, name in ipairs(last_tasks) do
 		overseer.run_task({ name = name })
 	end
 	vim.notify("Started " .. #last_tasks .. " task(s)", vim.log.levels.INFO)
+end
+
+vim.api.nvim_create_user_command("OverseerRunLast", function()
+	run_last_tasks()
 end, {})
+
+-- 启动时自动运行缓存的任务（需要项目目录下有 .overseer_autostart 标记文件）
+vim.api.nvim_create_autocmd("VimEnter", {
+	group = vim.api.nvim_create_augroup("OverseerAutoStart", { clear = true }),
+	callback = function()
+		if vim.fn.filereadable(vim.fn.getcwd() .. "/.overseer_autostart") == 1 then
+			-- 延迟一点等插件加载完
+			vim.defer_fn(function()
+				run_last_tasks({ silent = true })
+			end, 500)
+		end
+	end,
+})
