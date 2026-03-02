@@ -1554,9 +1554,9 @@ function M.diffview_multi_repo()
 	-- 显示加载提示
 	vim.notify("Scanning repos...", vim.log.levels.INFO)
 
-	-- 异步执行 find 命令
+	-- 异步执行 find 命令（同时查找 .git 目录和文件，支持 worktree）
 	vim.system(
-		{ "find", cwd, "-maxdepth", "2", "-name", ".git", "-type", "d" },
+		{ "find", cwd, "-maxdepth", "2", "-name", ".git" },
 		{ text = true },
 		function(find_result)
 			if find_result.code ~= 0 or not find_result.stdout or find_result.stdout == "" then
@@ -1622,7 +1622,7 @@ function M.diffview_multi_repo_status()
 	local cwd = vim.fn.getcwd()
 
 	vim.system(
-		{ "find", cwd, "-maxdepth", "2", "-name", ".git", "-type", "d" },
+		{ "find", cwd, "-maxdepth", "2", "-name", ".git" },
 		{ text = true },
 		function(find_result)
 			if find_result.code ~= 0 or not find_result.stdout or find_result.stdout == "" then

@@ -10,6 +10,16 @@ fzf_lua.setup({
 			["ctrl-g"] = { fn = actions.toggle_ignore, reuse = true, header = false },
 		},
 	},
+	buffers = {
+		actions = {
+			-- alt-u 切换显示 unlisted buffers (如 terminal)
+			["alt-u"] = function(_, ctx)
+				local o = vim.deepcopy(ctx.__call_opts)
+				o.show_unlisted = not o.show_unlisted
+				require("fzf-lua").buffers(o)
+			end,
+		},
+	},
 	grep = {
 		rg_opts = "--column --line-number --no-heading --color=always --smart-case --follow --max-columns=4096 -e",
 		actions = {
