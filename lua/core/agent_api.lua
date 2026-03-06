@@ -262,37 +262,25 @@ local function notify(args)
 	return e
 end
 
---- Spawn a Claude CLI terminal in nvim
---- args: {api?, mode?, args?}
----   api: 1 or 2 (default 1) - which CLAUDE_API config to use
----   mode: "v"=vsplit, "h"=hsplit, "t"=tab, "f"=float (default "t")
----   args: string - raw CLI args passed to claude command (e.g., "-p 'review this'")
-local function spawn_claude(args)
+--- Spawn a CLI terminal in nvim and track it
+--- args: {cmd, mode?, name?}
+---   cmd: string - full shell command to run (e.g., "claude --model sonnet", "gemini", "codex")
+---   mode: "t"=tab(default), "v"=vsplit, "h"=hsplit, "f"=float
+---   name: optional label for tracking
+local spawned_terminals = {} -- {name -> {bufnr, job_id, cmd, alive}}
+
+local function spawn_cli(args)
 	local s, e = pcall(function()
-		if type(args) ~= "table" then
-			args = {}
+		if type(args) == "string" then
+			args = { cmd = args }
+		end
+		if type(args) ~= "table" or not args.cmd then
+			return err("args must be {cmd, mode?, name?} or a command string")
 		end
 
-		local api_num = args.api or 1
+		local cmd = args.cmd
 		local mode = args.mode or "t"
-		local cli_args = args.args or ""
-
-		-- Load API config
-		local env_mod = require("core.env")
-		local base_url = env_mod.get("CLAUDE_API" .. api_num .. "_BASE_URL")
-		local token = env_mod.get("CLAUDE_API" .. api_num .. "_TOKEN")
-
-		if not base_url or not token then
-			return err("CLAUDE_API" .. api_num .. " config not found in .env")
-		end
-
-		-- Build command: env vars + claude + raw CLI args
-		local cmd = string.format(
-			"ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude %s",
-			base_url,
-			token,
-			cli_args
-		)
+		local name = args.name or ("cli_" .. os.time())
 
 		-- Terminal env (PATH setup)
 		local term_env = vim.fn.environ()
@@ -302,7 +290,6 @@ local function spawn_claude(args)
 			.. ":"
 			.. (term_env.PATH or "")
 
-		local name = "claude_agent_" .. os.time()
 		local buf, win
 
 		if mode == "t" then
@@ -336,10 +323,138 @@ local function spawn_claude(args)
 			vim.api.nvim_win_set_buf(win, buf)
 		end
 
-		vim.fn.termopen(cmd, { env = term_env })
+		local job_id = vim.fn.termopen(cmd, {
+			env = term_env,
+			on_exit = function(_, exit_code)
+				if spawned_terminals[name] then
+					spawned_terminals[name].alive = false
+					spawned_terminals[name].exit_code = exit_code
+				end
+			end,
+		})
 		vim.cmd("startinsert")
 
-		return ok({ name = name, api = api_num, mode = mode })
+		spawned_terminals[name] = {
+			bufnr = buf,
+			job_id = job_id,
+			cmd = cmd,
+			alive = true,
+		}
+
+		return ok({ name = name, bufnr = buf, job_id = job_id, mode = mode })
+	end)
+	if not s then
+		return err(tostring(e))
+	end
+	return e
+end
+
+--- Read terminal buffer output
+--- args: {bufnr} or {name} or {bufnr, tail?}
+---   bufnr: buffer number to read
+---   name: spawned terminal name (from spawn_cli)
+---   tail: number of lines from end (default: all)
+local function get_terminal_output(args)
+	local s, e = pcall(function()
+		if type(args) ~= "table" then
+			return err("args must be {bufnr} or {name} or {bufnr, tail?}")
+		end
+
+		local bufnr = args.bufnr
+		local name = args.name
+		local tail = args.tail
+
+		-- Resolve bufnr from name
+		if not bufnr and name and spawned_terminals[name] then
+			bufnr = spawned_terminals[name].bufnr
+		end
+
+		if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+			return err("invalid or missing bufnr")
+		end
+
+		local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+		-- Strip trailing empty lines (terminal buffers pad with blanks)
+		while #lines > 0 and lines[#lines] == "" do
+			lines[#lines] = nil
+		end
+
+		if tail and tail > 0 and #lines > tail then
+			local start = #lines - tail + 1
+			local result = {}
+			for i = start, #lines do
+				result[#result + 1] = lines[i]
+			end
+			lines = result
+		end
+
+		local info = spawned_terminals[name]
+		return ok({
+			bufnr = bufnr,
+			lines = lines,
+			line_count = #lines,
+			alive = info and info.alive or nil,
+			exit_code = info and info.exit_code or nil,
+		})
+	end)
+	if not s then
+		return err(tostring(e))
+	end
+	return e
+end
+
+--- List all spawned terminals and their status
+local function list_terminals()
+	local s, e = pcall(function()
+		local result = {}
+		for name, info in pairs(spawned_terminals) do
+			local valid = vim.api.nvim_buf_is_valid(info.bufnr)
+			result[#result + 1] = {
+				name = name,
+				bufnr = info.bufnr,
+				cmd = info.cmd,
+				alive = info.alive and valid,
+				exit_code = info.exit_code,
+			}
+		end
+		return ok(result)
+	end)
+	if not s then
+		return err(tostring(e))
+	end
+	return e
+end
+
+--- Send text input to a terminal buffer
+--- args: {bufnr?, name?, text}
+local function send_to_terminal(args)
+	local s, e = pcall(function()
+		if type(args) ~= "table" or not args.text then
+			return err("args must be {bufnr?, name?, text}")
+		end
+
+		local bufnr = args.bufnr
+		local name = args.name
+
+		if not bufnr and name and spawned_terminals[name] then
+			bufnr = spawned_terminals[name].bufnr
+		end
+
+		local info
+		for _, v in pairs(spawned_terminals) do
+			if v.bufnr == bufnr then
+				info = v
+				break
+			end
+		end
+
+		if not info or not info.alive then
+			return err("terminal not alive")
+		end
+
+		vim.fn.chansend(info.job_id, args.text)
+		return ok({ sent = true })
 	end)
 	if not s then
 		return err(tostring(e))
@@ -353,6 +468,9 @@ M.get_buffers = wrap("get_buffers", get_buffers)
 M.get_diagnostics = wrap("get_diagnostics", get_diagnostics)
 M.exec_lua = wrap("exec_lua", exec_lua)
 M.notify = wrap("notify", notify)
-M.spawn_claude = wrap("spawn_claude", spawn_claude)
+M.spawn_cli = wrap("spawn_cli", spawn_cli)
+M.get_terminal_output = wrap("get_terminal_output", get_terminal_output)
+M.list_terminals = wrap("list_terminals", list_terminals)
+M.send_to_terminal = wrap("send_to_terminal", send_to_terminal)
 
 return M
