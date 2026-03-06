@@ -262,11 +262,97 @@ local function notify(args)
 	return e
 end
 
+--- Spawn a Claude CLI terminal in nvim
+--- args: {api?, mode?, args?}
+---   api: 1 or 2 (default 1) - which CLAUDE_API config to use
+---   mode: "v"=vsplit, "h"=hsplit, "t"=tab, "f"=float (default "t")
+---   args: string - raw CLI args passed to claude command (e.g., "-p 'review this'")
+local function spawn_claude(args)
+	local s, e = pcall(function()
+		if type(args) ~= "table" then
+			args = {}
+		end
+
+		local api_num = args.api or 1
+		local mode = args.mode or "t"
+		local cli_args = args.args or ""
+
+		-- Load API config
+		local env_mod = require("core.env")
+		local base_url = env_mod.get("CLAUDE_API" .. api_num .. "_BASE_URL")
+		local token = env_mod.get("CLAUDE_API" .. api_num .. "_TOKEN")
+
+		if not base_url or not token then
+			return err("CLAUDE_API" .. api_num .. " config not found in .env")
+		end
+
+		-- Build command: env vars + claude + raw CLI args
+		local cmd = string.format(
+			"ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude %s",
+			base_url,
+			token,
+			cli_args
+		)
+
+		-- Terminal env (PATH setup)
+		local term_env = vim.fn.environ()
+		term_env.PATH = vim.fn.expand("$HOME/.local/bin")
+			.. ":"
+			.. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin")
+			.. ":"
+			.. (term_env.PATH or "")
+
+		local name = "claude_agent_" .. os.time()
+		local buf, win
+
+		if mode == "t" then
+			vim.cmd("tabnew")
+			buf = vim.api.nvim_get_current_buf()
+		elseif mode == "h" then
+			vim.cmd("botright 15split")
+			win = vim.api.nvim_get_current_win()
+			buf = vim.api.nvim_create_buf(false, true)
+			vim.api.nvim_win_set_buf(win, buf)
+		elseif mode == "f" then
+			buf = vim.api.nvim_create_buf(false, true)
+			local width = math.floor(vim.o.columns * 0.8)
+			local height = math.floor(vim.o.lines * 0.8)
+			win = vim.api.nvim_open_win(buf, true, {
+				relative = "editor",
+				width = width,
+				height = height,
+				row = math.floor((vim.o.lines - height) / 2),
+				col = math.floor((vim.o.columns - width) / 2),
+				style = "minimal",
+				border = "rounded",
+				title = " " .. name .. " ",
+				title_pos = "center",
+			})
+		else -- "v" vsplit
+			local width = math.floor(vim.o.columns * 0.4)
+			vim.cmd("botright " .. width .. "vsplit")
+			win = vim.api.nvim_get_current_win()
+			buf = vim.api.nvim_create_buf(false, true)
+			vim.api.nvim_win_set_buf(win, buf)
+		end
+
+		vim.fn.termopen(cmd, { env = term_env })
+		vim.cmd("startinsert")
+
+		return ok({ name = name, api = api_num, mode = mode })
+	end)
+	if not s then
+		return err(tostring(e))
+	end
+	return e
+end
+
 M.open_file = wrap("open_file", open_file)
 M.get_context = wrap("get_context", get_context)
 M.get_buffers = wrap("get_buffers", get_buffers)
 M.get_diagnostics = wrap("get_diagnostics", get_diagnostics)
 M.exec_lua = wrap("exec_lua", exec_lua)
 M.notify = wrap("notify", notify)
+M.spawn_claude = wrap("spawn_claude", spawn_claude)
 
 return M
