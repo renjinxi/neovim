@@ -73,14 +73,26 @@ local function find_editor_win()
 end
 
 --- Open file in editor window, optional line/col jump
+--- args: [path, line?, col?] or "path:line:col" string
 local function open_file(args)
 	local s, e = pcall(function()
-		if type(args) ~= "table" or #args < 1 then
-			return err("args must be [path, line?, col?]")
+		local path, line, col
+
+		-- Support both array and string formats
+		if type(args) == "string" then
+			local parts = vim.split(args, ":", { plain = true })
+			path = parts[1]
+			line = tonumber(parts[2])
+			col = tonumber(parts[3])
+		elseif type(args) == "table" and #args >= 1 then
+			path = args[1]
+			line = args[2]
+			col = args[3]
+		else
+			return err("args must be [path, line?, col?] or 'path:line:col'")
 		end
-		local path = vim.fn.fnamemodify(args[1], ":p")
-		local line = args[2]
-		local col = args[3]
+
+		path = vim.fn.fnamemodify(path, ":p")
 
 		local win = find_editor_win()
 		if not win then
