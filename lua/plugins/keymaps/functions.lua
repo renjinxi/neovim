@@ -1794,7 +1794,7 @@ end
 -- ============================================================================
 function M.open_daily_note()
 	local date_str = os.date("%Y-%m-%d")
-	local notes_dir = vim.fn.expand("~/notes/daily")
+	local notes_dir = vim.fn.expand("~/.ai/journal/daily")
 	local file_path = notes_dir .. "/" .. date_str .. ".md"
 
 	-- 确保目录存在

@@ -81,6 +81,18 @@ function M.setup()
 		end,
 	})
 
+	-- Hook termopen：所有终端自动带 NVIM_TERMINAL_BUFNR
+	local original_termopen = vim.fn.termopen
+	vim.fn.termopen = function(cmd, opts)
+		opts = opts or {}
+		local buf = vim.api.nvim_get_current_buf()
+		if not opts.env then
+			opts.env = vim.fn.environ()
+		end
+		opts.env.NVIM_TERMINAL_BUFNR = tostring(buf)
+		return original_termopen(cmd, opts)
+	end
+
 	vim.api.nvim_create_user_command("NvimInstanceEnv", function()
 		local lines = {
 			"NVIM_LISTEN_ADDRESS=" .. (vim.env.NVIM_LISTEN_ADDRESS or ""),

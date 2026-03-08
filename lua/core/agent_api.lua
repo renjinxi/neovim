@@ -262,12 +262,55 @@ local function notify(args)
 	return e
 end
 
+--- 任务基础目录：~/.ai-tasks/{nvim-pid}/
+local task_base_dir = vim.fn.expand("~/.ai-tasks/" .. vim.fn.getpid())
+
+--- 确保目录存在
+local function ensure_dir(dir)
+	vim.fn.mkdir(dir, "p")
+end
+
+--- task 系统调试日志 → ~/.ai-tasks/{pid}/debug.log
+local function task_log(level, source, msg)
+	ensure_dir(task_base_dir)
+	local f = io.open(task_base_dir .. "/debug.log", "a")
+	if not f then
+		return
+	end
+	f:write(string.format("%s [%s] %s: %s\n", os.date("!%Y-%m-%dT%H:%M:%SZ"), level, source, msg))
+	f:close()
+end
+
+--- 写文件（同步）
+local function write_file(path, content)
+	local f = io.open(path, "w")
+	if not f then
+		return false
+	end
+	f:write(content)
+	f:close()
+	return true
+end
+
+--- 读文件（同步）
+local function read_file(path)
+	local f = io.open(path, "r")
+	if not f then
+		return nil
+	end
+	local content = f:read("*a")
+	f:close()
+	return content
+end
+
 --- Spawn a CLI terminal in nvim and track it
 --- args: {cmd, mode?, name?}
 ---   cmd: string - full shell command to run (e.g., "claude --model sonnet", "gemini", "codex")
 ---   mode: "t"=tab(default), "v"=vsplit, "h"=hsplit, "f"=float
 ---   name: optional label for tracking
 local spawned_terminals = {} -- {name -> {bufnr, job_id, cmd, alive}}
+local task_agents = {} -- {task_name -> agent_name}
+local main_terminal_bufnr = nil -- 主 AI 终端 bufnr，由调用方传入
 
 local function spawn_cli(args)
 	local s, e = pcall(function()
@@ -279,8 +322,54 @@ local function spawn_cli(args)
 		end
 
 		local cmd = args.cmd
-		local mode = args.mode or "t"
+		local mode = args.mode or "v"
 		local name = args.name or ("cli_" .. os.time())
+
+		-- 快速模式闭环：传了 task 就自动创建任务目录，并把回写指令注入 cmd
+		local task_dir_for_quick
+		if args.task then
+			local task_name = type(args.task) == "table" and args.task.name or name
+			local task_desc = type(args.task) == "table" and args.task.description or tostring(args.task)
+			local td = task_base_dir .. "/" .. task_name
+			ensure_dir(td)
+			write_file(td .. "/status", "pending")
+			-- 通知 watcher
+			local watcher = package.loaded["core.task_watcher"]
+			if watcher and watcher.watch_task then
+				watcher.watch_task(task_name)
+			end
+			task_dir_for_quick = td
+			task_agents[task_name] = name
+			task_log("INFO", "spawn_cli", "quick task created: " .. task_name)
+
+			-- 把完整指令写到 task.md（任务描述 + 永久回写规则），cmd 改为读 task.md
+			local full_instructions = task_desc
+				.. "\n\n## 永久规则（每次收到新任务都必须遵守）\n"
+				.. "每次完成任务后必须执行以下两步:\n"
+				.. "1. 把执行结果写到 "
+				.. td
+				.. "/result.md\n"
+				.. "2. 执行: echo done > "
+				.. td
+				.. "/status\n"
+				.. "后续通过终端收到的新任务也一样，完成后都要执行这两步。"
+			write_file(td .. "/task.md", full_instructions)
+
+			-- 提取 cmd 中的 CLI 前缀（去掉末尾引号包裹的任务描述）
+			local cli_prefix = cmd:match('^(.-)%s*"[^"]*"%s*$')
+				or cmd:match("^(.-)%s*'[^']*'%s*$")
+				or cmd
+			cmd = cli_prefix .. ' "请阅读并执行任务: cat ' .. td .. '/task.md"'
+		end
+
+		-- 记录主 AI 终端 bufnr（调用方通过 caller_bufnr 传入自己的 NVIM_TERMINAL_BUFNR）
+		if not main_terminal_bufnr and args.caller_bufnr then
+			local bufnr = tonumber(args.caller_bufnr)
+			if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+				main_terminal_bufnr = bufnr
+				task_log("INFO", "spawn_cli", "main terminal registered: bufnr=" .. bufnr)
+			end
+		end
 
 		-- Terminal env (PATH setup)
 		local term_env = vim.fn.environ()
@@ -323,7 +412,10 @@ local function spawn_cli(args)
 			vim.api.nvim_win_set_buf(win, buf)
 		end
 
-		local job_id = vim.fn.termopen(cmd, {
+		-- 每个终端都带上自己的 bufnr 环境变量
+		term_env.NVIM_TERMINAL_BUFNR = tostring(buf)
+
+		local job_id = vim.fn.termopen({ "zsh", "-ic", cmd }, {
 			env = term_env,
 			on_exit = function(_, exit_code)
 				if spawned_terminals[name] then
@@ -426,8 +518,15 @@ local function list_terminals()
 	return e
 end
 
+--- 判断 cmd 是否为 claude CLI（claude/c1/c2 等）
+local function is_claude_cli(cmd)
+	local first = cmd:match("^(%S+)")
+	return first == "claude" or first == "c1" or first == "c2"
+end
+
 --- Send text input to a terminal buffer
---- args: {bufnr?, name?, text}
+--- args: {bufnr?, name?, text, task?, submit?}
+---   task=true 时自动重置 status 为 pending，重新激活 watcher
 local function send_to_terminal(args)
 	local s, e = pcall(function()
 		if type(args) ~= "table" or not args.text then
@@ -453,8 +552,102 @@ local function send_to_terminal(args)
 			return err("terminal not alive")
 		end
 
-		vim.fn.chansend(info.job_id, args.text)
+		-- task 模式：重置 status + 重新激活 watcher
+		if args.task and name then
+			local task_name = task_agents[name] and name or name
+			-- 反查 task_name：从 task_agents 里找这个 agent 对应的任务
+			for tn, an in pairs(task_agents) do
+				if an == name then
+					task_name = tn
+					break
+				end
+			end
+			local td = task_base_dir .. "/" .. task_name
+			if vim.fn.isdirectory(td) == 1 then
+				write_file(td .. "/status", "pending")
+				local watcher = package.loaded["core.task_watcher"]
+				if watcher and watcher.watch_task then
+					watcher.watch_task(task_name)
+				end
+				task_log("INFO", "send_to_terminal", "task reset: " .. task_name .. " → pending")
+			end
+		end
+
+		local text = args.text
+		-- 默认自动加回车提交，除非 submit=false
+		if args.submit ~= false and text:sub(-1) ~= "\r" then
+			text = text .. "\r"
+		end
+
+		vim.fn.chansend(info.job_id, text)
+
+		-- 非 claude CLI 额外发一次回车（某些 TUI 需要）
+		if text:sub(-1) == "\r" and not is_claude_cli(info.cmd or "") then
+			vim.defer_fn(function()
+				if info.alive then
+					vim.fn.chansend(info.job_id, "\r")
+				end
+			end, 500)
+		end
+
 		return ok({ sent = true })
+	end)
+	if not s then
+		return err(tostring(e))
+	end
+	return e
+end
+
+--- 查询所有任务状态
+local function list_tasks()
+	local s, e = pcall(function()
+		local result = {}
+		local dirs = vim.fn.glob(task_base_dir .. "/*", false, true)
+		for _, dir in ipairs(dirs) do
+			-- 跳过非目录项（如 debug.log）
+			if vim.fn.isdirectory(dir) ~= 1 then
+				goto continue
+			end
+			local name = vim.fn.fnamemodify(dir, ":t")
+			local status = read_file(dir .. "/status")
+			local has_result = vim.fn.filereadable(dir .. "/result.md") == 1
+			local created_at = vim.fn.getftime(dir .. "/task.md")
+			result[#result + 1] = {
+				name = name,
+				status = status and vim.trim(status) or "unknown",
+				has_result = has_result,
+				created_at = created_at,
+			}
+			::continue::
+		end
+		return ok(result)
+	end)
+	if not s then
+		return err(tostring(e))
+	end
+	return e
+end
+
+--- 读取任务结果
+--- args: {name}
+local function get_task_result(args)
+	local s, e = pcall(function()
+		if type(args) ~= "table" or not args.name then
+			return err("args must be {name}")
+		end
+
+		local result_path = task_base_dir .. "/" .. args.name .. "/result.md"
+		local content = read_file(result_path)
+		if not content then
+			return err("result not found for task: " .. args.name)
+		end
+
+		local status = read_file(task_base_dir .. "/" .. args.name .. "/status")
+		return ok({
+			name = args.name,
+			status = status and vim.trim(status) or "unknown",
+			result = content,
+		})
 	end)
 	if not s then
 		return err(tostring(e))
@@ -472,5 +665,15 @@ M.spawn_cli = wrap("spawn_cli", spawn_cli)
 M.get_terminal_output = wrap("get_terminal_output", get_terminal_output)
 M.list_terminals = wrap("list_terminals", list_terminals)
 M.send_to_terminal = wrap("send_to_terminal", send_to_terminal)
+M.list_tasks = wrap("list_tasks", list_tasks)
+M.get_task_result = wrap("get_task_result", get_task_result)
+
+--- 暴露给 task_watcher 用
+M._spawned_terminals = spawned_terminals
+M._task_base_dir = task_base_dir
+M._task_agents = task_agents
+M._get_main_terminal_bufnr = function()
+	return main_terminal_bufnr
+end
 
 return M

@@ -2,7 +2,7 @@
 -- 用于记录「卡住」「不爽」「灵感」三类事件
 local M = {}
 
-local log_dir = vim.fn.expand('~/notes/worklog')
+local log_dir = vim.fn.expand('~/.ai/worklog')
 local float_win = nil
 local float_buf = nil
 
