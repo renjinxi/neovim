@@ -1879,8 +1879,14 @@ local ai_providers = {
 		default_api = nil,
 		default_mode = "vsplit",
 	},
-	gemini = { cmd = "gemini", default_mode = "vsplit" },
-	codex  = { cmd = "codex", default_mode = "vsplit" },
+	gemini = {
+		cmd = function(_, auto_accept) return "gemini" .. (auto_accept and " --yolo" or "") end,
+		default_mode = "vsplit",
+	},
+	codex = {
+		cmd = function(_, auto_accept) return "codex" .. (auto_accept and " --dangerously-bypass-approvals-and-sandbox" or "") end,
+		default_mode = "vsplit",
+	},
 	kimi   = {
 		cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude",
 		default_mode = "vsplit",
@@ -1912,24 +1918,25 @@ local function parse_ai_arg(input)
 	return provider, api, mode, auto_accept
 end
 
--- 补全列表（别名 + 别名+api + 全名，claude 额外加 ! 后缀）
+-- 支持 ! 后缀的 provider（cmd 为 function 即支持 auto_accept 参数）
+local function supports_auto_accept(name)
+	return type(ai_providers[name].cmd) == "function"
+end
+
+-- 补全列表（别名 + 别名+api + 全名，支持 ! 的加 ! 后缀）
 M.ai_completions = (function()
 	local list = {}
 	for alias, name in pairs(provider_aliases) do
 		table.insert(list, alias)
 		local p = ai_providers[name]
+		local has_bang = supports_auto_accept(name)
 		if p.apis then
 			for _, n in ipairs(p.apis) do
 				table.insert(list, alias .. n)
-				-- claude 支持 ! 后缀（自动接受）
-				if name == "claude" then
-					table.insert(list, alias .. n .. "!")
-				end
+				if has_bang then table.insert(list, alias .. n .. "!") end
 			end
 		end
-		if name == "claude" then
-			table.insert(list, alias .. "!")
-		end
+		if has_bang then table.insert(list, alias .. "!") end
 	end
 	for name in pairs(ai_providers) do table.insert(list, name) end
 	table.sort(list)
