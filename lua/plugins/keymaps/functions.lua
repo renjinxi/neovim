@@ -236,6 +236,9 @@ end
 -- Editor: Terminal（原生 API 实现）
 -- ============================================================================
 local native_terminals = {}  -- { [name] = { buf = buf, win = win } }
+local ai_float_profiles = {}
+local build_ai_command
+local build_ai_label
 
 local function build_claude_cmd(api_num, auto_accept)
 	local env = require("core.env")
@@ -682,14 +685,6 @@ local function get_float_config(id, type, tabpage)
 	local tab_nr = vim.api.nvim_tabpage_get_number(tabpage or vim.api.nvim_get_current_tabpage())
 
 	local configs = {
-		claude = {
-			[1] = { title = " Claude 1 " },
-			[2] = { title = " Claude 2 " },
-			[3] = { title = " Claude 3 " },
-			[4] = { title = " Claude 4 " },
-			[5] = { title = " Claude [nvim] ", cwd = "~/.config/nvim" },
-			[6] = { title = " Claude [kitty] ", cwd = "~/.config/kitty" },
-		},
 		term = {
 			[1] = { title = " Terminal 1 " },
 			[2] = { title = " Terminal 2 " },
@@ -698,7 +693,16 @@ local function get_float_config(id, type, tabpage)
 		},
 	}
 
-	local cfg = (configs[type] or {})[id] or { title = " Float " .. id }
+	local cfg
+	if type == "claude" then
+		local profile = ai_float_profiles[id] or {}
+		cfg = vim.tbl_extend("force", {
+			title = build_ai_label and build_ai_label(profile.provider, profile.api, profile.label) or " AI ",
+			cwd = profile.cwd,
+		}, profile)
+	else
+		cfg = (configs[type] or {})[id] or { title = " Float " .. id }
+	end
 	local row, col = find_free_position(1, screen_w - width - 1, width, height)
 
 	-- 在标题中显示 tab 编号
@@ -798,6 +802,15 @@ local function float_toggle(id, type)
 
 	-- buffer 不存在，需要创建
 	if not state or not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
+		if type == "claude" then
+			local profile = ai_float_profiles[id] or {}
+			if profile.provider and build_ai_command then
+				create_float_terminal(key, function()
+					return build_ai_command(profile.provider, profile.api, profile.auto_accept)
+				end, cfg)
+				return
+			end
+		end
 		if type == "claude" and float_api_select_enabled then
 			select_api_and_run(function(api_num)
 				create_float_terminal(key, function()
@@ -814,12 +827,14 @@ local function float_toggle(id, type)
 	end
 end
 
-function M.claude_float_1_toggle() float_toggle(1, "claude") end
-function M.claude_float_2_toggle() float_toggle(2, "claude") end
-function M.claude_float_3_toggle() float_toggle(3, "claude") end
-function M.claude_float_4_toggle() float_toggle(4, "claude") end
-function M.claude_float_nvim_toggle() float_toggle(5, "claude") end
-function M.claude_float_kitty_toggle() float_toggle(6, "claude") end
+function M.ai_toggle_float_profile(id) float_toggle(id, "claude") end
+
+function M.claude_float_1_toggle() M.ai_toggle_float_profile(1) end
+function M.claude_float_2_toggle() M.ai_toggle_float_profile(2) end
+function M.claude_float_3_toggle() M.ai_toggle_float_profile(3) end
+function M.claude_float_4_toggle() M.ai_toggle_float_profile(4) end
+function M.claude_float_nvim_toggle() M.ai_toggle_float_profile(5) end
+function M.claude_float_kitty_toggle() M.ai_toggle_float_profile(6) end
 
 function M.claude_half_screen_toggle()
 	local tabpage = vim.api.nvim_get_current_tabpage()
@@ -1895,6 +1910,15 @@ local ai_providers = {
 	cursor = { cmd = "cursor-agent", default_mode = "vsplit" },
 }
 
+ai_float_profiles = {
+	[1] = { provider = "claude", api = "1" },
+	[2] = { provider = "claude", api = "2" },
+	[3] = { provider = "claude", label = "workbench" },
+	[4] = { provider = "gemini" },
+	[5] = { provider = "claude", cwd = "~/.config/nvim", label = "nvim" },
+	[6] = { provider = "claude", cwd = "~/.config/kitty", label = "kitty" },
+}
+
 local provider_aliases = {
 	c = "claude", g = "gemini", d = "codex",
 	k = "kimi", q = "qwen", a = "cursor",
@@ -1903,6 +1927,29 @@ local provider_aliases = {
 local mode_aliases = {
 	t = "tab", f = "float", v = "vsplit", h = "hsplit", s = "half",
 }
+
+local function provider_display_name(provider)
+	return (provider or "ai"):gsub("^%l", string.upper)
+end
+
+build_ai_command = function(provider, effective_api, auto_accept)
+	local p = ai_providers[provider]
+	if not p then
+		return nil
+	end
+	return type(p.cmd) == "function" and p.cmd(effective_api, auto_accept) or p.cmd
+end
+
+build_ai_label = function(provider, effective_api, suffix)
+	local label = provider_display_name(provider)
+	if effective_api then
+		label = label .. " [" .. effective_api .. "]"
+	end
+	if suffix and suffix ~= "" then
+		label = label .. " [" .. suffix .. "]"
+	end
+	return " " .. label .. " "
+end
 
 -- 解析: c1v → claude, api="1", mode=vsplit, c1! → auto_accept=true
 local function parse_ai_arg(input)
@@ -1945,9 +1992,9 @@ end)()
 
 local function ai_launch(provider, effective_api, display_mode, auto_accept)
 	local p = ai_providers[provider]
-	local cmd = type(p.cmd) == "function" and p.cmd(effective_api, auto_accept) or p.cmd
+	local cmd = build_ai_command(provider, effective_api, auto_accept)
 	local name = "ai_" .. provider .. "_" .. os.time() .. "_" .. math.random(1000)
-	local label = " " .. provider .. (effective_api and (" [" .. effective_api .. "]") or "") .. " "
+	local label = build_ai_label(provider, effective_api)
 
 	if display_mode == "half" then
 		local width = math.floor(vim.o.columns * 0.5)
@@ -1957,8 +2004,11 @@ local function ai_launch(provider, effective_api, display_mode, auto_accept)
 		})
 	elseif display_mode == "float" then
 		create_float_term(name, cmd, {
-			width = math.floor(vim.o.columns * 0.8),
-			height = math.floor(vim.o.lines * 0.8), title = label,
+			width = 60,
+			height = 16,
+			row = 1,
+			col = vim.o.columns - 60 - 1,
+			title = label,
 		})
 	elseif display_mode == "vsplit" then
 		create_vertical_term(name, cmd, { width = math.floor(vim.o.columns * 0.4) })
@@ -1973,7 +2023,7 @@ function M.ai_open(input)
 	local provider, api, mode, auto_accept = parse_ai_arg(input)
 	local p = ai_providers[provider]
 	if not p then
-		vim.notify("Unknown: " .. input .. "\n用法: :Ai <别名>[api][模式][!]\n别名: c g d k q a  模式: t f v h s  !: 自动接受", vim.log.levels.ERROR)
+		vim.notify("Unknown: " .. input .. "\n用法: :AI <别名>[api][模式][!]\n别名: c g d k q a  模式: t f v h s  !: 自动接受", vim.log.levels.ERROR)
 		return
 	end
 	ai_launch(provider, api or p.default_api, mode or p.default_mode, auto_accept)
@@ -2001,17 +2051,31 @@ function M.ai_set(input)
 end
 
 function M.ai_status()
-	local lines = {}
+	local provider_lines = {}
+	local profile_lines = {}
 	local alias_map = {}
 	for a, n in pairs(provider_aliases) do alias_map[n] = a end
 	for name, p in pairs(ai_providers) do
 		local a = alias_map[name] or "?"
 		local api_str = p.default_api and (" api=" .. p.default_api) or ""
 		local apis_str = p.apis and (" [" .. table.concat(p.apis, ",") .. "]") or ""
-		table.insert(lines, string.format("  %s %-8s %s%s%s", a, name, p.default_mode, api_str, apis_str))
+		table.insert(provider_lines, string.format("  %s %-8s %s%s%s", a, name, p.default_mode, api_str, apis_str))
 	end
-	table.sort(lines)
-	vim.notify("AI Providers:\n" .. table.concat(lines, "\n") .. "\n\n:Ai <别名>[api][模式]  :AiSet <别名>[api|模式]")
+	for id, profile in pairs(ai_float_profiles) do
+		local suffix = profile.label and (" [" .. profile.label .. "]") or ""
+		local api_str = profile.api and (" api=" .. profile.api) or ""
+		local cwd_str = profile.cwd and (" cwd=" .. vim.fn.fnamemodify(vim.fn.expand(profile.cwd), ":~")) or ""
+		table.insert(profile_lines, string.format("  %d %-8s%s%s%s", id, profile.provider or "?", suffix, api_str, cwd_str))
+	end
+	table.sort(provider_lines)
+	table.sort(profile_lines)
+	vim.notify(
+		"AI Providers:\n"
+			.. table.concat(provider_lines, "\n")
+			.. "\n\nAI Float Profiles:\n"
+			.. table.concat(profile_lines, "\n")
+			.. "\n\n:AI <别名>[api][模式]  :AISet <别名>[api|模式]"
+	)
 end
 
 -- ============================================================================

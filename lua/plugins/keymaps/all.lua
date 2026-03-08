@@ -151,17 +151,17 @@ M.mappings = {
 	{ "<leader>g", group = "Terminal" },
 	{ "<leader>ga", fn.terminal_lua_toggle, desc = "Lua" },
 	{ "<leader>gc", fn.claude_launcher, desc = "Claude Launcher (灵活)" },
-	{ "<leader>gc1", function() fn.tab_terminal_claude(1) end, desc = "Claude Code API 1" },
-	{ "<leader>gc2", function() fn.tab_terminal_claude(2) end, desc = "Claude Code API 2" },
-	{ "<leader>gcn", fn.tab_terminal_claude_new, desc = "New Claude Code Tab" },
-	{ "<leader>gcn1", function() fn.tab_terminal_claude_new(1) end, desc = "New Claude Tab (API 1)" },
-	{ "<leader>gcn2", function() fn.tab_terminal_claude_new(2) end, desc = "New Claude Tab (API 2)" },
-	{ "<leader>gd", fn.tab_terminal_codex, desc = "Codex" },
+	{ "<leader>gc1", function() fn.ai_open("c1t") end, desc = "AI: Claude API 1" },
+	{ "<leader>gc2", function() fn.ai_open("c2t") end, desc = "AI: Claude API 2" },
+	{ "<leader>gcn", function() fn.ai_open("ct") end, desc = "AI: Claude Tab" },
+	{ "<leader>gcn1", function() fn.ai_open("c1t") end, desc = "AI: Claude Tab (API 1)" },
+	{ "<leader>gcn2", function() fn.ai_open("c2t") end, desc = "AI: Claude Tab (API 2)" },
+	{ "<leader>gd", function() fn.ai_open("dt") end, desc = "AI: Codex" },
 	{ "<leader>gg", fn.terminal_cursor_agent_toggle, desc = "Cursor Agent" },
 	{ "<leader>gh", fn.terminal_htop_toggle, desc = "Htop" },
 	{ "<leader>gi", fn.terminal_ipython_toggle, desc = "IPython" },
-	{ "<leader>gk", fn.terminal_kimi_claude_code_toggle, desc = "Kimi Claude Code" },
-	{ "<leader>gl", fn.terminal_gemini_toggle, desc = "Gemini" },
+	{ "<leader>gk", function() fn.ai_open("kt") end, desc = "AI: Kimi" },
+	{ "<leader>gl", function() fn.ai_open("gt") end, desc = "AI: Gemini" },
 	{ "<leader>gn", fn.terminal_newterm_toggle, desc = "New Term" },
 	{ "<leader>gq", fn.terminal_qwen_toggle, desc = "Qwen" },
 	{ "<leader>gr", fn.terminal_newsboat_toggle, desc = "Newsboat" },
@@ -570,13 +570,13 @@ end
 -- ============================================================================
 M.alt_mappings = {
 	-- Claude Float (Alt+1~2)
-	{ "<A-1>", fn.claude_float_1_toggle, desc = "Claude Float 1", mode = { "n", "i", "v", "t" } },
-	{ "<A-2>", fn.claude_float_2_toggle, desc = "Claude Float 2", mode = { "n", "i", "v", "t" } },
+	{ "<A-1>", function() fn.ai_toggle_float_profile(1) end, desc = "AI Float 1", mode = { "n", "i", "v", "t" } },
+	{ "<A-2>", function() fn.ai_toggle_float_profile(2) end, desc = "AI Float 2", mode = { "n", "i", "v", "t" } },
 	-- Terminal Float (Alt+3~4)
 	{ "<A-3>", fn.term_float_1_toggle, desc = "Terminal Float 1", mode = { "n", "i", "v", "t" } },
 	{ "<A-4>", fn.term_float_2_toggle, desc = "Terminal Float 2", mode = { "n", "i", "v", "t" } },
-	{ "<A-n>", fn.claude_float_nvim_toggle, desc = "Claude [nvim]", mode = { "n", "i", "v", "t" } },
-	{ "<A-k>", fn.claude_float_kitty_toggle, desc = "Claude [kitty]", mode = { "n", "i", "v", "t" } },
+	{ "<A-n>", function() fn.ai_toggle_float_profile(5) end, desc = "AI [nvim]", mode = { "n", "i", "v", "t" } },
+	{ "<A-k>", function() fn.ai_toggle_float_profile(6) end, desc = "AI [kitty]", mode = { "n", "i", "v", "t" } },
 	{ "<A-a>", fn.float_hide_all, desc = "Hide All Float", mode = { "n", "i", "v", "t" } },
 	-- 窗口跳转 (Alt+5~9)
 	{ "<A-5>", "<cmd>5wincmd w<cr>", desc = "Window 5", mode = { "n", "i", "v", "t" } },
@@ -650,103 +650,19 @@ function M.setup()
 	-- 注册全局 mark 跳转映射 (跨 tab 跳转)
 	fn.setup_global_mark_keymaps()
 
-	-- 创建 Claude 启动器命令
-	-- 简化版：直接用命令名指定显示方式
-	local function create_claude_term(api_num, display_type)
-		local env_mod = require("core.env")
-		local cmd
-		if api_num then
-			local base_url = env_mod.get("CLAUDE_API" .. api_num .. "_BASE_URL") or ""
-			local token = env_mod.get("CLAUDE_API" .. api_num .. "_TOKEN") or ""
-			if base_url ~= "" and token ~= "" then
-				cmd = string.format("ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude", base_url, token)
-			else
-				cmd = "claude"
-			end
+	local function run_ai_command(arg)
+		if arg == "" then
+			fn.ai_open("c")
+		elseif arg == "help" then
+			fn.ai_status()
 		else
-			cmd = "claude"
-		end
-
-		local env = vim.fn.environ()
-		env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
-
-		if display_type == "tab" then
-			vim.cmd("tabnew")
-			vim.fn.termopen(cmd, { env = env })
-			vim.cmd("startinsert")
-		elseif display_type == "float" then
-			local width = math.floor(vim.o.columns * 0.8)
-			local height = math.floor(vim.o.lines * 0.8)
-			local buf = vim.api.nvim_create_buf(false, true)
-			local win = vim.api.nvim_open_win(buf, true, {
-				relative = "editor",
-				width = width,
-				height = height,
-				row = math.floor((vim.o.lines - height) / 2),
-				col = math.floor((vim.o.columns - width) / 2),
-				style = "minimal",
-				border = "rounded",
-				title = " Claude ",
-				title_pos = "center",
-			})
-			vim.fn.termopen(cmd, { env = env })
-			vim.cmd("startinsert")
-			vim.keymap.set("n", "q", function()
-				if vim.api.nvim_win_is_valid(win) then vim.api.nvim_win_close(win, true) end
-			end, { buffer = buf, noremap = true, silent = true })
-		elseif display_type == "half" then
-			local width = math.floor(vim.o.columns * 0.5)
-			local height = vim.o.lines - 4
-			local buf = vim.api.nvim_create_buf(false, true)
-			local win = vim.api.nvim_open_win(buf, true, {
-				relative = "editor",
-				width = width,
-				height = height,
-				row = 1,
-				col = vim.o.columns - width - 1,
-				style = "minimal",
-				border = "rounded",
-				title = " Claude ",
-				title_pos = "center",
-			})
-			vim.fn.termopen(cmd, { env = env })
-			vim.cmd("startinsert")
-			vim.keymap.set("n", "q", function()
-				if vim.api.nvim_win_is_valid(win) then vim.api.nvim_win_close(win, true) end
-			end, { buffer = buf, noremap = true, silent = true })
-		elseif display_type == "hsplit" then
-			vim.cmd("botright " .. math.floor(vim.o.lines * 0.4) .. "split")
-			local buf = vim.api.nvim_create_buf(false, true)
-			vim.api.nvim_win_set_buf(0, buf)
-			vim.fn.termopen(cmd, { env = env })
-			vim.cmd("startinsert")
-		elseif display_type == "vsplit" then
-			vim.cmd("botright " .. math.floor(vim.o.columns * 0.4) .. "vsplit")
-			local buf = vim.api.nvim_create_buf(false, true)
-			vim.api.nvim_win_set_buf(0, buf)
-			vim.fn.termopen(cmd, { env = env })
-			vim.cmd("startinsert")
+			fn.ai_open(arg)
 		end
 	end
 
-	-- 创建简洁的命令
-	vim.api.nvim_create_user_command("Claude", function() create_claude_term(nil, "tab") end, { desc = "Claude (Tab)" })
-	vim.api.nvim_create_user_command("Claude1", function() create_claude_term(1, "tab") end, { desc = "Claude API 1 (Tab)" })
-	vim.api.nvim_create_user_command("Claude2", function() create_claude_term(2, "tab") end, { desc = "Claude API 2 (Tab)" })
-	vim.api.nvim_create_user_command("ClaudeFloat", function() create_claude_term(nil, "float") end, { desc = "Claude (Float)" })
-	vim.api.nvim_create_user_command("ClaudeHalf", function() create_claude_term(nil, "half") end, { desc = "Claude (Half Screen)" })
-	vim.api.nvim_create_user_command("ClaudeVsplit", function() create_claude_term(nil, "vsplit") end, { desc = "Claude (Vsplit)" })
-	vim.api.nvim_create_user_command("ClaudeHsplit", function() create_claude_term(nil, "hsplit") end, { desc = "Claude (Hsplit)" })
-
-	-- AI 统一命令: :AI → claude tab, :AI cv → claude vsplit, :AI help → 帮助
+	-- AI 统一命令: :AI → Claude 默认配置, :AI c1v → Claude API1 vsplit, :AI help → 帮助
 	vim.api.nvim_create_user_command("AI", function(opts)
-		if opts.args == "" then
-			fn.ai_open("cv")
-		elseif opts.args == "help" then
-			fn.ai_status()
-		else
-			fn.ai_open(opts.args)
-		end
+		run_ai_command(opts.args)
 	end, {
 		nargs = "?",
 		desc = "AI 统一启动",
@@ -758,14 +674,16 @@ function M.setup()
 		end,
 	})
 
-	-- AI 默认配置: :AiSet c1 → claude 默认用 api1, :AiSet ct → claude 默认 tab
-	vim.api.nvim_create_user_command("AiSet", function(opts)
+	local ai_set_handler = function(opts)
 		if opts.args == "" then
 			fn.ai_status()
 		else
 			fn.ai_set(opts.args)
 		end
-	end, {
+	end
+
+	-- AI 默认配置: :AISet c1 → claude 默认用 api1, :AISet ct → claude 默认 tab
+	vim.api.nvim_create_user_command("AISet", ai_set_handler, {
 		nargs = "?",
 		desc = "设置 AI 默认配置",
 		complete = function(arg_lead)
