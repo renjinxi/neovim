@@ -4,13 +4,14 @@
 -- ================================
 
 local M = {}
+local terminal = require("core.terminal")
 
 -- 在水平分割终端中运行命令（原生实现）
 local function run_in_terminal(cmd)
 	vim.cmd("botright 15split")
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(0, buf)
-	vim.fn.termopen(cmd)
+	terminal.termopen(cmd)
 	vim.cmd("startinsert")
 end
 

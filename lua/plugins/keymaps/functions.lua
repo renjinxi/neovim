@@ -3,6 +3,7 @@
 -- 所有复杂的回调函数集中在此，供 all.lua 引用
 -- ============================================================================
 local M = {}
+local terminal = require("core.terminal")
 
 -- ============================================================================
 -- 辅助函数
@@ -240,23 +241,6 @@ local ai_float_profiles = {}
 local build_ai_command
 local build_ai_label
 
-local function build_claude_cmd(api_num, auto_accept)
-	local env = require("core.env")
-	local base_url = env.get("CLAUDE_API" .. api_num .. "_BASE_URL")
-	local token = env.get("CLAUDE_API" .. api_num .. "_TOKEN")
-	local flags = auto_accept and " --dangerously-skip-permissions --permission-mode acceptEdits" or ""
-	if base_url and token then
-		return string.format("ANTHROPIC_BASE_URL=%s ANTHROPIC_AUTH_TOKEN=%s claude%s", base_url, token, flags)
-	end
-	return "claude" .. flags
-end
-
-local function get_term_env()
-	local env = vim.fn.environ()
-	env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
-	return env
-end
-
 -- 创建浮动终端
 local function create_float_term(name, cmd, opts)
 	opts = opts or {}
@@ -278,8 +262,7 @@ local function create_float_term(name, cmd, opts)
 		title_pos = "center",
 	})
 
-	vim.fn.termopen(cmd, {
-		env = get_term_env(),
+	terminal.termopen(cmd, {
 		on_exit = function()
 			native_terminals[name] = nil
 		end,
@@ -307,8 +290,7 @@ local function create_horizontal_term(name, cmd, opts)
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(win, buf)
 
-	vim.fn.termopen(cmd, {
-		env = get_term_env(),
+	terminal.termopen(cmd, {
 		on_exit = function()
 			native_terminals[name] = nil
 		end,
@@ -328,8 +310,7 @@ local function create_vertical_term(name, cmd, opts)
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(win, buf)
 
-	vim.fn.termopen(cmd, {
-		env = get_term_env(),
+	terminal.termopen(cmd, {
 		on_exit = function()
 			native_terminals[name] = nil
 		end,
@@ -344,8 +325,7 @@ local function create_tab_term(name, cmd)
 	vim.cmd("tabnew")
 	local buf = vim.api.nvim_get_current_buf()
 
-	vim.fn.termopen(cmd, {
-		env = get_term_env(),
+	terminal.termopen(cmd, {
 		on_exit = function()
 			native_terminals[name] = nil
 		end,
@@ -452,46 +432,43 @@ end
 function M.terminal_newsboat_toggle() toggle_term("newsboat", "newsboat", "tab") end
 function M.terminal_newterm_tab() toggle_term("newtab", vim.o.shell, "tab") end
 function M.terminal_qwen_toggle() toggle_term("qwen", "qwen", "vertical") end
-function M.terminal_gemini_toggle() toggle_term("gemini", "gemini", "vertical") end
-function M.terminal_cursor_agent_toggle() toggle_term("cursor", "cursor-agent", "vertical") end
-function M.terminal_kimi_claude_code_toggle()
-	local cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude"
-	toggle_term("kimi", cmd, "tab")
-end
+function M.terminal_gemini_toggle() toggle_term("gemini", build_ai_command("gemini"), "vertical") end
+function M.terminal_cursor_agent_toggle() toggle_term("cursor", build_ai_command("cursor"), "vertical") end
+function M.terminal_kimi_claude_code_toggle() toggle_term("kimi", build_ai_command("kimi"), "tab") end
 
 -- Tab 终端（Claude/Codex）
 function M.tab_terminal_claude(api_num)
-	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local cmd = build_ai_command("claude", api_num and tostring(api_num) or nil)
 	toggle_term("claude_" .. (api_num or "default"), cmd, "tab")
 end
 
 function M.tab_terminal_claude_new(api_num)
-	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local cmd = build_ai_command("claude", api_num and tostring(api_num) or nil)
 	local name = "claude_new_" .. os.time()
 	create_tab_term(name, cmd)
 end
 
 function M.tab_terminal_codex()
-	toggle_term("codex", "codex", "tab")
+	toggle_term("codex", build_ai_command("codex"), "tab")
 end
 
 -- Claude 垂直分割
 function M.claude_vsplit(api_num)
-	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local cmd = build_ai_command("claude", api_num and tostring(api_num) or nil)
 	local name = "claude_vsplit_" .. (api_num or "default")
 	toggle_term(name, cmd, "vertical", { width = math.floor(vim.o.columns * 0.4) })
 end
 
 -- Claude 水平分割
 function M.claude_hsplit(api_num)
-	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local cmd = build_ai_command("claude", api_num and tostring(api_num) or nil)
 	local name = "claude_hsplit_" .. (api_num or "default")
 	toggle_term(name, cmd, "horizontal", { height = math.floor(vim.o.lines * 0.4) })
 end
 
 -- Claude 浮动窗口
 function M.claude_float(api_num)
-	local cmd = api_num and build_claude_cmd(api_num) or "claude"
+	local cmd = build_ai_command("claude", api_num and tostring(api_num) or nil)
 	local name = "claude_float_" .. (api_num or "default")
 	toggle_term(name, cmd, "float", {
 		width = math.floor(vim.o.columns * 0.8),
@@ -517,7 +494,7 @@ function M.claude_launcher()
 				function(display_choice)
 					if not display_choice then return end
 
-					local cmd = api_num and build_claude_cmd(api_num) or "claude"
+					local cmd = build_ai_command("claude", api_num and tostring(api_num) or nil)
 
 					if display_choice == "新 Tab" then
 						local name = "claude_new_" .. os.time()
@@ -583,13 +560,10 @@ local function open_lazygit_float(dir)
 		title_pos = "center",
 	})
 
-	local cmd = "lazygit"
-	if dir then
-		cmd = "cd " .. vim.fn.shellescape(dir) .. " && lazygit"
-	end
-
-	vim.fn.termopen(cmd, {
-		env = get_term_env(),
+	terminal.termopen({
+		cmd = "lazygit",
+		cwd = dir,
+	}, {
 		on_exit = function()
 			pcall(vim.api.nvim_win_close, win, true)
 		end,
@@ -735,15 +709,11 @@ local function create_float_terminal(key, cmd_fn, cfg)
 	})
 	float_terminals[key].win = win
 
-	local cmd = cmd_fn()
-	if cfg.cwd then
-		cmd = "cd " .. vim.fn.expand(cfg.cwd) .. " && " .. cmd
+	local spec = terminal.normalize_spec(cmd_fn())
+	if cfg.cwd and not spec.cwd then
+		spec.cwd = cfg.cwd
 	end
-	-- 确保 PATH 包含常用路径 (解决 node 找不到问题)
-	local env = vim.fn.environ()
-	env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
-	vim.fn.termopen(cmd, {
-		env = env,
+	terminal.termopen(spec, {
 		on_exit = function()
 			if float_terminals[key] then
 				float_terminals[key].buf = nil
@@ -814,11 +784,11 @@ local function float_toggle(id, type)
 		if type == "claude" and float_api_select_enabled then
 			select_api_and_run(function(api_num)
 				create_float_terminal(key, function()
-					return api_num and build_claude_cmd(api_num) or "claude"
+					return build_ai_command("claude", api_num and tostring(api_num) or nil)
 				end, cfg)
 			end)
 		elseif type == "claude" then
-			create_float_terminal(key, function() return "claude" end, cfg)
+			create_float_terminal(key, function() return build_ai_command("claude") end, cfg)
 		else
 			create_float_terminal(key, function() return vim.o.shell end, cfg)
 		end
@@ -860,7 +830,7 @@ function M.claude_half_screen_toggle()
 	}
 
 	if not state or not state.buf or not vim.api.nvim_buf_is_valid(state.buf) then
-		create_float_terminal(key, function() return "claude" end, cfg)
+		create_float_terminal(key, function() return build_ai_command("claude") end, cfg)
 	else
 		reopen_float_window(key, cfg)
 	end
@@ -1885,29 +1855,57 @@ end
 -- ============================================================================
 local ai_providers = {
 	claude = {
-		cmd = function(api, auto_accept)
-			if api then return build_claude_cmd(tonumber(api), auto_accept) end
+		supports_auto_accept = true,
+		build = function(api, auto_accept)
 			local flags = auto_accept and " --dangerously-skip-permissions --permission-mode acceptEdits" or ""
-			return "claude" .. flags
+			local cmd = "claude" .. flags
+			local env = nil
+			if api then
+				local env_mod = require("core.env")
+				local api_num = tonumber(api)
+				local base_url = env_mod.get("CLAUDE_API" .. api_num .. "_BASE_URL")
+				local token = env_mod.get("CLAUDE_API" .. api_num .. "_TOKEN")
+				if base_url and token then
+					env = {
+						ANTHROPIC_BASE_URL = base_url,
+						ANTHROPIC_AUTH_TOKEN = token,
+					}
+				end
+			end
+			return { cmd = cmd, env = env }
 		end,
 		apis = { "1", "2" },
 		default_api = nil,
 		default_mode = "vsplit",
 	},
 	gemini = {
-		cmd = function(_, auto_accept) return "gemini" .. (auto_accept and " --yolo" or "") end,
+		supports_auto_accept = true,
+		build = function(_, auto_accept)
+			return { cmd = "gemini" .. (auto_accept and " --yolo" or "") }
+		end,
 		default_mode = "vsplit",
 	},
 	codex = {
-		cmd = function(_, auto_accept) return "codex" .. (auto_accept and " --dangerously-bypass-approvals-and-sandbox" or "") end,
+		supports_auto_accept = true,
+		build = function(_, auto_accept)
+			return { cmd = "codex" .. (auto_accept and " --dangerously-bypass-approvals-and-sandbox" or "") }
+		end,
 		default_mode = "vsplit",
 	},
 	kimi   = {
-		cmd = "ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic/ ANTHROPIC_API_KEY=$(cat ~/work/password/kimi-cc) claude",
+		build = function()
+			return {
+				cmd = "claude",
+				env = {
+					ANTHROPIC_BASE_URL = "https://api.moonshot.cn/anthropic/",
+					ANTHROPIC_API_KEY = vim.fn.trim(vim.fn.system("cat ~/work/password/kimi-cc")),
+				},
+			}
+		end,
 		default_mode = "vsplit",
 	},
-	qwen   = { cmd = "qwen", default_mode = "vsplit" },
-	cursor = { cmd = "cursor-agent", default_mode = "vsplit" },
+	qwen   = { build = function() return { cmd = "qwen" } end, default_mode = "vsplit" },
+	cursor = { build = function() return { cmd = "cursor-agent" } end, default_mode = "vsplit" },
 }
 
 ai_float_profiles = {
@@ -1937,7 +1935,10 @@ build_ai_command = function(provider, effective_api, auto_accept)
 	if not p then
 		return nil
 	end
-	return type(p.cmd) == "function" and p.cmd(effective_api, auto_accept) or p.cmd
+	if p.build then
+		return p.build(effective_api, auto_accept)
+	end
+	return type(p.cmd) == "function" and { cmd = p.cmd(effective_api, auto_accept) } or { cmd = p.cmd }
 end
 
 build_ai_label = function(provider, effective_api, suffix)
@@ -1967,7 +1968,7 @@ end
 
 -- 支持 ! 后缀的 provider（cmd 为 function 即支持 auto_accept 参数）
 local function supports_auto_accept(name)
-	return type(ai_providers[name].cmd) == "function"
+	return ai_providers[name] and ai_providers[name].supports_auto_accept == true
 end
 
 -- 补全列表（别名 + 别名+api + 全名，支持 ! 的加 ! 后缀）

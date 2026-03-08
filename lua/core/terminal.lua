@@ -1,0 +1,35 @@
+local M = {}
+
+function M.get_env(extra_env)
+	local env = vim.fn.environ()
+	env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
+	for k, v in pairs(extra_env or {}) do
+		env[k] = v
+	end
+	return env
+end
+
+function M.normalize_spec(spec_or_cmd)
+	if type(spec_or_cmd) == "table" then
+		return vim.tbl_deep_extend("force", {}, spec_or_cmd)
+	end
+	return { cmd = spec_or_cmd }
+end
+
+function M.termopen(spec_or_cmd, opts)
+	local spec = M.normalize_spec(spec_or_cmd)
+	return vim.fn.termopen(spec.cmd, vim.tbl_extend("force", {
+		env = M.get_env(spec.env),
+		cwd = spec.cwd and vim.fn.expand(spec.cwd) or nil,
+	}, opts or {}))
+end
+
+function M.termopen_shell(spec_or_cmd, opts)
+	local spec = M.normalize_spec(spec_or_cmd)
+	return vim.fn.termopen({ "zsh", "-ic", spec.cmd }, vim.tbl_extend("force", {
+		env = M.get_env(spec.env),
+		cwd = spec.cwd and vim.fn.expand(spec.cwd) or nil,
+	}, opts or {}))
+end
+
+return M

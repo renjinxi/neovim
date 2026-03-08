@@ -1,6 +1,7 @@
 --- Structured RPC API for AI agents controlling nvim via --server
 --- Every exported function is pcall-wrapped and returns JSON string: {ok:bool, data?, error?}
 local M = {}
+local terminal = require("core.terminal")
 
 local json_encode = vim.fn.json_encode
 
@@ -371,14 +372,6 @@ local function spawn_cli(args)
 			end
 		end
 
-		-- Terminal env (PATH setup)
-		local term_env = vim.fn.environ()
-		term_env.PATH = vim.fn.expand("$HOME/.local/bin")
-			.. ":"
-			.. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin")
-			.. ":"
-			.. (term_env.PATH or "")
-
 		local buf, win
 
 		if mode == "t" then
@@ -413,10 +406,12 @@ local function spawn_cli(args)
 		end
 
 		-- 每个终端都带上自己的 bufnr 环境变量
-		term_env.NVIM_TERMINAL_BUFNR = tostring(buf)
+		local spec = terminal.normalize_spec({
+			cmd = cmd,
+			env = { NVIM_TERMINAL_BUFNR = tostring(buf) },
+		})
 
-		local job_id = vim.fn.termopen({ "zsh", "-ic", cmd }, {
-			env = term_env,
+		local job_id = terminal.termopen_shell(spec, {
 			on_exit = function(_, exit_code)
 				if spawned_terminals[name] then
 					spawned_terminals[name].alive = false
