@@ -59,7 +59,7 @@
 - [x] Codex App Server 架构 → 双向 JSON-RPC + thread/turn/item 模型
 
 待研究的方向：
-- [ ] Gemini CLI / Codex CLI 的程序化控制方式
+- [x] Gemini CLI / Codex CLI 的程序化控制方式 → 见 [gemini-cli.md](gemini-cli.md) / [sdk-url-protocol.md](sdk-url-protocol.md)
 - [ ] Claude CLI stream-json 模式
 - [ ] 其他 AI 编排框架（LangGraph、CrewAI 等）
 - [ ] 是否有人做到了"结构化 + 人可介入"的两全方案

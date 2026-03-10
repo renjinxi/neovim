@@ -51,7 +51,7 @@ nvim (Client) ← stdout ← JSON-RPC ← claude-agent-acp (Agent)
 - ❌ **需要自建 UI** — 要用 nvim buffer 渲染 agent 输出，人才能看到
 - ❌ **接管困难** — 人想打字介入需要通过 buffer → JSON-RPC 转换
 - ❌ **不是原生 CLI 体验** — 和直接用 `claude` 命令的感觉完全不同
-- ❌ **依赖 CLI 支持 ACP** — 不是所有 CLI 都有 ACP 模式
+- 🔶 **CLI 支持情况** — Gemini CLI 原生支持 `--acp`，Claude Code 通过 codecompanion 适配，Codex 无原生支持但 Copilot CLI 已支持
 
 ### 适用场景
 - AI 全自动编排，人只做审批
@@ -132,7 +132,7 @@ nvim (Client) ← stdout ← JSON-RPC ← claude-agent-acp (Agent)
 | 人可介入 | ✅ 切 tab 打字 | ❌ 需自建 UI | ❌ 后台进程 | 🔶 待定 |
 | 人可观察 | ✅ 看 terminal | 🔶 需渲染 buffer | ❌ 后台进程 | 🔶 待定 |
 | 实现复杂度 | ✅ 已有 | 🔶 中等 | 🔶 中等（需 WS Server） | ❌ 高 |
-| 多 CLI 支持 | ✅ 通用 | 🔶 需适配 | ❌ 仅 Claude Code | 🔶 待定 |
+| 多 CLI 支持 | ✅ 通用 | 🔶 Gemini原生/Claude适配 | ❌ 仅 Claude Code | 🔶 待定 |
 | AI 工具能力 | ✅ CLI 自带 | ✅ CLI 自带 | ✅ CLI 自带 | 🔶 待定 |
 | 权限控制 | ❌ 人工切 tab | ✅ request_permission | ✅ control_request | 🔶 待定 |
 | 崩溃恢复 | ❌ 无 | ❌ 无 | ✅ team-anya 已实现 | 🔶 待定 |
@@ -151,5 +151,37 @@ nvim (Client) ← stdout ← JSON-RPC ← claude-agent-acp (Agent)
 2. 测试 Claude CLI 的 stream-json 模式
 3. 研究是否有办法在 terminal 模式下增加结构化信号
 4. 评估 codecompanion 的 ACP + buffer 渲染方案的人工介入体验
-5. 研究 Gemini / Codex 等其他 CLI 是否有类似 sdk-url 的程序化控制方式
+5. ~~研究 Gemini / Codex 等其他 CLI 是否有类似 sdk-url 的程序化控制方式~~ ✅ 已完成
 6. 探索混合方案：SDK-URL 做通信 + nvim buffer 渲染输出模拟 terminal 体验
+
+## 2026-03-09 更新：三家 CLI 程序化控制全貌
+
+经过 Companion 项目逆向 + Gemini CLI 源码研究，三家 CLI 的程序化控制方式已全部摸清：
+
+| CLI | 接口 | 协议 | 传输层 |
+|-----|------|------|--------|
+| Claude Code | `--sdk-url` | NDJSON | WebSocket（CLI 反连） |
+| Codex | `app-server --listen` | JSON-RPC | WebSocket / stdio |
+| Gemini CLI | `--acp` | JSON-RPC (ACP) | stdin/stdout |
+| Copilot CLI | ACP server | JSON-RPC (ACP) | stdin/stdout |
+
+### ACP 成为统一层的可能性
+
+ACP (Agent Client Protocol) 由 Zed 发起，正在成为行业标准：
+- Gemini CLI 原生支持 `--acp`
+- Copilot CLI 已支持 ACP
+- Claude Code 通过 codecompanion 适配（非原生）
+- Codex 暂无 ACP 支持
+
+ACP 的优势：stdin/stdout JSON-RPC，不需要 WS server，`vim.uv.spawn` 直接 pipe。
+如果 Claude Code 未来也原生支持 ACP，那 ACP 就是最佳统一层。
+
+### 当前最优路线判断
+
+**短期**：继续用文件通信 task system（已跑通），ACP/SDK-URL 作为下一步升级方向
+**中期**：优先实现 ACP 对接（Gemini 原生支持，实现成本最低），同时用 WS proxy 对接 Claude --sdk-url
+**长期**：等 ACP 生态成熟，统一用 ACP 对接所有 CLI
+
+详细研究：
+- [sdk-url-protocol.md](sdk-url-protocol.md) — Claude Code WS 协议完整文档 + Companion 架构
+- [gemini-cli.md](gemini-cli.md) — Gemini CLI 全部程序化控制方式（ACP/A2A/SDK/stream-json）

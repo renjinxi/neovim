@@ -131,5 +131,9 @@ list_terminals()                         -- 列出所有终端
 - [x] 研究 myclaude（多后端抽象、Context Pack、并行任务、Hook 防退出）
 - [x] 研究 CCB（tmux 分屏协作、askd 守护进程、session 文件读取、MCP 暴露）
 - [x] 研究 CAO（tmux + FastAPI + SQLite inbox + MCP + watchdog，工程化最高）
+- [x] 研究 Companion 项目（Claude --sdk-url WS 协议逆向，完整 NDJSON 协议文档）
+- [x] 研究 Gemini CLI 源码（--acp/A2A Server/SDK/stream-json/IDE Companion）
+- [x] 三家 CLI 程序化控制全貌对比（Claude: WS, Codex: WS/stdio, Gemini: ACP stdio）
+- [ ] ACP 统一对接方案研究 → 见 [acp-plan.md](acp-plan.md)
 - [ ] 深入理解 PTY/TTY 机制
 - [ ] 验证 hcom 实际使用效果

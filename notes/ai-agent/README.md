@@ -19,10 +19,14 @@ reference/   ← 参考资料
 ## 关键文档
 
 - [design/task-system.md](design/task-system.md) — 文件任务系统架构、API、TODO
+- [design/session-bus.md](design/session-bus.md) — Session Bus：多 agent 协作运行时（构想阶段）
 - [research/goal.md](research/goal.md) — 目标和最优方案结论
 - [research/architecture.md](research/architecture.md) — 当前通信架构
-- [research/solutions.md](research/solutions.md) — 方案对比
+- [research/solutions.md](research/solutions.md) — 方案对比（含三家 CLI 全貌）
 - [research/hcom.md](research/hcom.md) — hcom 方案（当前最优参考）
+- [research/sdk-url-protocol.md](research/sdk-url-protocol.md) — Claude Code WS 协议完整文档
+- [research/gemini-cli.md](research/gemini-cli.md) — Gemini CLI 程序化控制（ACP/A2A/SDK）
+- [research/acp-plan.md](research/acp-plan.md) — ACP 统一对接方案
 
 ## 调试
 

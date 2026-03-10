@@ -84,6 +84,7 @@ timestamp [level] source: message
 - [ ] 无任务依赖编排
 - [ ] 无冲突检测
 - [ ] 无 messages.jsonl 管道（先用 status + result.md）
+- [ ] 考虑迁移到 --sdk-url WebSocket 方案，见 [research/sdk-url-protocol.md](../research/sdk-url-protocol.md)
 
 ## 迭代日志
 

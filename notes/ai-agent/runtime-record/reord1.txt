@@ -313,7 +313,8 @@
   assign_task 整个链路。
 
   你想让我把 skill 改成这种模式吗？简单任务直接 spawn_cli({cmd='claude 
-  --dangerously-skip-permissions "任务描述"'}) 一步搞定。
+o '📢 第二次全场广播：表演已进行到第 50 波！还在继续！'
+--dangerously-skip-permissions "任务描述"'}) 一步搞定。
 
 ❯  /export a.txt                                                                
 
