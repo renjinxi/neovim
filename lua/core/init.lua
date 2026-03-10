@@ -11,6 +11,8 @@ function M.setup()
 	require("core.autocmds").setup()
 	-- AI 任务文件监听
 	require("core.task_watcher").setup()
+	-- ACP 频道系统
+	require("acp").setup()
 	-- 加载用户自定义模块
 	require("user.worklog").setup()
 end

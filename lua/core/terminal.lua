@@ -2,7 +2,11 @@ local M = {}
 
 function M.get_env(extra_env)
 	local env = vim.fn.environ()
-	env.PATH = vim.fn.expand("$HOME/.local/bin") .. ":" .. vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin") .. ":" .. (env.PATH or "")
+	-- fnm default node + nvm node + local bin
+	local fnm_default = vim.fn.expand("$HOME/.local/share/fnm/aliases/default/bin")
+	local nvm_node = vim.fn.expand("$HOME/.nvm/versions/node/v22.12.0/bin")
+	local local_bin = vim.fn.expand("$HOME/.local/bin")
+	env.PATH = local_bin .. ":" .. fnm_default .. ":" .. nvm_node .. ":" .. (env.PATH or "")
 	for k, v in pairs(extra_env or {}) do
 		env[k] = v
 	end
