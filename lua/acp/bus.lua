@@ -173,9 +173,15 @@ end
 
 --- 推送消息给主 agent client
 function Bus:_push_to_main(content)
-	if not self.main_client or not self.main_client.alive then
+	if not self.main_client then
+		log("WARN", "_push_to_main: main_client is nil")
 		return
 	end
+	if not self.main_client.alive then
+		log("WARN", "_push_to_main: main_client not alive")
+		return
+	end
+	log("INFO", "_push_to_main: pushing " .. content:sub(1, 50))
 	self.main_client:prompt(content, function(_) end)
 end
 

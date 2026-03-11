@@ -88,13 +88,17 @@ function M.open_bus(adapter_name, agent_name)
 	if not active_bus then
 		active_bus = require("acp.bus").new()
 		active_bus:open()
-		-- 把已有的主 chat client 注册进来
-		for _, chat in pairs(active_chats) do
-			if chat.client then
-				active_bus.main_client = chat.client
-				break
+		-- 把已有的主 chat client 注册进来（延迟等 client 就绪）
+		vim.defer_fn(function()
+			if active_bus and not active_bus.main_client then
+				for _, chat in pairs(active_chats) do
+					if chat.client then
+						active_bus.main_client = chat.client
+						break
+					end
+				end
 			end
-		end
+		end, 500)
 	end
 	-- 添加 agent
 	active_bus:add_agent(agent_name, adapter_name)
