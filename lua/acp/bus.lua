@@ -150,20 +150,21 @@ function Bus:post(from, content, opts)
 	}
 	self.messages[#self.messages + 1] = msg
 	self:_render_message(msg)
-	-- agent 自己的回复不再触发路由，避免循环
-	if not (opts and opts.no_route) and not self.agents[from] then
-		self:_route(content)
+	if not (opts and opts.no_route) then
+		self:_route(content, from)
 	end
 end
 
---- 解析 @mention，推送给被 @ 的 agent 或主 client
-function Bus:_route(content)
+--- 解析 @mention，推送给被 @ 的 agent 或主 client（跳过发送者自己）
+function Bus:_route(content, from)
 	local mentioned = {}
 	for name in content:gmatch("@([%w_%-]+)") do
 		mentioned[name] = true
 	end
 	for name in pairs(mentioned) do
-		if self.agents[name] then
+		if name == from then
+			-- 跳过发送者自己，防止循环
+		elseif self.agents[name] then
 			self:send_to_agent(name, content)
 		elseif name == "主agent" or name == "main" then
 			self:_push_to_main(content)
