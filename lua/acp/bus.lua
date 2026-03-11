@@ -22,6 +22,7 @@ function Bus.new()
 	return setmetatable({
 		messages = {}, -- [{from, content, timestamp}]
 		agents = {}, -- {name -> {client, streaming}}
+		main_client = nil, -- 主 agent client，子 agent 回复时推送
 		buf = nil,
 		win = nil,
 		input_buf = nil,
@@ -155,7 +156,7 @@ function Bus:post(from, content, opts)
 	end
 end
 
---- 解析 @mention，推送给被 @ 的 agent
+--- 解析 @mention，推送给被 @ 的 agent 或主 client
 function Bus:_route(content)
 	local mentioned = {}
 	for name in content:gmatch("@([%w_%-]+)") do
@@ -164,8 +165,18 @@ function Bus:_route(content)
 	for name in pairs(mentioned) do
 		if self.agents[name] then
 			self:send_to_agent(name, content)
+		elseif name == "主agent" or name == "main" then
+			self:_push_to_main(content)
 		end
 	end
+end
+
+--- 推送消息给主 agent client
+function Bus:_push_to_main(content)
+	if not self.main_client or not self.main_client.alive then
+		return
+	end
+	self.main_client:prompt(content, function(_) end)
 end
 
 --- 推送消息给指定 agent
@@ -184,8 +195,8 @@ function Bus:send_to_agent(name, text)
 	agent.streaming = true
 	agent.stream_buf = ""
 	agent.stream_started = false
-	-- 把 user 消息写入 agent chat_buf
-	self:_append_agent_system(agent, "→ " .. text)
+	-- 把 user 消息写入 agent chat_buf（完整格式）
+	self:_append_agent_role(agent, "You", text)
 	agent.client:prompt(payload, function(stop_reason)
 		vim.schedule(function()
 			agent.streaming = false
@@ -248,6 +259,22 @@ function Bus:_on_agent_update(name, params)
 	else
 		log("DEBUG", name .. " update: " .. kind)
 	end
+end
+
+--- 追加角色消息到 agent chat_buf（完整块）
+function Bus:_append_agent_role(agent, role, text)
+	local buf = agent.chat_buf
+	if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
+	vim.schedule(function()
+		vim.bo[buf].modifiable = true
+		local count = vim.api.nvim_buf_line_count(buf)
+		local lines = { "", "## " .. role, "" }
+		for _, line in ipairs(vim.split(text, "\n", { plain = true })) do
+			lines[#lines + 1] = line
+		end
+		vim.api.nvim_buf_set_lines(buf, count, count, false, lines)
+		vim.bo[buf].modifiable = false
+	end)
 end
 
 --- 追加流式 chunk 到 agent chat_buf

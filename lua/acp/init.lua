@@ -74,6 +74,12 @@ function M.open_chat(adapter_name, opts)
 	local chat = require("acp.chat").new(adapter_name, opts)
 	local name = adapter_name .. "_" .. os.time()
 	active_chats[name] = chat
+	-- client 就绪后注册为主 agent
+	chat.on_ready = function(client)
+		if active_bus then
+			active_bus.main_client = client
+		end
+	end
 	chat:open()
 	return chat
 end
@@ -82,6 +88,13 @@ function M.open_bus(adapter_name, agent_name)
 	if not active_bus then
 		active_bus = require("acp.bus").new()
 		active_bus:open()
+		-- 把已有的主 chat client 注册进来
+		for _, chat in pairs(active_chats) do
+			if chat.client then
+				active_bus.main_client = chat.client
+				break
+			end
+		end
 	end
 	-- 添加 agent
 	active_bus:add_agent(agent_name, adapter_name)

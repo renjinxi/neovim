@@ -20,6 +20,7 @@ function Chat.new(adapter_name, opts)
 		input_win = nil,
 		streaming = false,
 		stream_started = false, -- 当前 turn 是否已写 header
+		on_ready = nil, -- client 启动成功后的回调
 	}, Chat)
 end
 
@@ -117,6 +118,10 @@ function Chat:_start_client()
 		if self.input_win and vim.api.nvim_win_is_valid(self.input_win) then
 			vim.api.nvim_set_current_win(self.input_win)
 			vim.cmd("startinsert")
+		end
+		-- 通知外部 client 已就绪
+		if self.on_ready then
+			self.on_ready(self.client)
 		end
 	else
 		vim.api.nvim_buf_set_lines(self.buf, 0, -1, false, {
