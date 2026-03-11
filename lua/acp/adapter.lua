@@ -37,8 +37,8 @@ local adapters = {
 
 --- 获取 adapter 的完整 spawn 配置
 --- @param name string "claude" | "gemini"
---- @param opts? table {api_num?, cwd?}
---- @return table {cmd, args, env, name}
+--- @param opts? table {api_num?, cwd?, agent_name?, bus_mode?}
+--- @return table {cmd, args, env, name, system_prompt?}
 function M.get(name, opts)
 	opts = opts or {}
 	local adapter = adapters[name]
@@ -47,12 +47,41 @@ function M.get(name, opts)
 	end
 	local terminal = require("core.terminal")
 	local extra_env = adapter.get_env(opts)
-	return {
+	local config = {
 		name = adapter.name,
 		cmd = adapter.cmd,
 		args = vim.deepcopy(adapter.args),
 		env = terminal.get_env(extra_env),
 	}
+	-- 频道模式：注入 system prompt
+	if opts.bus_mode and opts.agent_name then
+		config.system_prompt = M.get_bus_system_prompt(opts.agent_name)
+	end
+	return config
+end
+
+--- 生成频道模式的 system prompt
+--- @param agent_name string
+--- @return string
+function M.get_bus_system_prompt(agent_name)
+	local sock = vim.env.NVIM_LISTEN_ADDRESS or vim.v.servername
+	local tmpfile = "/tmp/acp_msg_" .. agent_name .. ".txt"
+	return string.format(
+		[[你在一个协作频道里。任务完成或需要汇报时，用以下方式发消息：
+
+MSG="你的消息内容"
+echo "$MSG" > '%s'
+nvim --server '%s' --remote-expr 'luaeval("require(\"acp.rpc\").bus_post_file(\"%s\",\"%s\")")'
+
+规则：
+- 任务完成：发 "@主agent 任务完成，结果是..."
+- 遇到问题：发 "@主agent 遇到问题，需要..."
+- 过程信息（读文件、写代码等）不发频道]],
+		tmpfile,
+		sock,
+		agent_name,
+		tmpfile
+	)
 end
 
 --- 列出可用 adapter 名称
