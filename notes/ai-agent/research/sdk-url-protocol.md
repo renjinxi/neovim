@@ -146,6 +146,245 @@ lua 原生做 WS 握手比较麻烦（要处理 HTTP upgrade、frame masking 等
 1. **外挂轻量进程**（推荐）— 小 node/bun 脚本做 WS proxy，nvim 通过 stdin/stdout pipe 或 unix socket 跟它通信，WS 复杂度隔离在外部
 2. **纯 lua** — vim.uv tcp + 手写 WS 握手/frame 解析，可行但工作量大且容易出 bug
 
+## Companion WS Proxy 实现细节
+
+> 以下基于 companion v0.72.0 源码分析，重点是可搬用的代码和架构。
+
+### 整体架构
+
+```
+Browser (React)                    Bun Server (Hono)                   Claude Code CLI
+    │                                    │                                    │
+    │◄── WS /ws/browser/:sessionId ──►│                                    │
+    │    (JSON, 自定义协议)              │◄── WS /ws/cli/:sessionId ──────►│
+    │                                    │    (NDJSON, SDK 协议)              │
+    │                                    │                                    │
+    │  user_message ──────────────────►│  转成 {type:"user",...} ──────────►│
+    │                                    │                                    │
+    │◄── assistant/stream_event ───────│◄── NDJSON 消息 ───────────────────│
+    │                                    │                                    │
+    │◄── permission_request ───────────│◄── control_request(can_use_tool) ─│
+    │  permission_response ────────────►│  转成 control_response ──────────►│
+```
+
+关键点：Browser↔Server 和 Server↔CLI 是**两套不同协议**。Server 做协议翻译，不是纯透传。
+
+### 核心文件和职责
+
+| 文件 | 职责 | 行数 |
+|------|------|------|
+| `index.ts` | Bun.serve 入口，WS upgrade 路由分发 | ~370 |
+| `cli-launcher.ts` | spawn CLI 进程，传 --sdk-url 参数 | ~800 |
+| `ws-bridge.ts` | 消息路由核心，CLI↔Browser 桥接 | ~1220 |
+| `ws-bridge-types.ts` | Session 数据结构 | ~95 |
+| `ws-bridge-controls.ts` | control_request 构造（interrupt/set_model/mcp 等） | ~150 |
+| `ws-bridge-browser.ts` | Browser 侧消息处理（subscribe/ack/permission） | ~137 |
+| `ws-bridge-replay.ts` | 消息去重、事件序列号、断线重放 | ~60 |
+| `session-types.ts` | 完整 TypeScript 类型定义 | ~440 |
+
+### WS Server 启动（index.ts）
+
+```typescript
+// Bun 原生 WS server，通过 URL path 区分 CLI/Browser/Terminal
+const server = Bun.serve<SocketData>({
+  port: 3456,
+  fetch(req, server) {
+    // CLI 连接：/ws/cli/{sessionId}
+    const cliMatch = url.pathname.match(/^\/ws\/cli\/([a-f0-9-]+)$/);
+    if (cliMatch) {
+      server.upgrade(req, { data: { kind: "cli", sessionId: cliMatch[1] } });
+    }
+    // Browser 连接：/ws/browser/{sessionId}?token=xxx
+    const browserMatch = url.pathname.match(/^\/ws\/browser\/([a-f0-9-]+)$/);
+    if (browserMatch) {
+      server.upgrade(req, { data: { kind: "browser", sessionId: browserMatch[1] } });
+    }
+  },
+  websocket: {
+    open(ws) {
+      if (ws.data.kind === "cli") wsBridge.handleCLIOpen(ws, ws.data.sessionId);
+      else if (ws.data.kind === "browser") wsBridge.handleBrowserOpen(ws, ws.data.sessionId);
+    },
+    message(ws, msg) {
+      if (ws.data.kind === "cli") wsBridge.handleCLIMessage(ws, msg);
+      else if (ws.data.kind === "browser") wsBridge.handleBrowserMessage(ws, msg);
+    },
+    close(ws) { /* 对应 handleCLIClose / handleBrowserClose */ },
+  },
+});
+```
+
+### CLI Spawn 参数（cli-launcher.ts）
+
+```typescript
+// 核心 spawn 逻辑
+const sdkUrl = `ws://localhost:${this.port}/ws/cli/${sessionId}`;
+const args = [
+  "--sdk-url", sdkUrl,
+  "--print",
+  "--output-format", "stream-json",
+  "--input-format", "stream-json",
+  "--include-partial-messages",  // 新版需要，开启流式 chunk
+  "--verbose",
+];
+if (options.model) args.push("--model", options.model);
+if (options.permissionMode) args.push("--permission-mode", options.permissionMode);
+if (options.resumeSessionId) args.push("--resume", options.resumeSessionId);
+args.push("-p", "");  // headless 占位
+
+const proc = Bun.spawn([binary, ...args], {
+  cwd: info.cwd,
+  env: { ...process.env, CLAUDECODE: undefined },
+  stdout: "pipe",
+  stderr: "pipe",
+});
+```
+
+环境变量：
+- `CLAUDECODE` 必须 unset（否则 CLI 行为异常）
+- `CLAUDE_CODE_SESSION_ACCESS_TOKEN` — WS 认证 token（可选）
+
+### WS Bridge 消息路由（ws-bridge.ts）
+
+**CLI → Browser 方向**：
+
+```typescript
+// NDJSON 解析
+handleCLIMessage(ws, raw) {
+  const lines = data.split("\n").filter(l => l.trim());
+  for (const line of lines) {
+    const msg = JSON.parse(line);
+    this.routeCLIMessage(session, msg);
+  }
+}
+
+// 路由分发
+routeCLIMessage(session, msg) {
+  switch (msg.type) {
+    case "system":     → 更新 session state，广播 session_init/status_change
+    case "assistant":  → 存入 messageHistory，广播给所有 browser
+    case "result":     → 更新 cost/turns，广播，触发 auto-naming
+    case "stream_event": → 直接广播（不存历史）
+    case "control_request": → 提取 can_use_tool，存入 pendingPermissions，广播 permission_request
+    case "tool_progress":   → 广播
+    case "keep_alive":      → 静默消费
+  }
+}
+```
+
+**Browser → CLI 方向**：
+
+```typescript
+// Browser 发 user_message → 转成 SDK 协议的 user 消息
+handleUserMessage(session, msg) {
+  const ndjson = JSON.stringify({
+    type: "user",
+    message: { role: "user", content: msg.content },
+    parent_tool_use_id: null,
+    session_id: session.state.session_id || "",
+  });
+  this.sendToCLI(session, ndjson);
+}
+
+// Browser 发 permission_response → 转成 control_response
+// (在 ws-bridge-browser.ts handlePermissionResponse)
+if (msg.behavior === "allow") {
+  sendToCLI(session, JSON.stringify({
+    type: "control_response",
+    response: {
+      subtype: "success",
+      request_id: msg.request_id,
+      response: { behavior: "allow", updatedInput: msg.updated_input ?? pending.input },
+    },
+  }));
+}
+```
+
+**sendToCLI 带消息队列**：
+
+```typescript
+sendToCLI(session, ndjson) {
+  if (!session.cliSocket) {
+    // CLI 还没连上，先排队
+    session.pendingMessages.push(ndjson);
+    return;
+  }
+  session.cliSocket.send(ndjson + "\n");  // NDJSON 需要换行分隔
+}
+```
+
+### Session 数据结构
+
+```typescript
+interface Session {
+  id: string;                    // launcher 分配的 UUID
+  cliSocket: ServerWebSocket | null;  // CLI 的 WS 连接
+  browserSockets: Set<ServerWebSocket>;  // 多个 browser 可同时连
+  state: SessionState;           // model, cwd, tools, cost, turns 等
+  pendingPermissions: Map<string, PermissionRequest>;  // 等待审批的 tool call
+  pendingControlRequests: Map<string, PendingControlRequest>;  // 等待 CLI 回复的控制请求
+  messageHistory: BrowserIncomingMessage[];  // 完整对话历史（用于 browser 重连回放）
+  pendingMessages: string[];     // CLI 未连接时的消息队列
+  nextEventSeq: number;          // 事件序列号（用于断线重放）
+  eventBuffer: BufferedBrowserEvent[];  // 事件缓冲区（最多 600 条）
+}
+```
+
+### 多 Session 支持
+
+完全支持。每个 session 独立的 CLI 进程 + 独立的 WS 连接：
+- `CliLauncher.sessions: Map<sessionId, SdkSessionInfo>` — 进程管理
+- `WsBridge.sessions: Map<sessionId, Session>` — 消息路由
+- URL path 里的 sessionId 做路由：`/ws/cli/{sessionId}`, `/ws/browser/{sessionId}`
+- 一个 browser 只连一个 session，但一个 session 可以有多个 browser
+
+### 断线重连
+
+- CLI 断开 → `handleCLIClose` → 广播 `cli_disconnected` → browser 重连时触发 `onCLIRelaunchNeeded` → 自动 relaunch（最多 3 次）
+- Browser 断开重连 → `handleBrowserOpen` → 发送 `session_init` + `message_history` 回放
+- 事件序列号机制：每条广播消息带 `seq`，browser 发 `session_subscribe(last_seq)` 请求补发缺失事件
+
+### 会话恢复
+
+```typescript
+// relaunch 时传 --resume 恢复 CLI 内部会话
+if (options.resumeSessionId) {
+  args.push("--resume", options.resumeSessionId);
+}
+```
+
+CLI 的 `session_id`（system/init 里报的）和 launcher 的 `sessionId`（UUID）是两个不同的 ID。launcher 存储 `cliSessionId` 用于 --resume。
+
+### 可直接搬的代码
+
+1. **CLI spawn 参数** — 完整的 args 列表和环境变量处理，直接搬
+2. **NDJSON 解析** — `data.split("\n").filter(l => l.trim())` + `JSON.parse`
+3. **消息路由 switch** — `routeCLIMessage` 的 type 分发逻辑
+4. **权限审批协议** — `handlePermissionResponse` 的 control_response 构造
+5. **消息队列** — `sendToCLI` 的 pendingMessages 队列模式
+6. **user 消息构造** — `handleUserMessage` 的 NDJSON 格式
+
+### 简化成 stdio ↔ WS 纯桥接？
+
+不太行。原因：
+1. Browser↔Server 协议和 CLI↔Server 协议不同，需要翻译
+2. Session state 管理（model/cwd/tools/cost）在 server 侧维护
+3. 权限请求需要 server 侧暂存（pendingPermissions），等 browser 回复后再转发
+4. 消息历史和断线重放需要 server 侧缓存
+
+但如果我们的场景是 **nvim 直接控制 CLI**（不经过 browser），可以大幅简化：
+- nvim 起 WS server → CLI 连过来
+- nvim 直接处理 NDJSON 消息（不需要协议翻译）
+- 权限审批在 nvim 侧做（浮动窗口 y/n）
+- 不需要 session store / event replay / 多 browser 支持
+
+### 依赖和运行要求
+
+- **运行时**：Bun >= 1.0（用了 `Bun.serve`, `Bun.spawn`, `ServerWebSocket` 等 Bun 专有 API）
+- **不能用 Node.js**：大量 Bun 特有 API，移植到 Node 需要替换 WS 库（ws）和进程管理
+- **核心依赖**：hono（HTTP 框架）、ws（仅用于 Codex WS proxy 的 Node 子进程）
+- **前端**：React + Vite + Tailwind + zustand
+
 ## 其他 CLI 的类似机制
 
 ### Codex (OpenAI)
