@@ -115,23 +115,27 @@ local function deliver_notification()
 	-- 往主 AI 终端输入框打字（不带回车，由人决定是否提交）
 	if api and api._get_main_terminal_bufnr then
 		local main_bufnr = api._get_main_terminal_bufnr()
+		log("DEBUG", "deliver: main_bufnr=" .. tostring(main_bufnr))
 		if main_bufnr and vim.api.nvim_buf_is_valid(main_bufnr) then
 			-- 找到主终端的 job_id
 			local job_id = vim.b[main_bufnr].terminal_job_id
+			log("DEBUG", "deliver: job_id=" .. tostring(job_id))
 			if job_id then
 				-- 不带 \r，文字出现在输入框但不提交
-				vim.fn.chansend(job_id, summary)
+				vim.fn.chansend(job_id, summary .. "\r")
 				log("INFO", "notification injected to main terminal bufnr=" .. main_bufnr)
 			else
 				log("WARN", "main terminal has no job_id, bufnr=" .. main_bufnr)
 			end
 		else
-			log("WARN", "main terminal bufnr invalid or not detected")
+			log("WARN", "main terminal bufnr invalid or not detected: main_bufnr=" .. tostring(main_bufnr))
 		end
+	else
+		log("WARN", "deliver: api not loaded or _get_main_terminal_bufnr missing")
 	end
 
-	-- vim.notify 保底
-	vim.notify(summary, vim.log.levels.INFO, { title = "AI Tasks" })
+	-- vim.notify 保底（已禁用，避免打断输入）
+	-- vim.notify(summary, vim.log.levels.INFO, { title = "AI Tasks" })
 
 	-- 刷新 dashboard
 	M.refresh_dashboard()

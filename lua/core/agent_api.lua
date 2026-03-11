@@ -363,13 +363,19 @@ local function spawn_cli(args)
 			cmd = cli_prefix .. ' "请阅读并执行任务: cat ' .. td .. '/task.md"'
 		end
 
-		-- 记录主 AI 终端 bufnr（调用方通过 caller_bufnr 传入自己的 NVIM_TERMINAL_BUFNR）
-		if not main_terminal_bufnr and args.caller_bufnr then
-			local bufnr = tonumber(args.caller_bufnr)
+		-- 记录主 AI 终端 bufnr（优先用 caller_bufnr，兜底读环境变量）
+		if not main_terminal_bufnr then
+			local raw = args.caller_bufnr or vim.env.NVIM_TERMINAL_BUFNR
+			task_log("DEBUG", "spawn_cli", "caller_bufnr raw=" .. tostring(raw) .. " env=" .. tostring(vim.env.NVIM_TERMINAL_BUFNR))
+			local bufnr = tonumber(raw)
 			if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
 				main_terminal_bufnr = bufnr
 				task_log("INFO", "spawn_cli", "main terminal registered: bufnr=" .. bufnr)
+			else
+				task_log("WARN", "spawn_cli", "main terminal NOT registered: raw=" .. tostring(raw) .. " tonumber=" .. tostring(bufnr) .. " valid=" .. tostring(bufnr and vim.api.nvim_buf_is_valid(bufnr)))
 			end
+		else
+			task_log("DEBUG", "spawn_cli", "main terminal already registered: bufnr=" .. main_terminal_bufnr)
 		end
 
 		local buf, win
