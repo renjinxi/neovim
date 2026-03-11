@@ -172,7 +172,7 @@ function Bus:_route(content, from)
 	end
 end
 
---- 推送消息给主 agent client
+--- 推送消息给主 agent client，回复完成后 post 到频道
 function Bus:_push_to_main(content)
 	if not self.main_client then
 		log("WARN", "_push_to_main: main_client is nil")
@@ -183,7 +183,29 @@ function Bus:_push_to_main(content)
 		return
 	end
 	log("INFO", "_push_to_main: pushing " .. content:sub(1, 50))
-	self.main_client:prompt(content, function(_) end)
+	local stream_buf = ""
+	local orig_on_update = self.main_client.on_update
+	self.main_client.on_update = function(params)
+		-- 原有回调继续（chat buffer 渲染）
+		if orig_on_update then orig_on_update(params) end
+		-- 同时收集回复内容
+		if not params or not params.update then return end
+		local kind = params.update.sessionUpdate
+		if kind == "agent_message_chunk" then
+			local text = self:_extract_text(params.update.content)
+			if text ~= "" then stream_buf = stream_buf .. text end
+		end
+	end
+	self.main_client:prompt(content, function(_)
+		-- 恢复原有 on_update
+		self.main_client.on_update = orig_on_update
+		-- 把主 Claude 的回复 post 到频道
+		if stream_buf ~= "" then
+			vim.schedule(function()
+				self:post("main", stream_buf, { no_route = true })
+			end)
+		end
+	end)
 end
 
 --- 推送消息给指定 agent

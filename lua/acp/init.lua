@@ -130,12 +130,18 @@ function M.bus_agents()
 	return active_bus:list_agents()
 end
 
---- RPC: 推送消息给指定 agent
+--- RPC: 推送消息给指定 agent（先过频道再路由）
 function M.bus_send(agent_name, text)
 	if not active_bus then
 		return nil, "bus not open"
 	end
-	active_bus:send_to_agent(agent_name, text)
+	-- 消息先进频道显示，路由会自动 @mention 触发 send_to_agent
+	-- 如果 text 里没有 @agent_name，自动加上
+	local content = text
+	if not content:find("@" .. agent_name, 1, true) then
+		content = "@" .. agent_name .. " " .. text
+	end
+	active_bus:post("main", content)
 	return true
 end
 
