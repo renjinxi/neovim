@@ -42,6 +42,28 @@ function M.setup()
 		end,
 	})
 
+	-- :AcpAgents
+	vim.api.nvim_create_user_command("AcpAgents", function()
+		if not active_bus then
+			vim.notify("[acp] 频道未开启", vim.log.levels.WARN)
+			return
+		end
+		local agents = active_bus:list_agents()
+		if #agents == 0 then
+			vim.notify("[acp] 没有活跃的 agent", vim.log.levels.INFO)
+			return
+		end
+		local items = {}
+		for _, a in ipairs(agents) do
+			local status = a.alive and (a.streaming and "streaming" or "idle") or "dead"
+			items[#items + 1] = a.name .. "  [" .. status .. "]"
+		end
+		vim.ui.select(items, { prompt = "选择 agent" }, function(choice, idx)
+			if not choice then return end
+			active_bus:open_agent_buf(agents[idx].name)
+		end)
+	end, { desc = "ACP: 查看子 agent 对话" })
+
 	-- :AcpStop
 	vim.api.nvim_create_user_command("AcpStop", function()
 		M.stop_all()
@@ -63,6 +85,45 @@ function M.open_bus(adapter_name, agent_name)
 	end
 	-- 添加 agent
 	active_bus:add_agent(agent_name, adapter_name)
+	return active_bus
+end
+
+--- RPC: 发消息到频道
+function M.bus_post(from, content)
+	if not active_bus then
+		return nil, "bus not open"
+	end
+	active_bus:post(from or "rpc", content)
+	return true
+end
+
+--- RPC: 读取最近消息
+function M.bus_read(last_n)
+	if not active_bus then
+		return nil, "bus not open"
+	end
+	return active_bus:read(last_n)
+end
+
+--- RPC: 列出 agent 状态
+function M.bus_agents()
+	if not active_bus then
+		return nil, "bus not open"
+	end
+	return active_bus:list_agents()
+end
+
+--- RPC: 推送消息给指定 agent
+function M.bus_send(agent_name, text)
+	if not active_bus then
+		return nil, "bus not open"
+	end
+	active_bus:send_to_agent(agent_name, text)
+	return true
+end
+
+--- RPC: 获取 active_bus 实例
+function M.get_bus()
 	return active_bus
 end
 
