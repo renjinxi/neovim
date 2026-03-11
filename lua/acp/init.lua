@@ -78,6 +78,7 @@ function M.open_chat(adapter_name, opts)
 	chat.on_ready = function(client)
 		if active_bus then
 			active_bus.main_client = client
+			active_bus:post("系统", "main (" .. adapter_name .. ") 已上线")
 		end
 	end
 	chat:open()
@@ -94,6 +95,7 @@ function M.open_bus(adapter_name, agent_name)
 				for _, chat in pairs(active_chats) do
 					if chat.client then
 						active_bus.main_client = chat.client
+						active_bus:post("系统", "main 已上线")
 						break
 					end
 				end
