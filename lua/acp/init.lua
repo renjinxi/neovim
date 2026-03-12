@@ -240,6 +240,11 @@ function M.get_bus()
 	return active_bus
 end
 
+--- 供 bus 内部查找主 chat 对象
+function M._active_chats()
+	return active_chats
+end
+
 function M.stop_all()
 	for name, chat in pairs(active_chats) do
 		pcall(function() chat:close() end)

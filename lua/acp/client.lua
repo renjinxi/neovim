@@ -2,8 +2,25 @@
 local jsonrpc = require("acp.jsonrpc")
 local uv = vim.uv
 
+-- 日志文件：~/.config/nvim/logs/acp-client.log
+local LOG_FILE = vim.fn.stdpath("config") .. "/logs/acp-client.log"
+
+local function write_log(msg)
+	vim.fn.mkdir(vim.fn.fnamemodify(LOG_FILE, ":h"), "p")
+	local f = io.open(LOG_FILE, "a")
+	if not f then return end
+	f:write(os.date("%H:%M:%S") .. "  " .. msg .. "\n")
+	f:close()
+end
+
 local Client = {}
 Client.__index = Client
+
+--- 实例日志（带 agent 名）
+function Client:_log(msg)
+	local name = self.adapter and self.adapter.name or "?"
+	write_log("[" .. name .. "]  " .. msg)
+end
 
 --- 创建新 client
 --- @param adapter_config table {cmd, args, env, name}
@@ -39,6 +56,8 @@ function Client:start(opts)
 	self.stderr = uv.new_pipe()
 
 	local cwd = opts.cwd or vim.fn.getcwd()
+	local t0 = os.clock()
+	self:_log("spawn  cmd=" .. self.adapter.cmd .. "  cwd=" .. cwd)
 
 	-- spawn
 	self.handle, self.pid = uv.spawn(self.adapter.cmd, {
@@ -48,6 +67,7 @@ function Client:start(opts)
 		cwd = cwd,
 	}, function(code, signal)
 		vim.schedule(function()
+			self:_log("exit  code=" .. tostring(code) .. "  signal=" .. tostring(signal))
 			self.alive = false
 			if self.on_exit then
 				self.on_exit(code, signal)
@@ -56,8 +76,10 @@ function Client:start(opts)
 	end)
 
 	if not self.handle then
+		self:_log("spawn FAILED  cmd=" .. self.adapter.cmd)
 		error("spawn failed: " .. self.adapter.cmd .. " (pid=" .. tostring(self.pid) .. ")")
 	end
+	self:_log("spawned  pid=" .. tostring(self.pid))
 
 	-- 读 stdout
 	self.stdout:read_start(function(err, chunk)
@@ -75,17 +97,17 @@ function Client:start(opts)
 		end)
 	end)
 
-	-- stderr → 日志
+	-- stderr → 日志文件（不再静默）
 	self.stderr:read_start(function(_, chunk)
-		if chunk then
+		if chunk and chunk ~= "" then
 			vim.schedule(function()
-				-- 静默，调试时可打开
-				-- vim.notify("[acp stderr] " .. chunk, vim.log.levels.DEBUG)
+				self:_log("stderr  " .. vim.trim(chunk):sub(1, 200))
 			end)
 		end
 	end)
 
 	-- ACP 握手：initialize
+	local t1 = os.clock()
 	local init_result, init_err = self:_request_sync("initialize", {
 		protocolVersion = 1,
 		clientInfo = { name = "nvim-acp", version = "0.1.0" },
@@ -95,20 +117,26 @@ function Client:start(opts)
 		},
 	}, 15000)
 	if init_err then
+		self:_log("initialize FAILED  err=" .. tostring(init_err))
 		self:stop()
 		error("initialize failed: " .. tostring(init_err))
 	end
+	self:_log("initialize ok  elapsed=" .. math.floor((os.clock()-t1)*1000) .. "ms  proto=" .. tostring(init_result and init_result.protocolVersion))
 	self.agent_info = init_result or {}
 	self.agent_caps = self.agent_info.agentCapabilities or {}
 
-	-- ACP 握手：session/new（始终创建新会话）
+	-- ACP 握手：session/new
+	local t2 = os.clock()
 	local session_args = { cwd = cwd, mcpServers = {} }
 	local session_result, session_err = self:_request_sync("session/new", session_args, 15000)
 	if session_err then
+		self:_log("session/new FAILED  err=" .. tostring(session_err))
 		self:stop()
 		error("session/new failed: " .. tostring(session_err))
 	end
 	self.session_id = session_result and session_result.sessionId
+	self:_log("session/new ok  elapsed=" .. math.floor((os.clock()-t2)*1000) .. "ms  session=" .. tostring(self.session_id))
+	self:_log("ready  total_handshake=" .. math.floor((os.clock()-t0)*1000) .. "ms")
 	self.alive = true
 end
 
@@ -120,16 +148,21 @@ function Client:prompt(text, on_done)
 		vim.notify("[acp] client not ready", vim.log.levels.ERROR)
 		return
 	end
+	local t0 = os.clock()
+	local name = self.adapter and self.adapter.name or "?"
 	local prompt = { { type = "text", text = text } }
 	self:_send_request("session/prompt", {
 		sessionId = self.session_id,
 		prompt = prompt,
 	}, function(result, err)
+		local elapsed_ms = math.floor((os.clock() - t0) * 1000)
+		self:_log("prompt done  agent=" .. name .. "  elapsed=" .. elapsed_ms .. "ms  stop=" .. tostring(result and result.stopReason or err and "error" or "?"))
 		if on_done then
 			local reason = result and result.stopReason or (err and "error" or "unknown")
 			on_done(reason)
 		end
 	end)
+	self:_log("prompt sent  agent=" .. name .. "  len=" .. #text)
 end
 
 --- 取消当前 prompt
@@ -376,9 +409,9 @@ function Client:_handle_terminal_create(id, params)
 	local args = params.args or {}
 	local cwd = params.cwd
 	local env_map = params.env
-	local byte_limit = params.outputByteLimit or (1024 * 1024) -- 默认 1MB
-
-	-- 构建完整命令行给 shell 执行
+	local byte_limit = params.outputByteLimit or (1024 * 1024)
+	local t0 = os.clock()
+	self:_log("terminal/create  cmd=" .. cmd .. "  cwd=" .. tostring(cwd))
 	local term_stdout = uv.new_pipe()
 	local term_stderr = uv.new_pipe()
 	local term_stdin = uv.new_pipe()
@@ -420,11 +453,13 @@ function Client:_handle_terminal_create(id, params)
 	end)
 
 	if not term_handle then
+		self:_log("terminal/create FAILED  cmd=" .. cmd)
 		self:_write(jsonrpc.encode_error(id, -32000, "spawn failed: " .. cmd))
 		return
 	end
 
 	local tid = tostring(term_pid)
+	self:_log("terminal/create ok  tid=" .. tid .. "  pid=" .. tostring(term_pid) .. "  elapsed=" .. math.floor((os.clock()-t0)*1000) .. "ms")
 	if not self._terminals then
 		self._terminals = {}
 	end

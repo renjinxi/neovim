@@ -255,13 +255,32 @@ function Bus:_push_to_main(content)
 		log("WARN", "_push_to_main: main_client not alive")
 		return
 	end
-	log("INFO", "_push_to_main: pushing " .. content:sub(1, 50))
+	local t0 = os.clock()
+	log("INFO", "_push_to_main: start  msg=" .. content:sub(1, 80))
+
 	local stream_buf = ""
 	local orig_on_update = self.main_client.on_update
+
+	-- 找主 Claude 的 chat 对象（用于同步写 chat buffer）
+	local main_chat = nil
+	local acp = package.loaded["acp"]
+	if acp then
+		for _, chat in pairs(acp._active_chats and acp._active_chats() or {}) do
+			if chat.client == self.main_client then
+				main_chat = chat
+				break
+			end
+		end
+	end
+
+	-- 在主 chat buffer 里写入"频道来的消息"标记
+	if main_chat then
+		main_chat:_append_system("← 频道: " .. content:sub(1, 120) .. (#content > 120 and "…" or ""))
+		main_chat.stream_started = false
+	end
+
 	self.main_client.on_update = function(params)
-		-- 原有回调继续（chat buffer 渲染）
 		if orig_on_update then orig_on_update(params) end
-		-- 同时收集回复内容
 		if not params or not params.update then return end
 		local kind = params.update.sessionUpdate
 		if kind == "agent_message_chunk" then
@@ -269,10 +288,11 @@ function Bus:_push_to_main(content)
 			if text ~= "" then stream_buf = stream_buf .. text end
 		end
 	end
+
 	self.main_client:prompt(content, function(_)
-		-- 恢复原有 on_update
 		self.main_client.on_update = orig_on_update
-		-- 把主 Claude 的回复 post 到频道
+		local elapsed = math.floor((os.clock() - t0) * 1000)
+		log("INFO", "_push_to_main: done  elapsed=" .. elapsed .. "ms  reply_len=" .. #stream_buf)
 		if stream_buf ~= "" then
 			vim.schedule(function()
 				self:post("main", stream_buf, { no_route = true })
@@ -470,20 +490,36 @@ function Bus:_bus_stream_end(name)
 	end)
 end
 
---- 渲染单条消息到 buffer
+--- 渲染单条消息到 buffer（带时间戳和间隔）
 function Bus:_render_message(msg)
 	if not self.buf or not vim.api.nvim_buf_is_valid(self.buf) then
 		return
 	end
 	vim.bo[self.buf].modifiable = true
 	local count = vim.api.nvim_buf_line_count(self.buf)
+
+	-- 计算与上条消息的时间间隔
+	local time_str = os.date("%H:%M:%S", msg.timestamp)
+	local gap_str = ""
+	if self._last_msg_time then
+		local gap = msg.timestamp - self._last_msg_time
+		if gap >= 60 then
+			gap_str = string.format(" (+%dm%ds)", math.floor(gap / 60), gap % 60)
+		elseif gap >= 2 then
+			gap_str = string.format(" (+%ds)", gap)
+		end
+	end
+	self._last_msg_time = msg.timestamp
+
 	local prefix = "[" .. msg.from .. "]"
+	local time_prefix = time_str .. gap_str .. "  "
+	local indent = string.rep(" ", #time_prefix + #prefix + 2)
 	local lines = {}
 	for _, line in ipairs(vim.split(msg.content, "\n", { plain = true })) do
 		if #lines == 0 then
-			lines[1] = prefix .. "  " .. line
+			lines[1] = time_prefix .. prefix .. "  " .. line
 		else
-			lines[#lines + 1] = string.rep(" ", #prefix + 2) .. line
+			lines[#lines + 1] = indent .. line
 		end
 	end
 	vim.api.nvim_buf_set_lines(self.buf, count, count, false, lines)
