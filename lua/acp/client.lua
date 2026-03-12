@@ -126,6 +126,24 @@ function Client:start(opts)
 	self.agent_info = init_result or {}
 	self.agent_caps = self.agent_info.agentCapabilities or {}
 
+	-- ACP 握手：authenticate（如果 adapter 提供了 auth_method）
+	-- gemini 需要这步，claude 不需要
+	if self.adapter.auth_method then
+		local t_auth = os.clock()
+		local auth_params = { methodId = self.adapter.auth_method }
+		-- 传 api-key（gemini USE_GEMINI 方式）
+		if self.adapter.auth_api_key then
+			auth_params._meta = { ["api-key"] = self.adapter.auth_api_key }
+		end
+		local _, auth_err = self:_request_sync("authenticate", auth_params, 15000)
+		if auth_err then
+			self:_log("authenticate FAILED  err=" .. tostring(auth_err))
+			self:stop()
+			error("authenticate failed: " .. tostring(auth_err))
+		end
+		self:_log("authenticate ok  elapsed=" .. math.floor((os.clock()-t_auth)*1000) .. "ms  method=" .. self.adapter.auth_method)
+	end
+
 	-- ACP 握手：session/new
 	local t2 = os.clock()
 	local session_args = { cwd = cwd, mcpServers = {} }

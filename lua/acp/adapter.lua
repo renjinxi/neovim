@@ -57,18 +57,22 @@ local adapters = {
 	gemini = {
 		name = "gemini",
 		cmd = "gemini",
-		-- 对齐 codecompanion：--yolo 在前，--experimental-acp 在后
-		args = { "--yolo", "--experimental-acp" },
-		terminal = false, -- gemini 不支持 terminal/* 反向请求
+		args = { "--yolo", "--acp" },
+		terminal = false,
+		auth_method = "USE_GEMINI", -- ACP authenticate 步骤需要
 		get_env = function(_)
+			return {}
+		end,
+		get_auth = function(_)
+			-- 返回 auth_api_key，供 client 握手时传给 authenticate
 			local ok, env_mod = pcall(require, "core.env")
 			if ok then
 				local key = env_mod.get("GEMINI_API_KEY")
 				if key and key ~= "" then
-					return { GEMINI_API_KEY = key }
+					return key
 				end
 			end
-			return {}
+			return nil
 		end,
 	},
 	-- codex 当前版本（0.114.x）不支持 ACP 协议，codex-acp 命令不存在
@@ -108,7 +112,9 @@ function M.get(name, opts)
 		cmd = adapter.cmd,
 		args = vim.deepcopy(adapter.args),
 		env = terminal.get_env(extra_env),
-		terminal = adapter.terminal, -- 是否支持 terminal/* 反向请求
+		terminal = adapter.terminal,
+		auth_method = adapter.auth_method, -- 需要 authenticate 步骤的 adapter
+		auth_api_key = adapter.get_auth and adapter.get_auth(opts) or nil,
 	}
 	-- 频道模式：注入 system prompt
 	if opts.bus_mode and opts.agent_name then
