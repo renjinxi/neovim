@@ -59,21 +59,9 @@ local adapters = {
 		cmd = "gemini",
 		args = { "--yolo", "--acp" },
 		terminal = false,
-		auth_method = "USE_GEMINI", -- ACP authenticate 步骤需要
-		get_env = function(_)
-			return {}
-		end,
-		get_auth = function(_)
-			-- 返回 auth_api_key，供 client 握手时传给 authenticate
-			local ok, env_mod = pcall(require, "core.env")
-			if ok then
-				local key = env_mod.get("GEMINI_API_KEY")
-				if key and key ~= "" then
-					return key
-				end
-			end
-			return nil
-		end,
+		auth_method = "LOGIN_WITH_GOOGLE", -- 用已登录的 Google 账号，不需要 API key
+		get_env = function(_) return {} end,
+		get_auth = function(_) return nil end,
 	},
 	-- codex 当前版本（0.114.x）不支持 ACP 协议，codex-acp 命令不存在
 	-- 等官方支持后启用，目前用 ai-task-dispatch skill 的 PTY 方案代替
