@@ -106,15 +106,16 @@ function Client:start(opts)
 		end
 	end)
 
-	-- ACP 握手：initialize
+	-- ACP 握手：initialize（capabilities 根据 adapter 决定）
 	local t1 = os.clock()
+	local caps = { fs = { readTextFile = true, writeTextFile = true } }
+	if self.adapter.terminal ~= false then
+		caps.terminal = true
+	end
 	local init_result, init_err = self:_request_sync("initialize", {
 		protocolVersion = 1,
 		clientInfo = { name = "nvim-acp", version = "0.1.0" },
-		clientCapabilities = {
-			fs = { readTextFile = true, writeTextFile = true },
-			terminal = true,
-		},
+		clientCapabilities = caps,
 	}, 15000)
 	if init_err then
 		self:_log("initialize FAILED  err=" .. tostring(init_err))

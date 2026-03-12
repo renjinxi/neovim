@@ -5,7 +5,8 @@ local adapters = {
 	claude = {
 		name = "claude",
 		cmd = "claude-agent-acp",
-		args = { "--yolo" }, -- M0 默认 bypass permissions
+		args = { "--yolo" },
+		terminal = true, -- 支持 terminal/* 反向请求
 		get_env = function(opts)
 			local env = {}
 			if opts.api_num then
@@ -14,12 +15,8 @@ local adapters = {
 					local n = tostring(opts.api_num)
 					local base_url = env_mod.get("CLAUDE_API" .. n .. "_BASE_URL")
 					local token = env_mod.get("CLAUDE_API" .. n .. "_TOKEN")
-					if base_url then
-						env.ANTHROPIC_BASE_URL = base_url
-					end
-					if token then
-						env.ANTHROPIC_AUTH_TOKEN = token
-					end
+					if base_url then env.ANTHROPIC_BASE_URL = base_url end
+					if token then env.ANTHROPIC_AUTH_TOKEN = token end
 				end
 			end
 			return env
@@ -29,6 +26,7 @@ local adapters = {
 		name = "c1",
 		cmd = "claude-agent-acp",
 		args = { "--yolo" },
+		terminal = true,
 		get_env = function(_)
 			local ok, env_mod = pcall(require, "core.env")
 			if ok then
@@ -37,13 +35,14 @@ local adapters = {
 					ANTHROPIC_AUTH_TOKEN = env_mod.get("CLAUDE_API1_TOKEN"),
 				}
 			end
-			return
+			return {}
 		end,
 	},
 	c2 = {
 		name = "c2",
 		cmd = "claude-agent-acp",
 		args = { "--yolo" },
+		terminal = true,
 		get_env = function(_)
 			local ok, env_mod = pcall(require, "core.env")
 			if ok then
@@ -58,17 +57,42 @@ local adapters = {
 	gemini = {
 		name = "gemini",
 		cmd = "gemini",
-		args = { "--experimental-acp", "--yolo" },
+		-- 对齐 codecompanion：--yolo 在前，--experimental-acp 在后
+		args = { "--yolo", "--experimental-acp" },
+		terminal = false, -- gemini 不支持 terminal/* 反向请求
 		get_env = function(_)
+			local ok, env_mod = pcall(require, "core.env")
+			if ok then
+				local key = env_mod.get("GEMINI_API_KEY")
+				if key and key ~= "" then
+					return { GEMINI_API_KEY = key }
+				end
+			end
+			return {}
+		end,
+	},
+	codex = {
+		name = "codex",
+		cmd = "codex-acp", -- 对齐 codecompanion，不是 codex
+		args = {},
+		terminal = false,
+		get_env = function(_)
+			local ok, env_mod = pcall(require, "core.env")
+			if ok then
+				local key = env_mod.get("OPENAI_API_KEY")
+				if key and key ~= "" then
+					return { OPENAI_API_KEY = key }
+				end
+			end
 			return {}
 		end,
 	},
 }
 
 --- 获取 adapter 的完整 spawn 配置
---- @param name string "claude" | "c1" | "c2" | "gemini"
+--- @param name string "claude" | "c1" | "c2" | "gemini" | "codex"
 --- @param opts? table {api_num?, cwd?, agent_name?, bus_mode?}
---- @return table {cmd, args, env, name, system_prompt?}
+--- @return table {cmd, args, env, name, terminal, system_prompt?}
 function M.get(name, opts)
 	opts = opts or {}
 	local adapter = adapters[name]
@@ -82,6 +106,7 @@ function M.get(name, opts)
 		cmd = adapter.cmd,
 		args = vim.deepcopy(adapter.args),
 		env = terminal.get_env(extra_env),
+		terminal = adapter.terminal, -- 是否支持 terminal/* 反向请求
 	}
 	-- 频道模式：注入 system prompt
 	if opts.bus_mode and opts.agent_name then
