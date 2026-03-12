@@ -27,6 +27,8 @@ function Bus.new()
 		win = nil,
 		input_buf = nil,
 		input_win = nil,
+		_main_busy = false,
+		_main_queue = {},
 	}, Bus)
 end
 
@@ -236,7 +238,7 @@ function Bus:_route(content, from)
 	end
 	for name in pairs(mentioned) do
 		if name == from then
-			-- 跳过发送者自己，防止循环
+			-- 跳过发送者自己
 		elseif self.agents[name] then
 			self:send_to_agent(name, content)
 		elseif name == "main" then
@@ -245,7 +247,7 @@ function Bus:_route(content, from)
 	end
 end
 
---- 推送消息给主 agent client，回复完成后 post 到频道
+--- 推送消息给主 agent client，回复完成后 post 到频道（串行队列，防并发）
 function Bus:_push_to_main(content)
 	if not self.main_client then
 		log("WARN", "_push_to_main: main_client is nil")
@@ -255,29 +257,20 @@ function Bus:_push_to_main(content)
 		log("WARN", "_push_to_main: main_client not alive")
 		return
 	end
+
+	-- 队列：如果正在处理，入队等待
+	if self._main_busy then
+		log("INFO", "_push_to_main: queued  msg=" .. content:sub(1, 80))
+		self._main_queue[#self._main_queue + 1] = content
+		return
+	end
+	self._main_busy = true
+
 	local t0 = os.clock()
 	log("INFO", "_push_to_main: start  msg=" .. content:sub(1, 80))
 
 	local stream_buf = ""
 	local orig_on_update = self.main_client.on_update
-
-	-- 找主 Claude 的 chat 对象（用于同步写 chat buffer）
-	local main_chat = nil
-	local acp = package.loaded["acp"]
-	if acp then
-		for _, chat in pairs(acp._active_chats and acp._active_chats() or {}) do
-			if chat.client == self.main_client then
-				main_chat = chat
-				break
-			end
-		end
-	end
-
-	-- 在主 chat buffer 里写入"频道来的消息"标记
-	if main_chat then
-		main_chat:_append_system("← 频道: " .. content:sub(1, 120) .. (#content > 120 and "…" or ""))
-		main_chat.stream_started = false
-	end
 
 	self.main_client.on_update = function(params)
 		if orig_on_update then orig_on_update(params) end
@@ -295,7 +288,15 @@ function Bus:_push_to_main(content)
 		log("INFO", "_push_to_main: done  elapsed=" .. elapsed .. "ms  reply_len=" .. #stream_buf)
 		if stream_buf ~= "" then
 			vim.schedule(function()
-				self:post("main", stream_buf, { no_route = true })
+				self:post("main", stream_buf)
+			end)
+		end
+		-- 处理队列里的下一条
+		self._main_busy = false
+		if #self._main_queue > 0 then
+			local next_msg = table.remove(self._main_queue, 1)
+			vim.schedule(function()
+				self:_push_to_main(next_msg)
 			end)
 		end
 	end)
@@ -317,18 +318,12 @@ function Bus:send_to_agent(name, text)
 	agent.streaming = true
 	agent.stream_buf = ""
 	agent.stream_started = false
-	agent.bus_stream_started = false  -- 频道主 buffer 流式状态
 	-- 把 user 消息写入 agent chat_buf（完整格式）
 	self:_append_agent_role(agent, "You", text)
 	agent.client:prompt(payload, function(stop_reason)
 		vim.schedule(function()
 			agent.streaming = false
 			agent.stream_started = false
-			-- 流式结束：在频道主 buffer 补一个空行分隔
-			if agent.bus_stream_started then
-				agent.bus_stream_started = false
-				self:_bus_stream_end(name)
-			end
 			agent.stream_buf = ""
 			if stop_reason == "cancelled" then
 				self:post("系统", name .. " 已取消")
@@ -374,8 +369,6 @@ function Bus:_on_agent_update(name, params)
 		if text ~= "" then
 			agent.stream_buf = (agent.stream_buf or "") .. text
 			self:_append_agent_chunk(agent, text)
-			-- 实时写频道主 buffer
-			self:_bus_stream_chunk(name, agent, text)
 		end
 	elseif kind == "tool_call" then
 		local title = update.title or "tool"
@@ -447,48 +440,6 @@ function Bus:_extract_text(content)
 	return Client.get_renderable_text(content) or ""
 end
 
---- 实时写 chunk 到频道主 buffer
-function Bus:_bus_stream_chunk(name, agent, text)
-	if not self.buf or not vim.api.nvim_buf_is_valid(self.buf) then return end
-	vim.schedule(function()
-		vim.bo[self.buf].modifiable = true
-		-- 第一个 chunk：写角色头
-		if not agent.bus_stream_started then
-			agent.bus_stream_started = true
-			local count = vim.api.nvim_buf_line_count(self.buf)
-			vim.api.nvim_buf_set_lines(self.buf, count, count, false, { "[" .. name .. "]  " })
-		end
-		-- 追加到最后一行（inline，和 _append_agent_chunk 逻辑一致）
-		local last_idx = vim.api.nvim_buf_line_count(self.buf) - 1
-		local last_line = vim.api.nvim_buf_get_lines(self.buf, last_idx, last_idx + 1, false)[1] or ""
-		local parts = vim.split(text, "\n", { plain = true })
-		parts[1] = last_line .. parts[1]
-		vim.api.nvim_buf_set_lines(self.buf, last_idx, last_idx + 1, false, parts)
-		vim.bo[self.buf].modifiable = false
-		self:_scroll_to_bottom()
-	end)
-end
-
---- 流式结束：补空行分隔
-function Bus:_bus_stream_end(name)
-	if not self.buf or not vim.api.nvim_buf_is_valid(self.buf) then return end
-	vim.schedule(function()
-		vim.bo[self.buf].modifiable = true
-		local count = vim.api.nvim_buf_line_count(self.buf)
-		vim.api.nvim_buf_set_lines(self.buf, count, count, false, { "" })
-		vim.bo[self.buf].modifiable = false
-		-- 记录到 messages（供 bus_read 读取）
-		local agent = self.agents[name]
-		if agent and agent.stream_buf and agent.stream_buf ~= "" then
-			self.messages[#self.messages + 1] = {
-				from = name,
-				content = agent.stream_buf,
-				timestamp = os.time(),
-			}
-		end
-		self:_scroll_to_bottom()
-	end)
-end
 
 --- 渲染单条消息到 buffer（带时间戳和间隔）
 function Bus:_render_message(msg)

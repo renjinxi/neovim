@@ -1,60 +1,62 @@
 # ACP 频道系统 — 问题清单
 
-## P1 尾巴
+最后更新：2026-03-13
 
-### #1 推送稳定性
-_push_to_main 并发问题，主 Claude 收到 @main 推送有时不回复。
-状态：未复现，暂跳过
+---
 
-### #2 统一命名 ✅
-子 agent system prompt 用 @主agent，路由只识别 @main。
-修复：bus.lua 路由统一为 @main，system prompt 同步更新。
+## 已解决 ✅
 
-## 多 adapter 支持
+| # | 问题 | 修复内容 |
+|---|------|---------|
+| #2 | 统一命名 @主agent→@main | bus.lua 路由 + system prompt 统一 |
+| #4 | Codex adapter 缺失 | 已加，但当前版本不支持 ACP，已注释禁用 |
+| #5 | 频道 buffer 被误关 | q 改为 hide()，BufWipeout+VimLeavePre 自动清理进程 |
+| #6 | Chat/频道双 buffer 体验差 | AcpToggle(<leader>ait)、AcpAgents picker(<leader>aia)、show() 修复 split 顺序 |
+| #7 | skill 轮询问题 | 隐藏 bus_agents/bus_read，加推送机制说明 |
+| #8 | 多账号支持 | c1/c2 adapter，读 CLAUDE_API1_*/CLAUDE_API2_* |
+| #9 | 主 Claude chat 割裂 | _push_to_main 在主 chat buffer 写"← 频道"标记 |
+| #10 | 频道消息无时间感知 | _render_message 加时间戳 + 间隔（+Xs） |
+| #11 | 通信延迟无法分析 | 新增 logs/acp-client.log，记录握手/prompt/terminal 耗时 |
+
+---
+
+## 进行中 🔧
 
 ### #3 Gemini 不回消息
-args 顺序错误（--experimental-acp 在前），且握手时传了 terminal=true（gemini 不支持）。
-修复：args 改为 ["--yolo", "--experimental-acp"]，adapter 加 terminal=false 字段，client 握手时按 adapter 决定 capabilities。
-状态：待验证（需要 .env 里配置 GEMINI_API_KEY）
+**根本原因**：ACP 握手缺少 authenticate 步骤。gemini 握手流程是：
+`initialize → authenticate → session/new`，我们之前跳过了 authenticate。
 
-### #4 Codex adapter ✅
-新增 codex adapter，cmd=codex-acp，auth=OPENAI_API_KEY。
-状态：待验证（需要 .env 里配置 OPENAI_API_KEY）
+**已修**：
+- client.lua 补全 authenticate 步骤
+- adapter: args 改为 `--acp`（`--experimental-acp` 已 deprecated）
+- adapter: auth_method 改为 `LOGIN_WITH_GOOGLE`（用本地 OAuth 凭证，不需要 API key）
 
-## UX
+**进展**：
+- authenticate 失败原因找到：methodId 传的是枚举名 `LOGIN_WITH_GOOGLE`，实际值应该是 `oauth-personal`
+- 已修改 adapter.lua，改为 `auth_method = "oauth-personal"`
+- 待验证：重启 nvim 后测试 `:AcpChat gemini`
 
-### #5 频道不可随意关闭 ✅
-修复：q 改为 hide()，只关窗口不杀进程。BufWipeout + VimLeavePre 自动清理进程。
+---
 
-### #6 Chat/频道双 buffer 体验差 ✅
-修复：
-- AcpToggle / <leader>ait：主+输入框成对 toggle
-- AcpAgents / <leader>aia：统一 picker，列出所有 session，选中 toggle
-- show() 修复 split 顺序，保证输入框成对出现
+## 待处理 ⏳
 
-## Skill 问题
+### #1 推送稳定性
+`_push_to_main` 并发问题，多个 agent 同时 @main 可能乱序或丢失。
+**状态**：未复现，暂跳过。
 
-### #7 acp-bus-dispatch 轮询问题 ✅
-修复：skill 隐藏 bus_agents/bus_read API，加推送机制说明，禁止 sleep 轮询。
+### #4 Codex ACP 支持
+当前 codex 0.114.x 没有 `codex-acp` 命令，ACP 未实现。
+**状态**：等官方支持，目前用 ai-task-dispatch PTY 方案代替。
 
-## 多账号支持
+---
 
-### #8 多账号 ✅
-修复：adapter.lua 新增 c1/c2，读取 CLAUDE_API1_*/CLAUDE_API2_* 环境变量。
+## 功能路线图
 
-## 新增问题
+### P3：子 agent 自主扩展（未开始）
+子 agent 能通过 bash 调 RPC 创建新 agent，动态加入频道。
+- [ ] rpc.lua 加 bus_add_agent 接口
+- [ ] 子 agent system prompt 加 spawn 指令
+- [ ] 动态加入后自动注入 system prompt
 
-### #9 主 Claude chat 割裂
-频道推送给主 Claude 的消息，在主 Claude 的 chat buffer 里看不到，很割裂。
-修复：_push_to_main 在主 chat buffer 写入"← 频道"来源标记。
-状态：待验证
-
-### #10 频道消息无时间感知
-不知道消息之间的时间间隔，慢/快无法感知。
-修复：_render_message 加时间戳 + 与上条消息的间隔（+Xs）。
-状态：待验证
-
-### #11 通信延迟无法分析
-不知道哪个环节慢。
-修复：新增 logs/acp-client.log，记录握手耗时、prompt 耗时、terminal 操作耗时、stderr 输出。
-状态：已上线
+### P4：频道树（未开始）
+频道可以嵌套，子频道独立运行后汇报给父频道。

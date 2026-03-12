@@ -59,7 +59,7 @@ local adapters = {
 		cmd = "gemini",
 		args = { "--yolo", "--acp" },
 		terminal = false,
-		auth_method = "LOGIN_WITH_GOOGLE", -- 用已登录的 Google 账号，不需要 API key
+		auth_method = "oauth-personal", -- AuthType.LOGIN_WITH_GOOGLE 的实际值
 		get_env = function(_) return {} end,
 		get_auth = function(_) return nil end,
 	},
@@ -118,16 +118,19 @@ function M.get_bus_system_prompt(agent_name)
 	local sock = vim.env.NVIM_LISTEN_ADDRESS or vim.v.servername
 	local tmpfile = "/tmp/acp_msg_" .. agent_name .. ".txt"
 	return string.format(
-		[[你在一个协作频道里。任务完成或需要汇报时，用以下方式发消息：
+		[[你在一个多 agent 协作频道里。
+
+收到任务后，完成时用以下命令发一次消息到频道：
 
 MSG="你的消息内容"
 echo "$MSG" > '%s'
 nvim --server '%s' --remote-expr 'luaeval("require(\"acp.rpc\").bus_post_file(\"%s\",\"%s\")")'
 
 规则：
-- 任务完成：发 "@main 任务完成，结果是..."
-- 遇到问题：发 "@main 遇到问题，需要..."
-- 过程信息（读文件、写代码等）不发频道]],
+- 任务消息里会说"完成后回复 xxx"，xxx 就是收件人，消息开头写 @xxx
+- 没有指定收件人时，默认 @main
+- 每个任务只发一次，发完等待下一条指令，不要重复发
+- 过程信息不发，只发最终结论]],
 		tmpfile,
 		sock,
 		agent_name,
