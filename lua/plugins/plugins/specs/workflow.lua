@@ -74,6 +74,17 @@ return {
 			end)
 		end,
 	},
+	{
+		"olimorris/codecompanion.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-treesitter/nvim-treesitter",
+		},
+		cmd = { "CodeCompanion", "CodeCompanionChat", "CodeCompanionActions" },
+		opts = function()
+			return require("plugins.config.codecompanion")
+		end,
+	},
 	"mbbill/undotree",
 	{
 		"matbme/JABS.nvim",
