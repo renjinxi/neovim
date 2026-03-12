@@ -25,6 +25,36 @@ local adapters = {
 			return env
 		end,
 	},
+	c1 = {
+		name = "c1",
+		cmd = "claude-agent-acp",
+		args = { "--yolo" },
+		get_env = function(_)
+			local ok, env_mod = pcall(require, "core.env")
+			if ok then
+				return {
+					ANTHROPIC_BASE_URL = env_mod.get("CLAUDE_API1_BASE_URL"),
+					ANTHROPIC_AUTH_TOKEN = env_mod.get("CLAUDE_API1_TOKEN"),
+				}
+			end
+			return
+		end,
+	},
+	c2 = {
+		name = "c2",
+		cmd = "claude-agent-acp",
+		args = { "--yolo" },
+		get_env = function(_)
+			local ok, env_mod = pcall(require, "core.env")
+			if ok then
+				return {
+					ANTHROPIC_BASE_URL = env_mod.get("CLAUDE_API2_BASE_URL"),
+					ANTHROPIC_AUTH_TOKEN = env_mod.get("CLAUDE_API2_TOKEN"),
+				}
+			end
+			return {}
+		end,
+	},
 	gemini = {
 		name = "gemini",
 		cmd = "gemini",
@@ -36,7 +66,7 @@ local adapters = {
 }
 
 --- 获取 adapter 的完整 spawn 配置
---- @param name string "claude" | "gemini"
+--- @param name string "claude" | "c1" | "c2" | "gemini"
 --- @param opts? table {api_num?, cwd?, agent_name?, bus_mode?}
 --- @return table {cmd, args, env, name, system_prompt?}
 function M.get(name, opts)
@@ -74,8 +104,8 @@ echo "$MSG" > '%s'
 nvim --server '%s' --remote-expr 'luaeval("require(\"acp.rpc\").bus_post_file(\"%s\",\"%s\")")'
 
 规则：
-- 任务完成：发 "@主agent 任务完成，结果是..."
-- 遇到问题：发 "@主agent 遇到问题，需要..."
+- 任务完成：发 "@main 任务完成，结果是..."
+- 遇到问题：发 "@main 遇到问题，需要..."
 - 过程信息（读文件、写代码等）不发频道]],
 		tmpfile,
 		sock,

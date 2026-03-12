@@ -76,10 +76,33 @@ function Chat:open()
 		self:_submit_input()
 	end, { buffer = self.input_buf, noremap = true, silent = true })
 
-	-- keymaps：q 关闭（normal mode，主 buffer）
+	-- keymaps：q 只关窗口，不杀进程
 	vim.keymap.set("n", "q", function()
-		self:close()
+		self:hide()
 	end, { buffer = self.buf, noremap = true, silent = true })
+
+	-- BufWipeout 保护
+	vim.api.nvim_create_autocmd("BufWipeout", {
+		buffer = self.buf,
+		once = true,
+		callback = function()
+			if self.client then
+				pcall(function() self.client:stop() end)
+				self.client = nil
+			end
+		end,
+	})
+
+	-- VimLeavePre 清理
+	vim.api.nvim_create_autocmd("VimLeavePre", {
+		group = vim.api.nvim_create_augroup("acp_chat_cleanup_" .. self.buf, { clear = true }),
+		once = true,
+		callback = function()
+			if self.client then
+				pcall(function() self.client:stop() end)
+			end
+		end,
+	})
 
 	-- 启动 client（异步，不阻塞 UI）
 	vim.schedule(function()
@@ -258,6 +281,49 @@ function Chat:_scroll_to_bottom()
 		local count = vim.api.nvim_buf_line_count(self.buf)
 		pcall(vim.api.nvim_win_set_cursor, self.win, { count, 0 })
 	end
+end
+
+--- 只关窗口，保留进程
+function Chat:hide()
+	if self.input_win and vim.api.nvim_win_is_valid(self.input_win) then
+		vim.api.nvim_win_close(self.input_win, true)
+		self.input_win = nil
+	end
+	if self.win and vim.api.nvim_win_is_valid(self.win) then
+		vim.api.nvim_win_close(self.win, true)
+		self.win = nil
+	end
+end
+
+--- 重新打开窗口
+function Chat:show()
+	if not self.buf or not vim.api.nvim_buf_is_valid(self.buf) then
+		return false
+	end
+	local width = math.floor(vim.o.columns * 0.4)
+	vim.cmd("botright " .. width .. "vsplit")
+	self.win = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(self.win, self.buf)
+	vim.wo[self.win].number = false
+	vim.wo[self.win].relativenumber = false
+	vim.wo[self.win].signcolumn = "no"
+	vim.wo[self.win].wrap = true
+	vim.wo[self.win].linebreak = true
+
+	-- 先切到主 win，再 split 输入框，保证成对
+	vim.api.nvim_set_current_win(self.win)
+	vim.cmd("belowright 3split")
+	self.input_win = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(self.input_win, self.input_buf)
+	vim.wo[self.input_win].winfixheight = true
+	vim.wo[self.input_win].number = false
+	vim.wo[self.input_win].relativenumber = false
+	vim.wo[self.input_win].signcolumn = "no"
+	vim.wo[self.input_win].wrap = true
+
+	vim.api.nvim_set_current_win(self.input_win)
+	vim.cmd("startinsert")
+	return true
 end
 
 --- 关闭 chat

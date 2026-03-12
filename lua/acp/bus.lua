@@ -70,14 +70,36 @@ function Bus:open()
 	vim.api.nvim_buf_set_lines(self.buf, 0, -1, false, { "# 频道", "" })
 	vim.bo[self.buf].modifiable = false
 
-	-- keymaps
+	-- keymaps：q 只关窗口，不杀进程
 	vim.keymap.set({ "n", "i" }, "<CR>", function()
 		self:_submit_input()
 	end, { buffer = self.input_buf, noremap = true, silent = true })
 
 	vim.keymap.set("n", "q", function()
-		self:close()
+		self:hide()
 	end, { buffer = self.buf, noremap = true, silent = true })
+
+	vim.keymap.set("n", "q", function()
+		self:hide()
+	end, { buffer = self.input_buf, noremap = true, silent = true })
+
+	-- BufWipeout 保护：buffer 被强制关闭时清理进程
+	vim.api.nvim_create_autocmd("BufWipeout", {
+		buffer = self.buf,
+		once = true,
+		callback = function()
+			self:_cleanup_agents()
+		end,
+	})
+
+	-- VimLeavePre：nvim 退出时清理所有进程
+	vim.api.nvim_create_autocmd("VimLeavePre", {
+		group = vim.api.nvim_create_augroup("acp_bus_cleanup", { clear = true }),
+		once = true,
+		callback = function()
+			self:_cleanup_agents()
+		end,
+	})
 
 	-- 聚焦输入框
 	if self.input_win and vim.api.nvim_win_is_valid(self.input_win) then
@@ -86,9 +108,60 @@ function Bus:open()
 	end
 end
 
+--- 只关窗口，保留进程（可以重新打开）
+function Bus:hide()
+	if self.input_win and vim.api.nvim_win_is_valid(self.input_win) then
+		vim.api.nvim_win_close(self.input_win, true)
+		self.input_win = nil
+	end
+	if self.win and vim.api.nvim_win_is_valid(self.win) then
+		vim.api.nvim_win_close(self.win, true)
+		self.win = nil
+	end
+end
+
+--- 重新打开已有频道的窗口
+function Bus:show()
+	if not self.buf or not vim.api.nvim_buf_is_valid(self.buf) then
+		return false
+	end
+	local width = math.floor(vim.o.columns * 0.4)
+	vim.cmd("botright " .. width .. "vsplit")
+	self.win = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(self.win, self.buf)
+	vim.wo[self.win].number = false
+	vim.wo[self.win].relativenumber = false
+	vim.wo[self.win].signcolumn = "no"
+	vim.wo[self.win].wrap = true
+	vim.wo[self.win].linebreak = true
+
+	-- 必须先切到主 buffer 的 win，再 split 输入框，保证成对
+	vim.api.nvim_set_current_win(self.win)
+	vim.cmd("belowright 3split")
+	self.input_win = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(self.input_win, self.input_buf)
+	vim.wo[self.input_win].winfixheight = true
+	vim.wo[self.input_win].number = false
+	vim.wo[self.input_win].relativenumber = false
+	vim.wo[self.input_win].signcolumn = "no"
+
+	vim.api.nvim_set_current_win(self.input_win)
+	vim.cmd("startinsert")
+	return true
+end
+
+--- 清理所有 agent 进程（不关 buffer）
+function Bus:_cleanup_agents()
+	for _, agent in pairs(self.agents) do
+		if agent.client then
+			pcall(function() agent.client:stop() end)
+		end
+	end
+end
+
 --- 添加 agent 到频道
 --- @param name string agent 名称
---- @param adapter_name string "claude" | "gemini"
+--- @param adapter_name string "claude" | "c1" | "c2" | "gemini"
 --- @param opts? table {api_num?, cwd?}
 function Bus:add_agent(name, adapter_name, opts)
 	opts = opts or {}
@@ -166,7 +239,7 @@ function Bus:_route(content, from)
 			-- 跳过发送者自己，防止循环
 		elseif self.agents[name] then
 			self:send_to_agent(name, content)
-		elseif name == "主agent" or name == "main" then
+		elseif name == "main" then
 			self:_push_to_main(content)
 		end
 	end
@@ -224,16 +297,19 @@ function Bus:send_to_agent(name, text)
 	agent.streaming = true
 	agent.stream_buf = ""
 	agent.stream_started = false
+	agent.bus_stream_started = false  -- 频道主 buffer 流式状态
 	-- 把 user 消息写入 agent chat_buf（完整格式）
 	self:_append_agent_role(agent, "You", text)
 	agent.client:prompt(payload, function(stop_reason)
 		vim.schedule(function()
 			agent.streaming = false
 			agent.stream_started = false
-			if agent.stream_buf ~= "" then
-				self:post(name, agent.stream_buf)
-				agent.stream_buf = ""
+			-- 流式结束：在频道主 buffer 补一个空行分隔
+			if agent.bus_stream_started then
+				agent.bus_stream_started = false
+				self:_bus_stream_end(name)
 			end
+			agent.stream_buf = ""
 			if stop_reason == "cancelled" then
 				self:post("系统", name .. " 已取消")
 			end
@@ -249,6 +325,11 @@ function Bus:_submit_input()
 		return
 	end
 	vim.api.nvim_buf_set_lines(self.input_buf, 0, -1, false, { "" })
+	-- 没有 @mention 时默认推给 main
+	local has_mention = text:find("@[%w_%-]+")
+	if not has_mention then
+		text = "@main " .. text
+	end
 	self:post("你", text)
 end
 
@@ -273,6 +354,8 @@ function Bus:_on_agent_update(name, params)
 		if text ~= "" then
 			agent.stream_buf = (agent.stream_buf or "") .. text
 			self:_append_agent_chunk(agent, text)
+			-- 实时写频道主 buffer
+			self:_bus_stream_chunk(name, agent, text)
 		end
 	elseif kind == "tool_call" then
 		local title = update.title or "tool"
@@ -342,6 +425,49 @@ end
 function Bus:_extract_text(content)
 	local Client = require("acp.client").Client
 	return Client.get_renderable_text(content) or ""
+end
+
+--- 实时写 chunk 到频道主 buffer
+function Bus:_bus_stream_chunk(name, agent, text)
+	if not self.buf or not vim.api.nvim_buf_is_valid(self.buf) then return end
+	vim.schedule(function()
+		vim.bo[self.buf].modifiable = true
+		-- 第一个 chunk：写角色头
+		if not agent.bus_stream_started then
+			agent.bus_stream_started = true
+			local count = vim.api.nvim_buf_line_count(self.buf)
+			vim.api.nvim_buf_set_lines(self.buf, count, count, false, { "[" .. name .. "]  " })
+		end
+		-- 追加到最后一行（inline，和 _append_agent_chunk 逻辑一致）
+		local last_idx = vim.api.nvim_buf_line_count(self.buf) - 1
+		local last_line = vim.api.nvim_buf_get_lines(self.buf, last_idx, last_idx + 1, false)[1] or ""
+		local parts = vim.split(text, "\n", { plain = true })
+		parts[1] = last_line .. parts[1]
+		vim.api.nvim_buf_set_lines(self.buf, last_idx, last_idx + 1, false, parts)
+		vim.bo[self.buf].modifiable = false
+		self:_scroll_to_bottom()
+	end)
+end
+
+--- 流式结束：补空行分隔
+function Bus:_bus_stream_end(name)
+	if not self.buf or not vim.api.nvim_buf_is_valid(self.buf) then return end
+	vim.schedule(function()
+		vim.bo[self.buf].modifiable = true
+		local count = vim.api.nvim_buf_line_count(self.buf)
+		vim.api.nvim_buf_set_lines(self.buf, count, count, false, { "" })
+		vim.bo[self.buf].modifiable = false
+		-- 记录到 messages（供 bus_read 读取）
+		local agent = self.agents[name]
+		if agent and agent.stream_buf and agent.stream_buf ~= "" then
+			self.messages[#self.messages + 1] = {
+				from = name,
+				content = agent.stream_buf,
+				timestamp = os.time(),
+			}
+		end
+		self:_scroll_to_bottom()
+	end)
 end
 
 --- 渲染单条消息到 buffer
@@ -424,11 +550,7 @@ end
 
 --- 关闭频道
 function Bus:close()
-	for _, agent in pairs(self.agents) do
-		if agent.client then
-			agent.client:stop()
-		end
-	end
+	self:_cleanup_agents()
 	self.agents = {}
 	if self.input_win and vim.api.nvim_win_is_valid(self.input_win) then
 		vim.api.nvim_win_close(self.input_win, true)

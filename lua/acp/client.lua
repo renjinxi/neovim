@@ -278,29 +278,74 @@ function Client:_handle_request(msg)
 			self:_write(jsonrpc.encode_error(msg.id, -32602, "missing path"))
 			return
 		end
+		-- 存在性检查
+		if not vim.uv.fs_stat(path) then
+			-- agent 可能要创建新文件，返回空内容而不是报错
+			self:_write(jsonrpc.encode_response(msg.id, { content = "" }))
+			return
+		end
 		local f = io.open(path, "r")
-		if not f then
-			self:_write(jsonrpc.encode_error(msg.id, -32000, "file not found: " .. path))
-			return
-		end
-		local data = f:read("*a")
-		f:close()
-		self:_write(jsonrpc.encode_response(msg.id, { content = data }))
-	elseif method == "fs/write_text_file" then
-		local path = params.path
-		local content = params.content
-		if not path or not content then
-			self:_write(jsonrpc.encode_error(msg.id, -32602, "missing path or content"))
-			return
-		end
-		local f = io.open(path, "w")
 		if not f then
 			self:_write(jsonrpc.encode_error(msg.id, -32000, "cannot open: " .. path))
 			return
 		end
-		f:write(content)
+		local data = f:read("*a")
 		f:close()
-		self:_write(jsonrpc.encode_response(msg.id, {}))
+		-- 支持 line + limit 分页（对齐 codecompanion fs.lua）
+		local line = params.line ~= vim.NIL and tonumber(params.line) or nil
+		local limit = params.limit ~= vim.NIL and tonumber(params.limit) or nil
+		if line or limit then
+			local lines = vim.split(data, "\n", { plain = true })
+			local total = #lines
+			local start = math.max(1, line or 1)
+			local content
+			if limit and limit > 0 then
+				local finish = math.min(start + limit - 1, total)
+				if start > total then
+					content = ""
+				else
+					content = table.concat(vim.list_slice(lines, start, finish), "\n")
+				end
+			else
+				content = start > total and "" or table.concat(vim.list_slice(lines, start, total), "\n")
+			end
+			self:_write(jsonrpc.encode_response(msg.id, { content = content }))
+		else
+			self:_write(jsonrpc.encode_response(msg.id, { content = data }))
+		end
+	elseif method == "fs/write_text_file" then
+		local path = params.path
+		local content = params.content
+		if not path or content == nil then
+			self:_write(jsonrpc.encode_error(msg.id, -32602, "missing path or content"))
+			return
+		end
+		-- 优先写已打开的 buffer，避免 buffer/磁盘不同步
+		local abs_path = vim.fn.fnamemodify(path, ":p")
+		local written = false
+		for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+			if vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_buf_get_name(bufnr) == abs_path then
+				local lines = vim.split(content, "\n", { plain = true })
+				if lines[#lines] == "" then lines[#lines] = nil end
+				vim.schedule(function()
+					vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+					vim.api.nvim_buf_call(bufnr, function() vim.cmd("silent! write") end)
+				end)
+				written = true
+				break
+			end
+		end
+		if not written then
+			vim.fn.mkdir(vim.fn.fnamemodify(abs_path, ":h"), "p")
+			local f = io.open(abs_path, "w")
+			if not f then
+				self:_write(jsonrpc.encode_error(msg.id, -32000, "cannot open: " .. path))
+				return
+			end
+			f:write(content)
+			f:close()
+		end
+		self:_write(jsonrpc.encode_response(msg.id, vim.empty_dict()))
 	elseif method == "terminal/create" then
 		self:_handle_terminal_create(msg.id, params)
 	elseif method == "terminal/output" then

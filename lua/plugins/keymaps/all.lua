@@ -494,6 +494,7 @@ M.mappings = {
 	{ "<leader>aic", "<cmd>AcpChat claude<cr>", desc = "ACP: Claude 私聊" },
 	{ "<leader>aig", "<cmd>AcpChat gemini<cr>", desc = "ACP: Gemini 私聊" },
 	{ "<leader>aib", "<cmd>AcpBus<cr>", desc = "ACP: 频道" },
+	{ "<leader>ait", "<cmd>AcpToggle<cr>", desc = "ACP: toggle 主+输入框" },
 	{ "<leader>aiq", "<cmd>AcpStop<cr>", desc = "ACP: 关闭所有" },
 }
 

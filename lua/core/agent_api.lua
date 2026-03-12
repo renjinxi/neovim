@@ -575,6 +575,22 @@ local function send_to_terminal(args)
 		end
 
 		local text = args.text
+		-- task 模式：追加回写指令，防止子 AI 上下文遗忘
+		if args.task and name then
+			local task_name = task_agents[name] and name or name
+			for tn, an in pairs(task_agents) do
+				if an == name then
+					task_name = tn
+					break
+				end
+			end
+			local td = task_base_dir .. "/" .. task_name
+			if vim.fn.isdirectory(td) == 1 then
+				text = text
+					.. "\n\n完成后必须执行：1. 把结果写到 " .. td .. "/result.md"
+					.. "  2. 执行: echo done > " .. td .. "/status"
+			end
+		end
 		-- 默认自动加回车提交，除非 submit=false
 		if args.submit ~= false and text:sub(-1) ~= "\r" then
 			text = text .. "\r"

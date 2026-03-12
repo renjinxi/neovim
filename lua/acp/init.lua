@@ -5,7 +5,7 @@ local active_chats = {} -- {name -> Chat}
 local active_bus = nil -- 单例频道
 
 function M.setup()
-	-- :AcpChat [claude|gemini] [api_num]
+	-- :AcpChat [claude|c1|c2|gemini] [api_num]
 	vim.api.nvim_create_user_command("AcpChat", function(opts)
 		local args = vim.split(opts.args, "%s+")
 		local adapter_name = args[1]
@@ -33,16 +33,46 @@ function M.setup()
 		if not agent_name or agent_name == "" then
 			agent_name = adapter_name .. "-1"
 		end
+		-- 已有频道：toggle show/hide
+		if active_bus then
+			local win = active_bus.win
+			if win and vim.api.nvim_win_is_valid(win) then
+				active_bus:hide()
+			else
+				active_bus:show()
+			end
+			return
+		end
 		M.open_bus(adapter_name, agent_name)
 	end, {
 		nargs = "?",
-		desc = "ACP: 打开频道",
+		desc = "ACP: 打开/切换频道",
 		complete = function()
 			return require("acp.adapter").list()
 		end,
 	})
 
-	-- :AcpAgents
+	-- :AcpToggle — 统一 toggle，主+输入框成对出现
+	vim.api.nvim_create_user_command("AcpToggle", function()
+		-- 优先 bus，其次 chat
+		local target = active_bus
+		if not target then
+			for _, chat in pairs(active_chats) do
+				target = chat
+				break
+			end
+		end
+		if not target then
+			vim.notify("[acp] 没有活跃的会话，先用 :AcpChat 或 :AcpBus 打开", vim.log.levels.WARN)
+			return
+		end
+		local win = target.win
+		if win and vim.api.nvim_win_is_valid(win) then
+			target:hide()
+		else
+			target:show()
+		end
+	end, { desc = "ACP: toggle 主+输入框" })
 	vim.api.nvim_create_user_command("AcpAgents", function()
 		if not active_bus then
 			vim.notify("[acp] 频道未开启", vim.log.levels.WARN)
@@ -71,6 +101,18 @@ function M.setup()
 end
 
 function M.open_chat(adapter_name, opts)
+	-- 已有同类型 chat：toggle show/hide
+	for name, chat in pairs(active_chats) do
+		if name:match("^" .. adapter_name .. "_") then
+			local win = chat.win
+			if win and vim.api.nvim_win_is_valid(win) then
+				chat:hide()
+			else
+				chat:show()
+			end
+			return chat
+		end
+	end
 	local chat = require("acp.chat").new(adapter_name, opts)
 	local name = adapter_name .. "_" .. os.time()
 	active_chats[name] = chat
@@ -154,11 +196,11 @@ end
 
 function M.stop_all()
 	for name, chat in pairs(active_chats) do
-		chat:close()
+		pcall(function() chat:close() end)
 		active_chats[name] = nil
 	end
 	if active_bus then
-		active_bus:close()
+		pcall(function() active_bus:close() end)
 		active_bus = nil
 	end
 end
