@@ -71,22 +71,24 @@ local adapters = {
 			return {}
 		end,
 	},
-	codex = {
-		name = "codex",
-		cmd = "codex-acp", -- 对齐 codecompanion，不是 codex
-		args = {},
-		terminal = false,
-		get_env = function(_)
-			local ok, env_mod = pcall(require, "core.env")
-			if ok then
-				local key = env_mod.get("OPENAI_API_KEY")
-				if key and key ~= "" then
-					return { OPENAI_API_KEY = key }
-				end
-			end
-			return {}
-		end,
-	},
+	-- codex 当前版本（0.114.x）不支持 ACP 协议，codex-acp 命令不存在
+	-- 等官方支持后启用，目前用 ai-task-dispatch skill 的 PTY 方案代替
+	-- codex = {
+	-- 	name = "codex",
+	-- 	cmd = "codex-acp",
+	-- 	args = {},
+	-- 	terminal = false,
+	-- 	get_env = function(_)
+	-- 		local ok, env_mod = pcall(require, "core.env")
+	-- 		if ok then
+	-- 			local key = env_mod.get("OPENAI_API_KEY")
+	-- 			if key and key ~= "" then
+	-- 				return { OPENAI_API_KEY = key }
+	-- 			end
+	-- 		end
+	-- 		return {}
+	-- 	end,
+	-- },
 }
 
 --- 获取 adapter 的完整 spawn 配置
