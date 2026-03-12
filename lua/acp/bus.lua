@@ -15,6 +15,15 @@ local function log(level, msg)
 	f:close()
 end
 
+--- 追加内容到频道会话日志文件
+local function session_write(session_dir, filename, content)
+	if not session_dir then return end
+	local f = io.open(session_dir .. "/" .. filename, "a")
+	if not f then return end
+	f:write(content)
+	f:close()
+end
+
 local Bus = {}
 Bus.__index = Bus
 
@@ -22,13 +31,14 @@ function Bus.new()
 	return setmetatable({
 		messages = {}, -- [{from, content, timestamp}]
 		agents = {}, -- {name -> {client, streaming}}
-		main_client = nil, -- 主 agent client，子 agent 回复时推送
+		main_client = nil,
 		buf = nil,
 		win = nil,
 		input_buf = nil,
 		input_win = nil,
 		_main_busy = false,
 		_main_queue = {},
+		session_dir = nil, -- 本次频道的日志目录
 	}, Bus)
 end
 
@@ -41,6 +51,12 @@ function Bus:open()
 	vim.bo[self.buf].swapfile = false
 	vim.bo[self.buf].filetype = "markdown"
 	pcall(vim.api.nvim_buf_set_name, self.buf, "acp://bus/" .. os.time())
+
+	-- 初始化本次频道的日志目录
+	local session_id = os.date("%Y%m%d-%H%M%S")
+	self.session_dir = LOG_DIR .. "/bus-" .. session_id
+	vim.fn.mkdir(self.session_dir, "p")
+	session_write(self.session_dir, "channel.log", "# 频道会话 " .. session_id .. "\n\n")
 
 	-- 输入 buffer
 	self.input_buf = vim.api.nvim_create_buf(false, true)
@@ -320,10 +336,18 @@ function Bus:send_to_agent(name, text)
 	agent.stream_started = false
 	-- 把 user 消息写入 agent chat_buf（完整格式）
 	self:_append_agent_role(agent, "You", text)
+	-- 写入 agent 日志：user 消息
+	session_write(self.session_dir, "agent-" .. name .. ".log",
+		string.format("[%s] [You]  %s\n\n", os.date("%H:%M:%S"), text))
 	agent.client:prompt(payload, function(stop_reason)
 		vim.schedule(function()
 			agent.streaming = false
 			agent.stream_started = false
+			-- 写入 agent 日志：assistant 回复
+			if agent.stream_buf and agent.stream_buf ~= "" then
+				session_write(self.session_dir, "agent-" .. name .. ".log",
+					string.format("[%s] [%s]  %s\n\n", os.date("%H:%M:%S"), name, agent.stream_buf))
+			end
 			agent.stream_buf = ""
 			if stop_reason == "cancelled" then
 				self:post("系统", name .. " 已取消")
@@ -476,6 +500,9 @@ function Bus:_render_message(msg)
 	vim.api.nvim_buf_set_lines(self.buf, count, count, false, lines)
 	vim.bo[self.buf].modifiable = false
 	self:_scroll_to_bottom()
+	-- 写入频道会话日志
+	session_write(self.session_dir, "channel.log",
+		string.format("[%s]%s [%s]  %s\n\n", time_str, gap_str, msg.from, msg.content))
 end
 
 --- 滚动到底部
