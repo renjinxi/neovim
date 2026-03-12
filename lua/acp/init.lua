@@ -73,26 +73,72 @@ function M.setup()
 			target:show()
 		end
 	end, { desc = "ACP: toggle 主+输入框" })
+	-- :AcpAgents — 统一 picker，列出所有 session，选中 toggle
 	vim.api.nvim_create_user_command("AcpAgents", function()
-		if not active_bus then
-			vim.notify("[acp] 频道未开启", vim.log.levels.WARN)
-			return
-		end
-		local agents = active_bus:list_agents()
-		if #agents == 0 then
-			vim.notify("[acp] 没有活跃的 agent", vim.log.levels.INFO)
-			return
-		end
 		local items = {}
-		for _, a in ipairs(agents) do
-			local status = a.alive and (a.streaming and "streaming" or "idle") or "dead"
-			items[#items + 1] = a.name .. "  [" .. status .. "]"
+		local actions = {}
+
+		-- 主 chat sessions
+		for _, chat in pairs(active_chats) do
+			local visible = chat.win and vim.api.nvim_win_is_valid(chat.win)
+			local status = not chat.client and "disconnected"
+				or chat.streaming and "streaming"
+				or "idle"
+			local label = "[chat:" .. chat.adapter_name .. "]  " .. status
+				.. (visible and "  ✓" or "")
+			items[#items + 1] = label
+			actions[#actions + 1] = function()
+				if visible then chat:hide() else chat:show() end
+			end
 		end
-		vim.ui.select(items, { prompt = "选择 agent" }, function(choice, idx)
-			if not choice then return end
-			active_bus:open_agent_buf(agents[idx].name)
+
+		-- 频道主 buffer
+		if active_bus then
+			local visible = active_bus.win and vim.api.nvim_win_is_valid(active_bus.win)
+			items[#items + 1] = "[bus]  频道" .. (visible and "  ✓" or "")
+			actions[#actions + 1] = function()
+				if visible then active_bus:hide() else active_bus:show() end
+			end
+
+			-- 子 agents（只读 buffer，无输入框）
+			for name, agent in pairs(active_bus.agents) do
+				local status = not agent.client and "disconnected"
+					or agent.streaming and "streaming"
+					or "idle"
+				-- 检查 chat_buf 是否已有窗口
+				local agent_visible = false
+				for _, win in ipairs(vim.api.nvim_list_wins()) do
+					if vim.api.nvim_win_get_buf(win) == agent.chat_buf then
+						agent_visible = true
+						break
+					end
+				end
+				items[#items + 1] = "[agent:" .. name .. "]  " .. status
+					.. (agent_visible and "  ✓" or "")
+				actions[#actions + 1] = function()
+					if agent_visible then
+						-- 关掉显示该 buffer 的窗口
+						for _, win in ipairs(vim.api.nvim_list_wins()) do
+							if vim.api.nvim_win_get_buf(win) == agent.chat_buf then
+								pcall(vim.api.nvim_win_close, win, true)
+							end
+						end
+					else
+						active_bus:open_agent_buf(name)
+					end
+				end
+			end
+		end
+
+		if #items == 0 then
+			vim.notify("[acp] 没有活跃的会话", vim.log.levels.INFO)
+			return
+		end
+
+		vim.ui.select(items, { prompt = "ACP Sessions" }, function(_, idx)
+			if idx then actions[idx]() end
 		end)
-	end, { desc = "ACP: 查看子 agent 对话" })
+	end, { desc = "ACP: 选择并 toggle session 窗口" })
 
 	-- :AcpStop
 	vim.api.nvim_create_user_command("AcpStop", function()

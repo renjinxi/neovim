@@ -495,6 +495,7 @@ M.mappings = {
 	{ "<leader>aig", "<cmd>AcpChat gemini<cr>", desc = "ACP: Gemini 私聊" },
 	{ "<leader>aib", "<cmd>AcpBus<cr>", desc = "ACP: 频道" },
 	{ "<leader>ait", "<cmd>AcpToggle<cr>", desc = "ACP: toggle 主+输入框" },
+	{ "<leader>aia", "<cmd>AcpAgents<cr>", desc = "ACP: 选择 session" },
 	{ "<leader>aiq", "<cmd>AcpStop<cr>", desc = "ACP: 关闭所有" },
 }
 
