@@ -7,3 +7,4 @@ lazy-lock.json
 .specstory
 settings.local.json
 .playwright-mcp/
+logs/
