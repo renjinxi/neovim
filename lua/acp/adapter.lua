@@ -1,14 +1,29 @@
 --- Adapter 注册表：各 CLI 的 spawn 配置
 local M = {}
 
+local function get_proxy_env()
+	local ok, env_mod = pcall(require, "core.env")
+	if not ok then return {} end
+	local proxy = env_mod.get("CLAUDE_PROXY")
+	if not proxy or proxy == "" then return {} end
+	return {
+		http_proxy = proxy,
+		https_proxy = proxy,
+		HTTP_PROXY = proxy,
+		HTTPS_PROXY = proxy,
+		all_proxy = proxy,
+	}
+end
+
 local adapters = {
 	claude = {
 		name = "claude",
+		description = "Claude Code (Anthropic)",
 		cmd = "claude-agent-acp",
 		args = { "--yolo" },
 		terminal = true, -- 支持 terminal/* 反向请求
 		get_env = function(opts)
-			local env = {}
+			local env = get_proxy_env()
 			if opts.api_num then
 				local ok, env_mod = pcall(require, "core.env")
 				if ok then
@@ -24,38 +39,39 @@ local adapters = {
 	},
 	c1 = {
 		name = "c1",
+		description = "Claude Code API1",
 		cmd = "claude-agent-acp",
 		args = { "--yolo" },
 		terminal = true,
 		get_env = function(_)
+			local env = get_proxy_env()
 			local ok, env_mod = pcall(require, "core.env")
 			if ok then
-				return {
-					ANTHROPIC_BASE_URL = env_mod.get("CLAUDE_API1_BASE_URL"),
-					ANTHROPIC_AUTH_TOKEN = env_mod.get("CLAUDE_API1_TOKEN"),
-				}
+				env.ANTHROPIC_BASE_URL = env_mod.get("CLAUDE_API1_BASE_URL")
+				env.ANTHROPIC_AUTH_TOKEN = env_mod.get("CLAUDE_API1_TOKEN")
 			end
-			return {}
+			return env
 		end,
 	},
 	c2 = {
 		name = "c2",
+		description = "Claude Code API2",
 		cmd = "claude-agent-acp",
 		args = { "--yolo" },
 		terminal = true,
 		get_env = function(_)
+			local env = get_proxy_env()
 			local ok, env_mod = pcall(require, "core.env")
 			if ok then
-				return {
-					ANTHROPIC_BASE_URL = env_mod.get("CLAUDE_API2_BASE_URL"),
-					ANTHROPIC_AUTH_TOKEN = env_mod.get("CLAUDE_API2_TOKEN"),
-				}
+				env.ANTHROPIC_BASE_URL = env_mod.get("CLAUDE_API2_BASE_URL")
+				env.ANTHROPIC_AUTH_TOKEN = env_mod.get("CLAUDE_API2_TOKEN")
 			end
-			return {}
+			return env
 		end,
 	},
 	gemini = {
 		name = "gemini",
+		description = "Gemini CLI (Google)",
 		cmd = "gemini",
 		args = { "--yolo", "--acp" },
 		terminal = false,
@@ -65,6 +81,7 @@ local adapters = {
 	},
 	codex = {
 		name = "codex",
+		description = "Codex CLI (OpenAI)",
 		cmd = "codex-acp",
 		args = {},
 		terminal = false,
@@ -105,35 +122,36 @@ function M.get(name, opts)
 	}
 	-- 频道模式：注入 system prompt
 	if opts.bus_mode and opts.agent_name then
-		config.system_prompt = M.get_bus_system_prompt(opts.agent_name)
+		config.system_prompt = M.get_bus_system_prompt(opts.agent_name, opts.channel_id)
 	end
 	return config
 end
 
 --- 生成频道模式的 system prompt
 --- @param agent_name string
+--- @param channel_id? string 频道 ID，用于文件输出目录
 --- @return string
-function M.get_bus_system_prompt(agent_name)
+function M.get_bus_system_prompt(agent_name, channel_id)
 	local sock = vim.env.NVIM_LISTEN_ADDRESS or vim.v.servername
 	local tmpfile = "/tmp/acp_msg_" .. agent_name .. ".txt"
+	local notes_dir = "notes/acp-bus/" .. (channel_id or "default")
 	return string.format(
-		[[你在一个多 agent 协作频道里。
+		[[你是 %s，在一个多 agent 协作频道里。
 
-收到任务后，完成时用以下命令发一次消息到频道：
+发消息命令：
+echo '内容' > '%s' && nvim --server '%s' --remote-expr 'luaeval("require(\"acp.rpc\").bus_post_file(\"%s\",\"%s\")")'
 
-MSG="你的消息内容"
-echo "$MSG" > '%s'
-nvim --server '%s' --remote-expr 'luaeval("require(\"acp.rpc\").bus_post_file(\"%s\",\"%s\")")'
-
-规则：
-- 任务消息里会说"完成后回复 xxx"，xxx 就是收件人，消息开头写 @xxx
-- 没有指定收件人时，默认 @main
-- 每个任务只发一次，发完等待下一条指令，不要重复发
-- 过程信息不发，只发最终结论]],
+频道规则：
+- @收件人 开头，默认 @main
+- 频道消息 50 字以内，只写结论
+- 长内容写文件到 %s/，频道附路径
+- 每个任务回复一次，然后等指令]],
+		agent_name,
 		tmpfile,
 		sock,
 		agent_name,
-		tmpfile
+		tmpfile,
+		notes_dir
 	)
 end
 
@@ -145,6 +163,17 @@ function M.list()
 	end
 	table.sort(names)
 	return names
+end
+
+--- 列出 adapter 详细信息
+--- @return table[] [{name, description}]
+function M.list_detailed()
+	local result = {}
+	for k, v in pairs(adapters) do
+		result[#result + 1] = { name = k, description = v.description or "" }
+	end
+	table.sort(result, function(a, b) return a.name < b.name end)
+	return result
 end
 
 return M

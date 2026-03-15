@@ -1,5 +1,4 @@
 --- 频道 Buffer：多 agent 消息展示
-local client_mod = require("acp.client")
 local adapter_mod = require("acp.adapter")
 
 local LOG_DIR = vim.fn.stdpath("config") .. "/logs"
@@ -28,16 +27,19 @@ local Bus = {}
 Bus.__index = Bus
 
 function Bus.new()
+	local channel_id = os.date("%Y%m%d-%H%M%S")
 	return setmetatable({
+		channel_id = channel_id,
+		cwd = vim.fn.getcwd(),
 		messages = {}, -- [{from, content, timestamp}]
-		agents = {}, -- {name -> {client, streaming}}
-		main_client = nil,
+		agents = {}, -- {name -> {kind, client, status, streaming, adapter_name, ...}}
 		buf = nil,
 		win = nil,
 		input_buf = nil,
 		input_win = nil,
 		_main_busy = false,
 		_main_queue = {},
+		_saved = false,
 		session_dir = nil, -- 本次频道的日志目录
 	}, Bus)
 end
@@ -53,10 +55,9 @@ function Bus:open()
 	pcall(vim.api.nvim_buf_set_name, self.buf, "acp://bus/" .. os.time())
 
 	-- 初始化本次频道的日志目录
-	local session_id = os.date("%Y%m%d-%H%M%S")
-	self.session_dir = LOG_DIR .. "/bus-" .. session_id
+	self.session_dir = LOG_DIR .. "/bus-" .. self.channel_id
 	vim.fn.mkdir(self.session_dir, "p")
-	session_write(self.session_dir, "channel.log", "# 频道会话 " .. session_id .. "\n\n")
+	session_write(self.session_dir, "channel.log", "# 频道会话 " .. self.channel_id .. "\n\n")
 
 	-- 输入 buffer
 	self.input_buf = vim.api.nvim_create_buf(false, true)
@@ -82,6 +83,9 @@ function Bus:open()
 	vim.wo[self.input_win].number = false
 	vim.wo[self.input_win].relativenumber = false
 	vim.wo[self.input_win].signcolumn = "no"
+
+	-- 输入框动态高度
+	self:_setup_input_autoresize()
 
 	-- 欢迎
 	vim.bo[self.buf].modifiable = true
@@ -110,11 +114,12 @@ function Bus:open()
 		end,
 	})
 
-	-- VimLeavePre：nvim 退出时清理所有进程
+	-- VimLeavePre：nvim 退出时保存快照 + 清理进程
 	vim.api.nvim_create_autocmd("VimLeavePre", {
 		group = vim.api.nvim_create_augroup("acp_bus_cleanup", { clear = true }),
 		once = true,
 		callback = function()
+			self:save_snapshot()
 			self:_cleanup_agents()
 		end,
 	})
@@ -124,6 +129,88 @@ function Bus:open()
 		vim.api.nvim_set_current_win(self.input_win)
 		vim.cmd("startinsert")
 	end
+
+	-- 注册 main agent（kind="local"，client 由外部注入）
+	self.agents["main"] = {
+		kind = "local",
+		client = nil,
+		status = "idle",
+		adapter_name = "local",
+		streaming = false,
+	}
+
+	-- 初始刷新 winbar
+	self:_refresh_winbar()
+end
+
+--- 刷新频道窗口的 winbar（agent 状态栏）
+function Bus:_refresh_winbar()
+	if not self.win or not vim.api.nvim_win_is_valid(self.win) then return end
+	local parts = {}
+	-- main 排最前
+	local names = {}
+	for name in pairs(self.agents) do
+		names[#names + 1] = name
+	end
+	table.sort(names, function(a, b)
+		if a == "main" then return true end
+		if b == "main" then return false end
+		return a < b
+	end)
+	for _, name in ipairs(names) do
+		local agent = self.agents[name]
+		local icon, hl, hint
+		local status = agent.status or "idle"
+		-- 从 client 状态推导
+		if agent.client then
+			if not agent.client.alive then
+				status = "disconnected"
+			elseif agent.streaming then
+				status = "streaming"
+			end
+		elseif agent.kind ~= "local" and agent.status ~= "connecting" then
+			status = "disconnected"
+		end
+		if status == "disconnected" or status == "error" then
+			icon, hl = "○", "Comment"
+		elseif status == "connecting" then
+			icon, hl = "◌", "Comment"
+		elseif status == "streaming" then
+			icon, hl = "●", "DiagnosticOk"
+			hint = agent.activity
+		else
+			icon, hl = "◉", "Normal"
+		end
+		local adapter = agent.adapter_name or "?"
+		local base = name == adapter and name or (name .. "/" .. adapter)
+		local label = hint and string.format("%s %s [%s]", icon, base, hint) or (icon .. " " .. base)
+		-- main 显示队列深度
+		if name == "main" and #self._main_queue > 0 then
+			label = label .. string.format(" [queue:%d]", #self._main_queue)
+		end
+		parts[#parts + 1] = string.format("%%#%s#%s%%*", hl, label)
+	end
+	if #parts == 0 then
+		vim.wo[self.win].winbar = " 频道"
+	else
+		vim.wo[self.win].winbar = " " .. table.concat(parts, "  ")
+	end
+end
+
+--- 输入框动态高度（min 3, max 10）
+function Bus:_setup_input_autoresize()
+	if not self.input_buf then return end
+	local group = vim.api.nvim_create_augroup("acp_bus_autoresize_" .. self.input_buf, { clear = true })
+	vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+		group = group,
+		buffer = self.input_buf,
+		callback = function()
+			if not self.input_win or not vim.api.nvim_win_is_valid(self.input_win) then return end
+			local line_count = vim.api.nvim_buf_line_count(self.input_buf)
+			local height = math.max(3, math.min(10, line_count))
+			vim.api.nvim_win_set_height(self.input_win, height)
+		end,
+	})
 end
 
 --- 只关窗口，保留进程（可以重新打开）
@@ -163,15 +250,20 @@ function Bus:show()
 	vim.wo[self.input_win].relativenumber = false
 	vim.wo[self.input_win].signcolumn = "no"
 
+	self:_refresh_winbar()
+	self:_setup_input_autoresize()
+
 	vim.api.nvim_set_current_win(self.input_win)
 	vim.cmd("startinsert")
 	return true
 end
 
---- 清理所有 agent 进程（不关 buffer）
+--- 清理所有 agent 进程和 buffer
 function Bus:_cleanup_agents()
 	for _, agent in pairs(self.agents) do
-		if agent.client then
+		if agent.chat then
+			pcall(function() agent.chat:close() end)
+		elseif agent.client then
 			pcall(function() agent.client:stop() end)
 		end
 	end
@@ -182,51 +274,56 @@ end
 --- @param adapter_name string "claude" | "c1" | "c2" | "gemini"
 --- @param opts? table {api_num?, cwd?}
 function Bus:add_agent(name, adapter_name, opts)
+	log("INFO", "add_agent  name=" .. name .. "  adapter=" .. adapter_name)
+	if self.agents[name] and self.agents[name].kind ~= "local" then
+		self:post("系统", name .. " 已存在，先 stop 再重新添加")
+		return
+	end
 	opts = opts or {}
-	local adapter_config = adapter_mod.get(adapter_name, vim.tbl_extend("force", opts, {
+	local chat_mod = require("acp.chat")
+
+	local chat_opts = vim.tbl_extend("force", opts, {
 		bus_mode = true,
 		agent_name = name,
-	}))
-	local client = client_mod.new(adapter_config)
+		channel_id = self.channel_id,
+	})
 
-	local ok, start_err = pcall(function()
-		client:start({
-			cwd = opts.cwd or vim.fn.getcwd(),
-			on_update = function(params)
-				self:_on_agent_update(name, params)
-			end,
-			on_exit = function(code, _)
-				vim.schedule(function()
-					self:post("系统", name .. " 退出 (code=" .. tostring(code) .. ")")
-				end)
-			end,
-		})
-	end)
+	local adapter_config = adapter_mod.get(adapter_name, chat_opts)
 
-	if ok then
-		local chat_buf = vim.api.nvim_create_buf(false, true)
-		vim.bo[chat_buf].buftype = "nofile"
-		vim.bo[chat_buf].bufhidden = "hide"
-		vim.bo[chat_buf].swapfile = false
-		vim.bo[chat_buf].filetype = "markdown"
-		pcall(vim.api.nvim_buf_set_name, chat_buf, "acp://agent/" .. name)
-		vim.bo[chat_buf].modifiable = true
-		vim.api.nvim_buf_set_lines(chat_buf, 0, -1, false, { "# Agent: " .. name, "" })
-		vim.bo[chat_buf].modifiable = false
+	local chat = chat_mod.new(adapter_name, chat_opts)
+	chat.bus = self
+	chat.bus_agent_name = name
 
-		self.agents[name] = {
-			client = client,
-			streaming = false,
-			stream_buf = "",
-			stream_started = false,
-			system_prompt = adapter_config.system_prompt,
-			prompted = false,
-			chat_buf = chat_buf,
-		}
+	-- 先注册 agent（client 在 on_ready 里填充）
+	self.agents[name] = {
+		kind = "spawned",
+		client = nil,
+		chat = chat,
+		status = "connecting",
+		adapter_name = adapter_name,
+		streaming = false,
+		stream_buf = "",
+		system_prompt = adapter_config.system_prompt,
+		prompted = false,
+		chat_buf = nil, -- open_headless 后设置
+	}
+
+	chat.on_ready = function(client)
+		log("INFO", "add_agent ready  name=" .. name
+			.. "  session=" .. tostring(client.session_id))
+		local agent = self.agents[name]
+		if agent then
+			agent.client = client
+			agent.status = "idle"
+		end
 		self:post("系统", name .. " (" .. adapter_name .. ") 已上线")
-	else
-		self:post("系统", name .. " 启动失败: " .. tostring(start_err))
+		self:_refresh_winbar()
 	end
+
+	chat:open_headless()
+	-- buf 在 open_headless 里同步创建
+	self.agents[name].chat_buf = chat.buf
+	self:_refresh_winbar()
 end
 
 --- 发消息到频道，并按 @mention 路由推送
@@ -246,49 +343,76 @@ function Bus:post(from, content, opts)
 	end
 end
 
---- 解析 @mention，推送给被 @ 的 agent 或主 client（跳过发送者自己）
+--- 解析 @mention，推送给被 @ 的 agent（跳过发送者自己）
 function Bus:_route(content, from)
 	local mentioned = {}
 	for name in content:gmatch("@([%w_%-]+)") do
 		mentioned[name] = true
 	end
 	for name in pairs(mentioned) do
-		if name == from then
-			-- 跳过发送者自己
-		elseif self.agents[name] then
-			self:send_to_agent(name, content)
-		elseif name == "main" then
-			self:_push_to_main(content)
+		if name ~= from and self.agents[name] then
+			log("DEBUG", "_route  from=" .. from .. "  → " .. name)
+			self:_send_to(name, content, from)
 		end
 	end
 end
 
+--- 统一消息分发：根据 agent.kind 选择发送方式
+function Bus:_send_to(name, content, from)
+	local agent = self.agents[name]
+	if not agent then return end
+	if agent.kind == "local" then
+		self:_push_to_main(content, from)
+	else
+		self:send_to_agent(name, content, from)
+	end
+end
+
 --- 推送消息给主 agent client，回复完成后 post 到频道（串行队列，防并发）
-function Bus:_push_to_main(content)
-	if not self.main_client then
-		log("WARN", "_push_to_main: main_client is nil")
+--- @param content string 消息内容
+--- @param from? string 发送者名称
+function Bus:_push_to_main(content, from)
+	local main = self.agents["main"]
+	if not main or not main.client then
+		log("WARN", "_push_to_main: main client is nil")
+		self:post("系统", "⚠ main 未连接，消息未送达: " .. content:sub(1, 60), { no_route = true })
 		return
 	end
-	if not self.main_client.alive then
-		log("WARN", "_push_to_main: main_client not alive")
+	if not main.client.alive then
+		log("WARN", "_push_to_main: main client not alive")
+		main.status = "disconnected"
+		self:_refresh_winbar()
+		self:post("系统", "⚠ main 已离线，消息未送达: " .. content:sub(1, 60), { no_route = true })
 		return
 	end
 
 	-- 队列：如果正在处理，入队等待
 	if self._main_busy then
 		log("INFO", "_push_to_main: queued  msg=" .. content:sub(1, 80))
-		self._main_queue[#self._main_queue + 1] = content
+		self._main_queue[#self._main_queue + 1] = { content = content, from = from }
+		self:_refresh_winbar()
 		return
 	end
 	self._main_busy = true
+	main.status = "streaming"
+	-- 同步主 Chat 的 streaming 状态
+	local main_chat = self:_find_main_chat()
+	if main_chat then
+		main_chat.streaming = true
+		main_chat:_refresh_winbar()
+	end
+	self:_refresh_winbar()
 
 	local t0 = os.clock()
 	log("INFO", "_push_to_main: start  msg=" .. content:sub(1, 80))
 
-	local stream_buf = ""
-	local orig_on_update = self.main_client.on_update
+	-- 在主 chat buffer 里标记频道来源
+	self:_notify_main_chat(from or "频道", content)
 
-	self.main_client.on_update = function(params)
+	local stream_buf = ""
+	local orig_on_update = main.client.on_update
+
+	main.client.on_update = function(params)
 		if orig_on_update then orig_on_update(params) end
 		if not params or not params.update then return end
 		local kind = params.update.sessionUpdate
@@ -298,8 +422,8 @@ function Bus:_push_to_main(content)
 		end
 	end
 
-	self.main_client:prompt(content, function(_)
-		self.main_client.on_update = orig_on_update
+	main.client:prompt(content, function(_)
+		main.client.on_update = orig_on_update
 		local elapsed = math.floor((os.clock() - t0) * 1000)
 		log("INFO", "_push_to_main: done  elapsed=" .. elapsed .. "ms  reply_len=" .. #stream_buf)
 		if stream_buf ~= "" then
@@ -309,22 +433,71 @@ function Bus:_push_to_main(content)
 		end
 		-- 处理队列里的下一条
 		self._main_busy = false
+		main.status = "idle"
+		-- 同步主 Chat 的 streaming 状态
+		if main_chat then
+			main_chat.streaming = false
+			main_chat:_refresh_winbar()
+		end
+		self:_refresh_winbar()
 		if #self._main_queue > 0 then
-			local next_msg = table.remove(self._main_queue, 1)
+			local next_item = table.remove(self._main_queue, 1)
 			vim.schedule(function()
-				self:_push_to_main(next_msg)
+				self:_push_to_main(next_item.content, next_item.from)
 			end)
 		end
 	end)
 end
 
+--- 查找主 agent 关联的 Chat 实例
+function Bus:_find_main_chat()
+	local ok, init = pcall(require, "acp.init")
+	if not ok then return nil end
+	local chats = init._active_chats and init._active_chats() or {}
+	local main = self.agents["main"]
+	local main_client = main and main.client
+	for _, chat in pairs(chats) do
+		if main_client and chat.client == main_client then
+			return chat
+		end
+	end
+	return nil
+end
+
+--- 在主 chat buffer 里标记频道来源消息
+--- @param from string 发送者名称
+--- @param content string 消息内容
+function Bus:_notify_main_chat(from, content)
+	local ok, init = pcall(require, "acp.init")
+	if not ok then return end
+	local chats = init._active_chats and init._active_chats() or {}
+	local main = self.agents["main"]
+	local main_client = main and main.client
+	for _, chat in pairs(chats) do
+		if main_client and chat.client == main_client and chat.append_bus_message then
+			vim.schedule(function()
+				chat:append_bus_message(from, content)
+			end)
+			return
+		end
+	end
+end
+
 --- 推送消息给指定 agent
-function Bus:send_to_agent(name, text)
+--- @param name string 目标 agent
+--- @param text string 消息内容
+--- @param sender? string 发送者名称，出错时通知此人
+function Bus:send_to_agent(name, text, sender)
 	local agent = self.agents[name]
 	if not agent or not agent.client or not agent.client.alive then
+		log("WARN", "send_to_agent  name=" .. name .. "  not alive")
 		self:post("系统", name .. " 不在线")
 		return
 	end
+	log("INFO", "send_to_agent  name=" .. name
+		.. "  sender=" .. tostring(sender)
+		.. "  text_len=" .. #text
+		.. "  first_prompt=" .. tostring(not agent.prompted))
 	-- 第一次发消息时，把 system prompt 前置
 	local payload = text
 	if not agent.prompted and agent.system_prompt then
@@ -332,17 +505,39 @@ function Bus:send_to_agent(name, text)
 		agent.prompted = true
 	end
 	agent.streaming = true
+	agent.status = "streaming"
 	agent.stream_buf = ""
-	agent.stream_started = false
-	-- 把 user 消息写入 agent chat_buf（完整格式）
-	self:_append_agent_role(agent, "You", text)
+	agent.activity = "receiving"
+	-- 同步 Chat 的 streaming 状态
+	if agent.chat then
+		agent.chat.streaming = true
+		agent.chat.stream_started = false
+		agent.chat:_refresh_winbar()
+	end
+	self:_refresh_winbar()
+	self:post("系统", "→ " .. name, { no_route = true })
+	-- 把 user 消息写入 agent chat buffer
+	if agent.chat then
+		agent.chat:_append_role("You", text)
+	end
 	-- 写入 agent 日志：user 消息
 	session_write(self.session_dir, "agent-" .. name .. ".log",
 		string.format("[%s] [You]  %s\n\n", os.date("%H:%M:%S"), text))
-	agent.client:prompt(payload, function(stop_reason)
+	agent.client:prompt(payload, function(stop_reason, err)
 		vim.schedule(function()
 			agent.streaming = false
-			agent.stream_started = false
+			agent.status = "idle"
+			agent.activity = nil
+			-- 同步 Chat 的 streaming 状态
+			if agent.chat then
+				agent.chat.streaming = false
+				agent.chat.stream_started = false
+				agent.chat:_refresh_winbar()
+			end
+			self:_refresh_winbar()
+			log("INFO", "send_to_agent done  name=" .. name
+				.. "  stop=" .. tostring(stop_reason)
+				.. "  reply_len=" .. #(agent.stream_buf or ""))
 			-- 写入 agent 日志：assistant 回复
 			if agent.stream_buf and agent.stream_buf ~= "" then
 				session_write(self.session_dir, "agent-" .. name .. ".log",
@@ -351,6 +546,20 @@ function Bus:send_to_agent(name, text)
 			agent.stream_buf = ""
 			if stop_reason == "cancelled" then
 				self:post("系统", name .. " 已取消")
+			elseif stop_reason == "error" then
+				log("ERROR", "send_to_agent error  name=" .. name
+					.. "  " .. tostring(err and err.message or "unknown"))
+				local detail = ""
+				if err then
+					detail = " (" .. tostring(err.code or "") .. " " .. tostring(err.message or ""):sub(1, 80) .. ")"
+				end
+				local err_msg = name .. " 执行出错" .. detail
+				self:post("系统", err_msg)
+				-- 通知发送者
+				if sender and sender ~= "系统" and self.agents[sender] then
+					local notify_msg = "@" .. sender .. " " .. err_msg
+					self:_send_to(sender, notify_msg, "系统")
+				end
 			end
 		end)
 	end)
@@ -388,74 +597,29 @@ function Bus:_on_agent_update(name, params)
 		return
 	end
 
+	-- bus 侧只管状态和日志，buffer 渲染由 Chat._on_update 处理
 	if kind == "agent_message_chunk" then
 		local text = self:_extract_text(update.content)
 		if text ~= "" then
 			agent.stream_buf = (agent.stream_buf or "") .. text
-			self:_append_agent_chunk(agent, text)
+			agent.activity = "typing"
+			self:_refresh_winbar()
 		end
 	elseif kind == "tool_call" then
 		local title = update.title or "tool"
 		log("DEBUG", name .. " tool_call: " .. title)
-		self:_append_agent_system(agent, "🔧 " .. title)
+		agent.activity = title
+		self:_refresh_winbar()
 	elseif kind == "tool_call_update" then
 		local status = update.status or ""
 		local title = update.title or "tool"
 		log("DEBUG", name .. " tool_update: " .. title .. " " .. status)
-		if status == "completed" or status == "failed" then
-			self:_append_agent_system(agent, "  → " .. title .. ": " .. status)
-		end
+	elseif kind == "agent_thought_chunk" then
+		agent.activity = "thinking"
+		self:_refresh_winbar()
 	else
 		log("DEBUG", name .. " update: " .. kind)
 	end
-end
-
---- 追加角色消息到 agent chat_buf（完整块）
-function Bus:_append_agent_role(agent, role, text)
-	local buf = agent.chat_buf
-	if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
-	vim.schedule(function()
-		vim.bo[buf].modifiable = true
-		local count = vim.api.nvim_buf_line_count(buf)
-		local lines = { "", "## " .. role, "" }
-		for _, line in ipairs(vim.split(text, "\n", { plain = true })) do
-			lines[#lines + 1] = line
-		end
-		vim.api.nvim_buf_set_lines(buf, count, count, false, lines)
-		vim.bo[buf].modifiable = false
-	end)
-end
-
---- 追加流式 chunk 到 agent chat_buf
-function Bus:_append_agent_chunk(agent, text)
-	local buf = agent.chat_buf
-	if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
-	vim.schedule(function()
-		vim.bo[buf].modifiable = true
-		if not agent.stream_started then
-			agent.stream_started = true
-			local count = vim.api.nvim_buf_line_count(buf)
-			vim.api.nvim_buf_set_lines(buf, count, count, false, { "", "## Assistant", "" })
-		end
-		local last_idx = vim.api.nvim_buf_line_count(buf) - 1
-		local last_line = vim.api.nvim_buf_get_lines(buf, last_idx, last_idx + 1, false)[1] or ""
-		local parts = vim.split(text, "\n", { plain = true })
-		parts[1] = last_line .. parts[1]
-		vim.api.nvim_buf_set_lines(buf, last_idx, last_idx + 1, false, parts)
-		vim.bo[buf].modifiable = false
-	end)
-end
-
---- 追加系统消息到 agent chat_buf
-function Bus:_append_agent_system(agent, text)
-	local buf = agent.chat_buf
-	if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
-	vim.schedule(function()
-		vim.bo[buf].modifiable = true
-		local count = vim.api.nvim_buf_line_count(buf)
-		vim.api.nvim_buf_set_lines(buf, count, count, false, { "*" .. text .. "*" })
-		vim.bo[buf].modifiable = false
-	end)
 end
 
 --- 从 content 提取文本（对齐 codecompanion get_renderable_text）
@@ -513,27 +677,14 @@ function Bus:_scroll_to_bottom()
 	end
 end
 
---- 在右侧 vsplit 打开指定 agent 的 chat buffer
+--- 打开指定 agent 的 Chat 窗口（含输入框）
 function Bus:open_agent_buf(name)
 	local agent = self.agents[name]
-	if not agent or not vim.api.nvim_buf_is_valid(agent.chat_buf) then
+	if not agent or not agent.chat then
 		vim.notify("[acp] agent not found: " .. name, vim.log.levels.WARN)
 		return
 	end
-	local width = math.floor(vim.o.columns * 0.4)
-	vim.cmd("botright " .. width .. "vsplit")
-	vim.api.nvim_win_set_buf(0, agent.chat_buf)
-	local win = vim.api.nvim_get_current_win()
-	vim.wo[win].number = false
-	vim.wo[win].relativenumber = false
-	vim.wo[win].signcolumn = "no"
-	vim.wo[win].wrap = true
-	vim.wo[win].linebreak = true
-	-- 滚到底部
-	local count = vim.api.nvim_buf_line_count(agent.chat_buf)
-	pcall(vim.api.nvim_win_set_cursor, win, { count, 0 })
-	-- q 关窗
-	vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = agent.chat_buf, noremap = true, silent = true })
+	agent.chat:show()
 end
 --- @param last_n? number 默认 20
 --- @return table[] [{from, content, timestamp}]
@@ -555,6 +706,8 @@ function Bus:list_agents()
 	for name, agent in pairs(self.agents) do
 		result[#result + 1] = {
 			name = name,
+			kind = agent.kind or "spawned",
+			status = agent.status or "idle",
 			alive = agent.client and agent.client.alive or false,
 			streaming = agent.streaming or false,
 		}
@@ -562,8 +715,46 @@ function Bus:list_agents()
 	return result
 end
 
+--- 保存频道快照
+function Bus:save_snapshot()
+	if self._saved then return end
+	self._saved = true
+	local store = require("acp.store")
+	store.save(self, self.cwd)
+end
+
+--- 从快照恢复：回填历史 + 重新启动 agent
+--- @param snapshot table store.load() 返回的快照
+function Bus:restore_from_snapshot(snapshot)
+	self.channel_id = snapshot.channel_id
+	self.cwd = snapshot.cwd or vim.fn.getcwd()
+
+	-- 回填历史消息到 buffer
+	if snapshot.history then
+		for _, msg in ipairs(snapshot.history) do
+			self.messages[#self.messages + 1] = msg
+			self:_render_message(msg)
+		end
+	end
+
+	-- 重新启动各 agent（跳过 kind="local"，新 session 不依赖 session/load）
+	if snapshot.agents then
+		for _, agent_info in ipairs(snapshot.agents) do
+			if agent_info.kind ~= "local" then
+				local ok, err = pcall(function()
+					self:add_agent(agent_info.name, agent_info.adapter)
+				end)
+				if not ok then
+					self:post("系统", agent_info.name .. " 恢复失败: " .. tostring(err))
+				end
+			end
+		end
+	end
+end
+
 --- 关闭频道
 function Bus:close()
+	self:save_snapshot()
 	self:_cleanup_agents()
 	self.agents = {}
 	if self.input_win and vim.api.nvim_win_is_valid(self.input_win) then

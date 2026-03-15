@@ -5,145 +5,192 @@ local active_chats = {} -- {name -> Chat}
 local active_bus = nil -- 单例频道
 
 function M.setup()
-	-- :AcpChat [claude|c1|c2|gemini] [api_num]
-	vim.api.nvim_create_user_command("AcpChat", function(opts)
+	-- :Acp [子命令] — 统一入口
+	vim.api.nvim_create_user_command("Acp", function(opts)
 		local args = vim.split(opts.args, "%s+")
-		local adapter_name = args[1]
-		if not adapter_name or adapter_name == "" then
-			adapter_name = "claude"
-		end
-		local api_num = args[2] and tonumber(args[2]) or nil
-		M.open_chat(adapter_name, { api_num = api_num })
-	end, {
-		nargs = "?",
-		desc = "ACP: 打开私聊",
-		complete = function()
-			return require("acp.adapter").list()
-		end,
-	})
-
-	-- :AcpBus [adapter] [agent_name]
-	vim.api.nvim_create_user_command("AcpBus", function(opts)
-		local args = vim.split(opts.args, "%s+")
-		local adapter_name = args[1]
-		if not adapter_name or adapter_name == "" then
-			adapter_name = "claude"
-		end
-		local agent_name = args[2]
-		if not agent_name or agent_name == "" then
-			agent_name = adapter_name .. "-1"
-		end
-		-- 已有频道：toggle show/hide
-		if active_bus then
-			local win = active_bus.win
-			if win and vim.api.nvim_win_is_valid(win) then
-				active_bus:hide()
-			else
-				active_bus:show()
+		local sub = args[1] or ""
+		if sub == "" then
+			M.toggle_or_start()
+		elseif sub == "chat" then
+			M.open_chat(args[2] or "claude", { api_num = args[3] and tonumber(args[3]) })
+		elseif sub == "bus" then
+			local adapter_name = args[2] or "claude"
+			local agent_name = args[3]
+			if not agent_name or agent_name == "" then
+				agent_name = adapter_name .. "-1"
 			end
-			return
-		end
-		M.open_bus(adapter_name, agent_name)
-	end, {
-		nargs = "?",
-		desc = "ACP: 打开/切换频道",
-		complete = function()
-			return require("acp.adapter").list()
-		end,
-	})
-
-	-- :AcpToggle — 统一 toggle，主+输入框成对出现
-	vim.api.nvim_create_user_command("AcpToggle", function()
-		-- 优先 bus，其次 chat
-		local target = active_bus
-		if not target then
-			for _, chat in pairs(active_chats) do
-				target = chat
-				break
-			end
-		end
-		if not target then
-			vim.notify("[acp] 没有活跃的会话，先用 :AcpChat 或 :AcpBus 打开", vim.log.levels.WARN)
-			return
-		end
-		local win = target.win
-		if win and vim.api.nvim_win_is_valid(win) then
-			target:hide()
-		else
-			target:show()
-		end
-	end, { desc = "ACP: toggle 主+输入框" })
-	-- :AcpAgents — 统一 picker，列出所有 session，选中 toggle
-	vim.api.nvim_create_user_command("AcpAgents", function()
-		local items = {}
-		local actions = {}
-
-		-- 主 chat sessions
-		for _, chat in pairs(active_chats) do
-			local visible = chat.win and vim.api.nvim_win_is_valid(chat.win)
-			local status = not chat.client and "disconnected"
-				or chat.streaming and "streaming"
-				or "idle"
-			local label = "[chat:" .. chat.adapter_name .. "]  " .. status
-				.. (visible and "  ✓" or "")
-			items[#items + 1] = label
-			actions[#actions + 1] = function()
-				if visible then chat:hide() else chat:show() end
-			end
-		end
-
-		-- 频道主 buffer
-		if active_bus then
-			local visible = active_bus.win and vim.api.nvim_win_is_valid(active_bus.win)
-			items[#items + 1] = "[bus]  频道" .. (visible and "  ✓" or "")
-			actions[#actions + 1] = function()
-				if visible then active_bus:hide() else active_bus:show() end
-			end
-
-			-- 子 agents（只读 buffer，无输入框）
-			for name, agent in pairs(active_bus.agents) do
-				local status = not agent.client and "disconnected"
-					or agent.streaming and "streaming"
-					or "idle"
-				-- 检查 chat_buf 是否已有窗口
-				local agent_visible = false
-				for _, win in ipairs(vim.api.nvim_list_wins()) do
-					if vim.api.nvim_win_get_buf(win) == agent.chat_buf then
-						agent_visible = true
-						break
-					end
+			if active_bus then
+				local win = active_bus.win
+				if win and vim.api.nvim_win_is_valid(win) then
+					active_bus:hide()
+				else
+					active_bus:show()
 				end
+				return
+			end
+			M.open_bus(adapter_name, agent_name)
+		elseif sub == "list" then
+			M.show_picker()
+		elseif sub == "restore" then
+			M.select_bus()
+		elseif sub == "stop" then
+			M.stop_all()
+		elseif sub == "cli" then
+			M.open_native_cli(args[2])
+		else
+			vim.notify("[acp] 未知子命令: " .. sub, vim.log.levels.ERROR)
+		end
+	end, {
+		nargs = "*",
+		desc = "ACP 统一入口",
+		complete = function(arg_lead, line)
+			local parts = vim.split(line, "%s+")
+			if #parts <= 2 then
+				return vim.tbl_filter(function(s)
+					return s:find(arg_lead, 1, true) == 1
+				end, { "bus", "chat", "cli", "list", "restore", "stop" })
+			elseif parts[2] == "chat" or parts[2] == "bus" then
+				return require("acp.adapter").list()
+			elseif parts[2] == "cli" then
+				if active_bus then
+					local names = {}
+					for name, agent in pairs(active_bus.agents) do
+						if agent.kind ~= "local" then
+							names[#names + 1] = name
+						end
+					end
+					table.sort(names)
+					return names
+				end
+				return {}
+			end
+			return {}
+		end,
+	})
+end
+
+--- 无参数时：有活跃会话 toggle，没有则开 claude chat
+function M.toggle_or_start()
+	-- 优先 bus，其次 chat
+	local target = active_bus
+	if not target then
+		for _, chat in pairs(active_chats) do
+			target = chat
+			break
+		end
+	end
+	if not target then
+		M.open_chat("claude", {})
+		return
+	end
+	local win = target.win
+	if win and vim.api.nvim_win_is_valid(win) then
+		target:hide()
+	else
+		target:show()
+	end
+end
+
+--- Picker：列出所有 session，选中 toggle
+function M.show_picker()
+	local items = {}
+	local actions = {}
+
+	-- 主 chat sessions
+	for _, chat in pairs(active_chats) do
+		local visible = chat.win and vim.api.nvim_win_is_valid(chat.win)
+		local status = not chat.client and "disconnected"
+			or chat.streaming and "streaming"
+			or "idle"
+		local label = "[chat:" .. chat.adapter_name .. "]  " .. status
+			.. (visible and "  ✓" or "")
+		items[#items + 1] = label
+		actions[#actions + 1] = function()
+			if visible then chat:hide() else chat:show() end
+		end
+	end
+
+	-- 频道主 buffer
+	if active_bus then
+		local visible = active_bus.win and vim.api.nvim_win_is_valid(active_bus.win)
+		items[#items + 1] = "[bus]  频道" .. (visible and "  ✓" or "")
+		actions[#actions + 1] = function()
+			if visible then active_bus:hide() else active_bus:show() end
+		end
+
+		-- 子 agents
+		for name, agent in pairs(active_bus.agents) do
+			if agent.kind ~= "local" then
+				local status = agent.status or "idle"
+				local agent_visible = agent.chat
+					and agent.chat.win
+					and vim.api.nvim_win_is_valid(agent.chat.win)
 				items[#items + 1] = "[agent:" .. name .. "]  " .. status
 					.. (agent_visible and "  ✓" or "")
 				actions[#actions + 1] = function()
-					if agent_visible then
-						-- 关掉显示该 buffer 的窗口
-						for _, win in ipairs(vim.api.nvim_list_wins()) do
-							if vim.api.nvim_win_get_buf(win) == agent.chat_buf then
-								pcall(vim.api.nvim_win_close, win, true)
-							end
+					if agent.chat then
+						if agent_visible then
+							agent.chat:hide()
+						else
+							agent.chat:show()
 						end
-					else
-						active_bus:open_agent_buf(name)
 					end
 				end
 			end
 		end
+	end
 
-		if #items == 0 then
-			vim.notify("[acp] 没有活跃的会话", vim.log.levels.INFO)
-			return
+	if #items == 0 then
+		vim.notify("[acp] 没有活跃的会话", vim.log.levels.INFO)
+		return
+	end
+
+	vim.ui.select(items, { prompt = "ACP Sessions" }, function(_, idx)
+		if idx then actions[idx]() end
+	end)
+end
+
+--- 在新 tab 打开原生 CLI（claude --resume）
+function M.open_native_cli(agent_name)
+	if not active_bus then
+		vim.notify("[acp] 没有活跃频道", vim.log.levels.WARN)
+		return
+	end
+	if not agent_name or agent_name == "" then
+		vim.notify("[acp] 用法: :Acp cli <agent_name>", vim.log.levels.WARN)
+		return
+	end
+	local agent = active_bus.agents[agent_name]
+	if not agent then
+		vim.notify("[acp] agent not found: " .. agent_name, vim.log.levels.WARN)
+		return
+	end
+	local session_id = agent.client and agent.client.session_id
+	if not session_id then
+		vim.notify("[acp] agent 没有 session_id", vim.log.levels.WARN)
+		return
+	end
+	local adapter_name = agent.adapter_name or "claude"
+	-- 只支持 claude/c1/c2
+	if adapter_name ~= "claude" and adapter_name ~= "c1" and adapter_name ~= "c2" then
+		vim.notify("[acp] " .. adapter_name .. " 不支持原生 CLI resume", vim.log.levels.WARN)
+		return
+	end
+	-- 构建 env
+	local adapter_config = require("acp.adapter").get(adapter_name, {})
+	local env_parts = {}
+	if adapter_config.env then
+		for k, v in pairs(adapter_config.env) do
+			-- 只注入 ANTHROPIC_ 相关的 env
+			if k:match("^ANTHROPIC_") then
+				env_parts[#env_parts + 1] = k .. "=" .. vim.fn.shellescape(v)
+			end
 		end
-
-		vim.ui.select(items, { prompt = "ACP Sessions" }, function(_, idx)
-			if idx then actions[idx]() end
-		end)
-	end, { desc = "ACP: 选择并 toggle session 窗口" })
-
-	-- :AcpStop
-	vim.api.nvim_create_user_command("AcpStop", function()
-		M.stop_all()
-	end, { desc = "ACP: 关闭所有会话" })
+	end
+	local env_prefix = #env_parts > 0 and (table.concat(env_parts, " ") .. " ") or ""
+	local cmd = env_prefix .. "claude --resume " .. session_id
+	vim.cmd("tabnew")
+	vim.fn.termopen(cmd)
 end
 
 function M.open_chat(adapter_name, opts)
@@ -164,8 +211,11 @@ function M.open_chat(adapter_name, opts)
 	active_chats[name] = chat
 	-- client 就绪后注册为主 agent
 	chat.on_ready = function(client)
-		if active_bus then
-			active_bus.main_client = client
+		if active_bus and active_bus.agents["main"] then
+			active_bus.agents["main"].client = client
+			active_bus.agents["main"].status = "idle"
+			active_bus.agents["main"].adapter_name = adapter_name
+			active_bus:_refresh_winbar()
 			active_bus:post("系统", "main (" .. adapter_name .. ") 已上线")
 		end
 	end
@@ -177,22 +227,56 @@ function M.open_bus(adapter_name, agent_name)
 	if not active_bus then
 		active_bus = require("acp.bus").new()
 		active_bus:open()
-		-- 把已有的主 chat client 注册进来（延迟等 client 就绪）
-		vim.defer_fn(function()
-			if active_bus and not active_bus.main_client then
-				for _, chat in pairs(active_chats) do
-					if chat.client then
-						active_bus.main_client = chat.client
-						active_bus:post("系统", "main 已上线")
-						break
-					end
+		-- 把已有的主 chat client 注册进来（同步检测，on_ready 回调兜底）
+		if active_bus.agents["main"] and not active_bus.agents["main"].client then
+			for _, chat in pairs(active_chats) do
+				if chat.client then
+					active_bus.agents["main"].client = chat.client
+					active_bus.agents["main"].status = "idle"
+					active_bus.agents["main"].adapter_name = chat.adapter_name or "claude"
+					active_bus:_refresh_winbar()
+					active_bus:post("系统", "main 已上线")
+					break
 				end
 			end
-		end, 500)
+		end
 	end
 	-- 添加 agent
 	active_bus:add_agent(agent_name, adapter_name)
 	return active_bus
+end
+
+--- 选择并恢复已保存的频道
+function M.select_bus()
+	local store = require("acp.store")
+	local cwd = vim.fn.getcwd()
+	local channels = store.list(cwd)
+	if #channels == 0 then
+		vim.notify("[acp] 当前目录没有已保存的频道", vim.log.levels.INFO)
+		return
+	end
+	local items = {}
+	for _, ch in ipairs(channels) do
+		items[#items + 1] = string.format("%s  [%s]  %d条消息", ch.channel_id, ch.agents, ch.msg_count)
+	end
+	vim.ui.select(items, { prompt = "恢复频道" }, function(_, idx)
+		if not idx then return end
+		local selected = channels[idx]
+		local snapshot = store.load(selected.filepath)
+		if not snapshot then
+			vim.notify("[acp] 快照加载失败", vim.log.levels.ERROR)
+			return
+		end
+		-- 关闭当前频道（如果有）
+		if active_bus then
+			pcall(function() active_bus:close() end)
+			active_bus = nil
+		end
+		-- 创建新 bus 并恢复
+		active_bus = require("acp.bus").new()
+		active_bus:open()
+		active_bus:restore_from_snapshot(snapshot)
+	end)
 end
 
 --- RPC: 发消息到频道

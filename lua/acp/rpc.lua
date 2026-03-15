@@ -135,6 +135,12 @@ function M.bus_agents(raw)
 	end
 end
 
+--- 列出可用 adapter
+function M.list_adapters(_)
+	local adapter_mod = require("acp.adapter")
+	return ok(adapter_mod.list_detailed())
+end
+
 --- 关闭频道
 function M.bus_stop(raw)
 	parse_args(raw) -- 忽略参数

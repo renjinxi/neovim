@@ -1,6 +1,6 @@
 # ACP 频道系统 — 问题清单
 
-最后更新：2026-03-13
+最后更新：2026-03-15
 
 ---
 
@@ -10,6 +10,7 @@
 |---|------|---------|
 | #2 | 统一命名 @主agent→@main | bus.lua 路由 + system prompt 统一 |
 | #4 | Codex adapter 缺失 | 已加，但当前版本不支持 ACP，已注释禁用 |
+| #4 | Codex adapter 缺失 | 已加 codex-acp adapter，codex 可通过频道通信 |
 | #5 | 频道 buffer 被误关 | q 改为 hide()，BufWipeout+VimLeavePre 自动清理进程 |
 | #6 | Chat/频道双 buffer 体验差 | AcpToggle(<leader>ait)、AcpAgents picker(<leader>aia)、show() 修复 split 顺序 |
 | #7 | skill 轮询问题 | 隐藏 bus_agents/bus_read，加推送机制说明 |
@@ -17,6 +18,8 @@
 | #9 | 主 Claude chat 割裂 | _push_to_main 在主 chat buffer 写"← 频道"标记 |
 | #10 | 频道消息无时间感知 | _render_message 加时间戳 + 间隔（+Xs） |
 | #11 | 通信延迟无法分析 | 新增 logs/acp-client.log，记录握手/prompt/terminal 耗时 |
+| #12 | _append_agent_system 换行崩溃 | vim.split 后再传 nvim_buf_set_lines |
+| #14 | c1/c2 代理环境变量丢失 | 新增 get_proxy_env()，所有 adapter 统一读 CLAUDE_PROXY |
 
 ---
 
@@ -44,9 +47,75 @@
 `_push_to_main` 并发问题，多个 agent 同时 @main 可能乱序或丢失。
 **状态**：未复现，暂跳过。
 
-### #4 Codex ACP 支持
-当前 codex 0.114.x 没有 `codex-acp` 命令，ACP 未实现。
-**状态**：等官方支持，目前用 ai-task-dispatch PTY 方案代替。
+### #13 频道持久化
+频道关闭/nvim退出时自动保存快照，`:AcpBusSelect` 恢复。
+**已实现**：store.lua + bus.lua save_snapshot/restore + init.lua AcpBusSelect（2026-03-15）
+**M0 限制**：恢复时 agent 走 session/new，不依赖 session/load
+**待验证**：重启后测试完整恢复流程
+
+### #15 agent 不回消息时无反馈
+`send_to_agent` 的 prompt 回调只处理 `cancelled`，`error` 时完全静默。
+**已修**：加 `stop=error` 处理，post "xxx 执行出错" 到频道（2026-03-15）
+
+### #16 system prompt 精简 + 长内容写文件
+频道消息太长太乱，agent 大段分析直接刷屏。
+**已修**（2026-03-15）：
+- system prompt 精简到最小：只管通信命令 + 基本规则
+- 频道消息 50 字以内，长内容写 `notes/acp-bus/{channel_id}/`
+- 角色定义由 main agent 启动时的消息决定，不硬编码
+
+### #17 agent 实时状态显示
+不知道 agent 在不在干活。
+**已实现**（2026-03-15）：
+- 频道主窗口 winbar 显示各 agent 状态：○ offline / ◉ idle / ● busy
+- busy 时显示当前活动：[thinking] / [Read File] / [typing]
+- 事件驱动刷新，不轮询
+
+### #18 消息送达无反馈
+发消息给 agent 后不知道是否送达。
+**已修**（2026-03-15）：
+- `send_to_agent` 发 prompt 时 post "→ xxx" 到频道
+- winbar 同步变绿
+
+### #19 频道消息在主 chat buffer 里不易区分
+频道推给 main 的消息和手动对话混在一起。
+**已修**（2026-03-15）：
+- Chat 加 `append_bus_message(from, text)` 方法
+- 频道来源消息显示为 `## 📨 频道 ← {agent名}`，区别于普通 `## You`
+- `_push_to_main` 传递发送者信息
+
+### #20 ACP 原生命令支持度
+ACP 协议定义的原生命令（clear、compact/压缩上下文、等），当前支持到什么程度？需要排查：
+- client.lua 是否实现了 clear / compact 等 session 管理命令
+- 各 adapter（claude/gemini/codex）哪些原生命令可用
+- 是否需要在 UI 层暴露这些操作（比如 `:Acp clear agent_name`）
+
+**状态**：待调研
+
+### #21 轻量 task 层（codex1 建议）
+频道从纯消息流升级为"消息 + 任务事件"。引入 task 对象（task_id, owner, status, artifacts），
+UI 可显示"谁在做什么"而非"谁说了什么"。恢复时能恢复任务状态而非仅聊天历史。
+**状态**：待设计
+
+### #22 结构化协作原语（codex1 建议）
+加 assign/done/blocked/artifact 四个动作的 RPC 原语，减少纯自然语言协议负担。
+让 agent 通过接口上报状态而非靠 prompt 约定。
+**状态**：待设计
+
+### #23 可观测性面板（codex1 建议）
+`:Acp inspect` 展示 agent 状态、当前 task、运行时长、队列长度、最近错误、artifact 路径。
+把真实状态从频道解耦，避免频道变日志垃圾桶。
+**状态**：待设计
+
+### #24 身份校验 + 背压机制（codex1 建议）
+- from 字段无校验，可伪造。需 agent token/nonce 绑定
+- 缺系统级背压：每 agent 最大排队数、全局最大并发数、超出回 busy
+**状态**：待设计
+
+### #25 模型能力差异化编排（codex1 建议）
+给 adapter 标注 traits（strengths/cost_class/latency_class/tooling），
+planner 按任务类型派单而非只按名字 @agent。
+**状态**：待设计
 
 ---
 

@@ -15,19 +15,28 @@ function M.setup(opts)
 		claude = {
 			supports_auto_accept = true,
 			build = function(api_num, auto_accept)
+				local env_mod = require("core.env")
 				local flags = auto_accept and " --dangerously-skip-permissions --permission-mode acceptEdits" or ""
 				local cmd = "claude" .. flags
 				local env = nil
+				local proxy = env_mod.get("CLAUDE_PROXY")
+				if proxy and proxy ~= "" then
+					env = {
+						http_proxy = proxy,
+						https_proxy = proxy,
+						HTTP_PROXY = proxy,
+						HTTPS_PROXY = proxy,
+						all_proxy = proxy,
+					}
+				end
 				if api_num then
-					local env_mod = require("core.env")
 					local n = tonumber(api_num)
 					local base_url = env_mod.get("CLAUDE_API" .. n .. "_BASE_URL")
 					local token = env_mod.get("CLAUDE_API" .. n .. "_TOKEN")
 					if base_url and token then
-						env = {
-							ANTHROPIC_BASE_URL = base_url,
-							ANTHROPIC_AUTH_TOKEN = token,
-						}
+						env = env or {}
+						env.ANTHROPIC_BASE_URL = base_url
+						env.ANTHROPIC_AUTH_TOKEN = token
 					end
 				end
 				return { cmd = cmd, env = env }

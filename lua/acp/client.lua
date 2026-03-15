@@ -69,6 +69,12 @@ function Client:start(opts)
 		vim.schedule(function()
 			self:_log("exit  code=" .. tostring(code) .. "  signal=" .. tostring(signal))
 			self.alive = false
+			-- 清理所有 pending 回调，防止调用方永远卡住
+			local pending = self.pending
+			self.pending = {}
+			for id, cb in pairs(pending) do
+				pcall(cb, nil, { code = -32000, message = "client exited (code=" .. tostring(code) .. ")" })
+			end
 			if self.on_exit then
 				self.on_exit(code, signal)
 			end
@@ -162,7 +168,8 @@ end
 --- 发送 prompt（异步）
 --- @param text string 用户输入文本
 --- @param on_done? function(stop_reason)
-function Client:prompt(text, on_done)
+--- @param on_chunk? function(params) 流式 update 回调（不影响全局 on_update）
+function Client:prompt(text, on_done, on_chunk)
 	if not self.alive or not self.session_id then
 		vim.notify("[acp] client not ready", vim.log.levels.ERROR)
 		return
@@ -170,15 +177,17 @@ function Client:prompt(text, on_done)
 	local t0 = os.clock()
 	local name = self.adapter and self.adapter.name or "?"
 	local prompt = { { type = "text", text = text } }
+	self._on_chunk = on_chunk
 	self:_send_request("session/prompt", {
 		sessionId = self.session_id,
 		prompt = prompt,
 	}, function(result, err)
+		self._on_chunk = nil
 		local elapsed_ms = math.floor((os.clock() - t0) * 1000)
 		self:_log("prompt done  agent=" .. name .. "  elapsed=" .. elapsed_ms .. "ms  stop=" .. tostring(result and result.stopReason or err and "error" or "?"))
 		if on_done then
 			local reason = result and result.stopReason or (err and "error" or "unknown")
-			on_done(reason)
+			on_done(reason, err)
 		end
 	end)
 	self:_log("prompt sent  agent=" .. name .. "  len=" .. #text)
@@ -619,17 +628,28 @@ end
 
 --- 处理 agent 发来的 notification
 function Client:_handle_notification(msg)
-	if msg.method == "session/update" and self.on_update then
-		self.on_update(msg.params)
+	if msg.method == "session/update" then
+		if self._on_chunk then self._on_chunk(msg.params) end
+		if self.on_update then self.on_update(msg.params) end
 	end
 end
 
 --- 把 env table 转成 {"KEY=VALUE", ...} 列表（vim.uv.spawn 要求）
+--- 继承当前进程环境，adapter.env 覆盖同名变量
 function Client:_env_list()
-	local env = self.adapter.env or {}
+	local extra = self.adapter.env or {}
+	-- 先收集当前进程的全部环境变量
+	local merged = {}
+	for k, v in pairs(vim.fn.environ()) do
+		merged[k] = v
+	end
+	-- adapter 的 env 覆盖
+	for k, v in pairs(extra) do
+		merged[k] = tostring(v)
+	end
 	local list = {}
-	for k, v in pairs(env) do
-		list[#list + 1] = k .. "=" .. tostring(v)
+	for k, v in pairs(merged) do
+		list[#list + 1] = k .. "=" .. v
 	end
 	return list
 end

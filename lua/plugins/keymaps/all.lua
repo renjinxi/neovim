@@ -491,12 +491,12 @@ M.mappings = {
 	-- ========================================================================
 	{ "<leader>ai", group = "AI Tasks" },
 	{ "<leader>aid", "<cmd>AITasks<cr>", desc = "Toggle Dashboard" },
-	{ "<leader>aic", "<cmd>AcpChat claude<cr>", desc = "ACP: Claude 私聊" },
-	{ "<leader>aig", "<cmd>AcpChat gemini<cr>", desc = "ACP: Gemini 私聊" },
-	{ "<leader>aib", "<cmd>AcpBus<cr>", desc = "ACP: 频道" },
-	{ "<leader>ait", "<cmd>AcpToggle<cr>", desc = "ACP: toggle 主+输入框" },
-	{ "<leader>aia", "<cmd>AcpAgents<cr>", desc = "ACP: 选择 session" },
-	{ "<leader>aiq", "<cmd>AcpStop<cr>", desc = "ACP: 关闭所有" },
+
+	-- ========================================================================
+	-- Alt 快捷键 — ACP
+	-- ========================================================================
+	{ "<A-u>", "<cmd>Acp<cr>", desc = "ACP Toggle", mode = { "n", "i", "v", "t" } },
+	{ "<A-i>", "<cmd>Acp list<cr>", desc = "ACP Picker", mode = { "n", "i", "v", "t" } },
 }
 
 -- ============================================================================
