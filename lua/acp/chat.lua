@@ -76,6 +76,11 @@ function Chat:open()
 		self:_submit_input()
 	end, { buffer = self.input_buf, noremap = true, silent = true })
 
+	-- keymaps：<C-c> 取消 streaming
+	vim.keymap.set({ "n", "i" }, "<C-c>", function()
+		self:cancel()
+	end, { buffer = self.input_buf, noremap = true, silent = true })
+
 	-- keymaps：q 只关窗口，不杀进程
 	vim.keymap.set("n", "q", function()
 		self:hide()
@@ -159,7 +164,7 @@ end
 --- 提交输入框内容
 function Chat:_submit_input()
 	if self.streaming then
-		vim.notify("[acp] 等待回复中...", vim.log.levels.WARN)
+		vim.notify("[acp] 等待回复中… <C-c> 取消", vim.log.levels.WARN)
 		return
 	end
 	local lines = vim.api.nvim_buf_get_lines(self.input_buf, 0, -1, false)
@@ -281,6 +286,17 @@ function Chat:_scroll_to_bottom()
 		local count = vim.api.nvim_buf_line_count(self.buf)
 		pcall(vim.api.nvim_win_set_cursor, self.win, { count, 0 })
 	end
+end
+
+--- 取消当前 streaming
+function Chat:cancel()
+	if not self.streaming then return end
+	if self.client then
+		self.client:cancel()
+	end
+	self.streaming = false
+	self.stream_started = false
+	self:_append_system("(已取消)")
 end
 
 --- 只关窗口，保留进程
