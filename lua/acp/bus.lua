@@ -560,6 +560,7 @@ function Bus:send_to_agent(name, text, sender)
 	-- 写入 agent 日志：user 消息
 	session_write(self.session_dir, "agent-" .. name .. ".log",
 		string.format("[%s] [You]  %s\n\n", os.date("%H:%M:%S"), text))
+	local prompt_time = os.time()
 	agent.client:prompt(payload, function(stop_reason, err)
 		vim.schedule(function()
 			agent.streaming = false
@@ -580,8 +581,25 @@ function Bus:send_to_agent(name, text, sender)
 				session_write(self.session_dir, "agent-" .. name .. ".log",
 					string.format("[%s] [%s]  %s\n\n", os.date("%H:%M:%S"), name, agent.stream_buf))
 			end
+			-- 兜底：检测 agent 是否在本次 prompt 期间自行回复了频道
 			if not stop_reason or (stop_reason ~= "cancelled" and stop_reason ~= "error") then
-				self:post(name, "@main 已完成")
+				local self_posted = false
+				for i = #self.messages, 1, -1 do
+					local msg = self.messages[i]
+					if msg.timestamp < prompt_time then break end
+					if msg.from == name then
+						self_posted = true
+						break
+					end
+				end
+				if not self_posted then
+					if agent.stream_buf and agent.stream_buf ~= "" then
+						local summary = self:_extract_summary(agent.stream_buf, 200)
+						self:post(name, "@main " .. summary)
+					else
+						self:post("系统", name .. " 已完成（无输出）", { no_route = true })
+					end
+				end
 			end
 			agent.stream_buf = ""
 			if stop_reason == "cancelled" then
@@ -663,6 +681,20 @@ function Bus:_on_agent_update(name, params)
 end
 
 --- 从 content 提取文本（对齐 codecompanion get_renderable_text）
+--- 从 agent 输出中提取摘要（用于兜底回复）
+function Bus:_extract_summary(text, max_len)
+	max_len = max_len or 200
+	text = vim.trim(text)
+	if text == "" then return "（已完成）" end
+	if #text <= max_len then return text end
+	-- 取最后一段（通常是结论）
+	local last_para = text:match("\n\n([^\n].+)$")
+	if last_para and #last_para <= max_len then
+		return last_para
+	end
+	return text:sub(1, max_len - 1) .. "…"
+end
+
 function Bus:_extract_text(content)
 	local Client = require("acp.client").Client
 	return Client.get_renderable_text(content) or ""
