@@ -205,7 +205,7 @@ function Scheduler:push_to_agent(name, text, sender)
 					end
 				end
 				if not self_posted then
-					bus:post(name, "@main 已完成（未主动回复）")
+					bus:post(name, "@main 已 idle（未主动回复）")
 				end
 			end
 			agent.stream_buf = ""
