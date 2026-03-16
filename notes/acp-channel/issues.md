@@ -168,6 +168,12 @@ agent prompt 完成后，bus 自动把 stream_buf 内容 post 到频道，替代
 **可能方案**：长内容截断/摘要、写文件后只 post 路径、由 agent 自行决定回复什么
 **状态**：待讨论，暂不实现
 
+### #34 :Acp chat 应支持多实例
+当前 `open_chat()` 对同 adapter 做 toggle（同类型只允许一个），`:Acp chat claude` 第二次只会 show/hide 已有的 chat。
+**预期**：每次 `:Acp chat claude` 都创建新的独立 chat 实例，各自有独立的 session。
+**改动点**：init.lua `open_chat()` 去掉同类型 toggle 逻辑，或加子命令区分（`:Acp chat claude new` vs `:Acp chat claude`）
+**状态**：待修复
+
 ---
 
 ## 功能路线图
