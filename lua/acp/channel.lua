@@ -39,6 +39,8 @@ function Channel.new()
 		_listeners = {},    -- {event -> [fn]}
 		_last_msg_time = nil,
 		_saved = false,
+		_find_main_chat_fn = nil,  -- 由 registry 注入
+		_notify_main_chat_fn = nil, -- 由 registry 注入
 		-- P4 频道树预留
 		parent = nil,
 		children = {},
@@ -85,35 +87,18 @@ function Channel:session_write(filename, content)
 	session_write_file(self.session_dir, filename, content)
 end
 
---- 查找主 agent 关联的 Chat 实例
+--- 查找主 agent 关联的 Chat 实例（由 registry 注入回调）
 function Channel:find_main_chat()
-	local ok, init = pcall(require, "acp.init")
-	if not ok then return nil end
-	local chats = init._active_chats and init._active_chats() or {}
-	local main = self.agents["main"]
-	local main_client = main and main.client
-	for _, chat in pairs(chats) do
-		if main_client and chat.client == main_client then
-			return chat
-		end
+	if self._find_main_chat_fn then
+		return self._find_main_chat_fn()
 	end
 	return nil
 end
 
---- 在主 chat buffer 里标记频道来源消息
+--- 在主 chat buffer 里标记频道来源消息（由 registry 注入回调）
 function Channel:notify_main_chat(from, content)
-	local ok, init = pcall(require, "acp.init")
-	if not ok then return end
-	local chats = init._active_chats and init._active_chats() or {}
-	local main = self.agents["main"]
-	local main_client = main and main.client
-	for _, chat in pairs(chats) do
-		if main_client and chat.client == main_client and chat.append_bus_message then
-			vim.schedule(function()
-				chat:append_bus_message(from, content)
-			end)
-			return
-		end
+	if self._notify_main_chat_fn then
+		self._notify_main_chat_fn(from, content)
 	end
 end
 

@@ -1,8 +1,10 @@
 --- ACP 入口：命令注册
 local M = {}
 
-local active_chats = {} -- {name -> Chat}
-local active_bus = nil -- 单例频道
+--- 获取 registry 单例
+local function reg()
+	return require("acp.registry").get()
+end
 
 function M.setup()
 	-- :Acp [子命令] — 统一入口
@@ -19,6 +21,7 @@ function M.setup()
 			if not agent_name or agent_name == "" then
 				agent_name = adapter_name .. "-1"
 			end
+			local active_bus = reg():get_active_channel()
 			if active_bus then
 				local win = active_bus.win
 				if win and vim.api.nvim_win_is_valid(win) then
@@ -52,6 +55,7 @@ function M.setup()
 			elseif parts[2] == "chat" or parts[2] == "bus" then
 				return require("acp.adapter").list()
 			elseif parts[2] == "cli" then
+				local active_bus = reg():get_active_channel()
 				if active_bus then
 					local names = {}
 					for name, agent in pairs(active_bus.agents) do
@@ -71,10 +75,10 @@ end
 
 --- 无参数时：有活跃会话 toggle，没有则开 claude chat
 function M.toggle_or_start()
-	-- 优先 bus，其次 chat
-	local target = active_bus
+	local r = reg()
+	local target = r:get_active_channel()
 	if not target then
-		for _, chat in pairs(active_chats) do
+		for _, chat in pairs(r.chats) do
 			target = chat
 			break
 		end
@@ -93,11 +97,12 @@ end
 
 --- Picker：列出所有 session，选中 toggle
 function M.show_picker()
+	local r = reg()
 	local items = {}
 	local actions = {}
 
 	-- 主 chat sessions
-	for _, chat in pairs(active_chats) do
+	for _, chat in pairs(r.chats) do
 		local visible = chat.win and vim.api.nvim_win_is_valid(chat.win)
 		local status = not chat.client and "disconnected"
 			or chat.streaming and "streaming"
@@ -110,22 +115,24 @@ function M.show_picker()
 		end
 	end
 
-	-- 频道主 buffer
-	if active_bus then
-		local visible = active_bus.win and vim.api.nvim_win_is_valid(active_bus.win)
-		items[#items + 1] = "[bus]  频道" .. (visible and "  ✓" or "")
+	-- 所有频道
+	for channel_id, bus in pairs(r.channels) do
+		local visible = bus.win and vim.api.nvim_win_is_valid(bus.win)
+		local active_mark = channel_id == r.active_channel_id and " *" or ""
+		items[#items + 1] = "[bus:" .. channel_id .. "]  频道" .. active_mark .. (visible and "  ✓" or "")
 		actions[#actions + 1] = function()
-			if visible then active_bus:hide() else active_bus:show() end
+			if visible then bus:hide() else bus:show() end
+			r.active_channel_id = channel_id
 		end
 
 		-- 子 agents
-		for name, agent in pairs(active_bus.agents) do
+		for name, agent in pairs(bus.agents) do
 			if agent.kind ~= "local" then
-				local status = agent.status or "idle"
+				local agent_status = agent.status or "idle"
 				local agent_visible = agent.chat
 					and agent.chat.win
 					and vim.api.nvim_win_is_valid(agent.chat.win)
-				items[#items + 1] = "[agent:" .. name .. "]  " .. status
+				items[#items + 1] = "[agent:" .. name .. "]  " .. agent_status
 					.. (agent_visible and "  ✓" or "")
 				actions[#actions + 1] = function()
 					if agent.chat then
@@ -152,6 +159,7 @@ end
 
 --- 在新 tab 打开原生 CLI（claude --resume）
 function M.open_native_cli(agent_name)
+	local active_bus = reg():get_active_channel()
 	if not active_bus then
 		vim.notify("[acp] 没有活跃频道", vim.log.levels.WARN)
 		return
@@ -181,7 +189,6 @@ function M.open_native_cli(agent_name)
 	local env_parts = {}
 	if adapter_config.env then
 		for k, v in pairs(adapter_config.env) do
-			-- 只注入 ANTHROPIC_ 相关的 env
 			if k:match("^ANTHROPIC_") then
 				env_parts[#env_parts + 1] = k .. "=" .. vim.fn.shellescape(v)
 			end
@@ -194,9 +201,10 @@ function M.open_native_cli(agent_name)
 end
 
 function M.open_chat(adapter_name, opts)
+	local r = reg()
 	-- 已有同类型 chat：toggle show/hide
-	for name, chat in pairs(active_chats) do
-		if name:match("^" .. adapter_name .. "_") then
+	for key, chat in pairs(r.chats) do
+		if key:match("^" .. adapter_name .. "_") then
 			local win = chat.win
 			if win and vim.api.nvim_win_is_valid(win) then
 				chat:hide()
@@ -206,11 +214,10 @@ function M.open_chat(adapter_name, opts)
 			return chat
 		end
 	end
-	local chat = require("acp.chat").new(adapter_name, opts)
-	local name = adapter_name .. "_" .. os.time()
-	active_chats[name] = chat
+	local chat = r:create_chat(adapter_name, opts)
 	-- client 就绪后注册为主 agent
 	chat.on_ready = function(client)
+		local active_bus = r:get_active_channel()
 		if active_bus and active_bus.agents["main"] then
 			local main = active_bus.agents["main"]
 			-- 只在 main 无活跃 client 时注册
@@ -228,20 +235,20 @@ function M.open_chat(adapter_name, opts)
 end
 
 function M.open_bus(adapter_name, agent_name)
+	local r = reg()
+	local active_bus = r:get_active_channel()
 	if not active_bus then
-		active_bus = require("acp.bus").new()
+		active_bus = r:create_channel()
 		active_bus:open()
-		-- 把已有的主 chat client 注册进来（同步检测，on_ready 回调兜底）
+		-- 把已有的主 chat client 注册进来
 		if active_bus.agents["main"] and not active_bus.agents["main"].client then
-			for _, chat in pairs(active_chats) do
-				if chat.client then
-					active_bus.agents["main"].client = chat.client
-					active_bus.agents["main"].status = "idle"
-					active_bus.agents["main"].adapter_name = chat.adapter_name or "claude"
-					active_bus:_refresh_winbar()
-					active_bus:post("系统", "main 已上线")
-					break
-				end
+			local client, client_adapter = r:find_main_client()
+			if client then
+				active_bus.agents["main"].client = client
+				active_bus.agents["main"].status = "idle"
+				active_bus.agents["main"].adapter_name = client_adapter or "claude"
+				active_bus:_refresh_winbar()
+				active_bus:post("系统", "main 已上线")
 			end
 		end
 	end
@@ -252,6 +259,7 @@ end
 
 --- 选择并恢复已保存的频道
 function M.select_bus()
+	local r = reg()
 	local store = require("acp.store")
 	local cwd = vim.fn.getcwd()
 	local channels = store.list(cwd)
@@ -272,76 +280,78 @@ function M.select_bus()
 			return
 		end
 		-- 关闭当前频道（如果有）
-		if active_bus then
-			pcall(function() active_bus:close() end)
-			active_bus = nil
-		end
-		-- 创建新 bus 并恢复
-		active_bus = require("acp.bus").new()
-		active_bus:open()
-		active_bus:restore_from_snapshot(snapshot)
+		r:close_channel()
+		-- 创建新频道并恢复
+		local bus = r:create_channel()
+		bus:open()
+		bus:restore_from_snapshot(snapshot)
 	end)
 end
 
 --- RPC: 发消息到频道
-function M.bus_post(from, content)
-	if not active_bus then
+--- @param from? string
+--- @param content string
+--- @param channel_id? string
+function M.bus_post(from, content, channel_id)
+	local bus = reg():get_active_channel(channel_id)
+	if not bus then
 		return nil, "bus not open"
 	end
-	active_bus:post(from or "rpc", content)
+	bus:post(from or "rpc", content)
 	return true
 end
 
 --- RPC: 读取最近消息
-function M.bus_read(last_n)
-	if not active_bus then
+--- @param last_n? number
+--- @param channel_id? string
+function M.bus_read(last_n, channel_id)
+	local bus = reg():get_active_channel(channel_id)
+	if not bus then
 		return nil, "bus not open"
 	end
-	return active_bus:read(last_n)
+	return bus:read(last_n)
 end
 
 --- RPC: 列出 agent 状态
-function M.bus_agents()
-	if not active_bus then
+--- @param channel_id? string
+function M.bus_agents(channel_id)
+	local bus = reg():get_active_channel(channel_id)
+	if not bus then
 		return nil, "bus not open"
 	end
-	return active_bus:list_agents()
+	return bus:list_agents()
 end
 
---- RPC: 推送消息给指定 agent（先过频道再路由）
-function M.bus_send(agent_name, text)
-	if not active_bus then
+--- RPC: 推送消息给指定 agent
+--- @param agent_name string
+--- @param text string
+--- @param channel_id? string
+function M.bus_send(agent_name, text, channel_id)
+	local bus = reg():get_active_channel(channel_id)
+	if not bus then
 		return nil, "bus not open"
 	end
-	-- 消息先进频道显示，路由会自动 @mention 触发 send_to_agent
-	-- 如果 text 里没有 @agent_name，自动加上
 	local content = text
 	if not content:find("@" .. agent_name, 1, true) then
 		content = "@" .. agent_name .. " " .. text
 	end
-	active_bus:post("main", content)
+	bus:post("main", content)
 	return true
 end
 
---- RPC: 获取 active_bus 实例
-function M.get_bus()
-	return active_bus
+--- RPC: 获取 active bus 实例
+--- @param channel_id? string
+function M.get_bus(channel_id)
+	return reg():get_active_channel(channel_id)
 end
 
---- 供 bus 内部查找主 chat 对象
-function M._active_chats()
-	return active_chats
+--- RPC: 列出所有频道 ID
+function M.list_channels()
+	return reg():list_channel_ids()
 end
 
 function M.stop_all()
-	for name, chat in pairs(active_chats) do
-		pcall(function() chat:close() end)
-		active_chats[name] = nil
-	end
-	if active_bus then
-		pcall(function() active_bus:close() end)
-		active_bus = nil
-	end
+	reg():stop_all()
 end
 
 return M

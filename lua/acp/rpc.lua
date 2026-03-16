@@ -80,13 +80,13 @@ function M.bus_post_file(from, path)
 end
 
 --- 发消息到频道
---- args: {text: string, from?: string}
+--- args: {text: string, from?: string, channel_id?: string}
 function M.bus_post(raw)
 	local args = parse_args(raw)
 	if not args.text then
 		return err("missing text")
 	end
-	local result, post_err = acp.bus_post(args.from, args.text)
+	local result, post_err = acp.bus_post(args.from, args.text, args.channel_id)
 	if result then
 		return ok(true)
 	else
@@ -95,10 +95,10 @@ function M.bus_post(raw)
 end
 
 --- 读取频道消息
---- args: {last_n?: number}
+--- args: {last_n?: number, channel_id?: string}
 function M.bus_read(raw)
 	local args = parse_args(raw)
-	local result, read_err = acp.bus_read(args.last_n)
+	local result, read_err = acp.bus_read(args.last_n, args.channel_id)
 	if result then
 		return ok(result)
 	else
@@ -107,7 +107,7 @@ function M.bus_read(raw)
 end
 
 --- 推送消息给指定 agent
---- args: {agent_name: string, text: string}
+--- args: {agent_name: string, text: string, channel_id?: string}
 function M.bus_send(raw)
 	local args = parse_args(raw)
 	if not args.agent_name then
@@ -116,7 +116,7 @@ function M.bus_send(raw)
 	if not args.text then
 		return err("missing text")
 	end
-	local result, send_err = acp.bus_send(args.agent_name, args.text)
+	local result, send_err = acp.bus_send(args.agent_name, args.text, args.channel_id)
 	if result then
 		return ok(true)
 	else
@@ -125,9 +125,10 @@ function M.bus_send(raw)
 end
 
 --- 查询 agent 状态
+--- args: {channel_id?: string}
 function M.bus_agents(raw)
-	parse_args(raw) -- 忽略参数
-	local result, agents_err = acp.bus_agents()
+	local args = parse_args(raw)
+	local result, agents_err = acp.bus_agents(args.channel_id)
 	if result then
 		return ok(result)
 	else
@@ -142,22 +143,27 @@ function M.list_adapters(_)
 end
 
 --- 关闭频道
+--- args: {channel_id?: string}
 function M.bus_stop(raw)
-	parse_args(raw) -- 忽略参数
-	local bus = acp.get_bus()
+	local args = parse_args(raw)
+	local bus = acp.get_bus(args.channel_id)
 	if not bus then
 		return err("bus not open")
 	end
+	local registry = require("acp.registry").get()
 	local success, stop_err = pcall(function()
-		bus:close()
+		registry:close_channel(args.channel_id)
 	end)
-	-- 清理 active_bus 引用
-	acp.stop_all()
 	if success then
 		return ok(true)
 	else
 		return err(tostring(stop_err))
 	end
+end
+
+--- 列出活跃频道
+function M.list_channels(_)
+	return ok(acp.list_channels())
 end
 
 return M
