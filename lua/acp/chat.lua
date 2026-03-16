@@ -130,6 +130,12 @@ function Chat:open()
 		end,
 	})
 
+	-- 先聚焦输入框，不等 client 连接（#37 修复启动期键盘不响应）
+	if self.input_win and vim.api.nvim_win_is_valid(self.input_win) then
+		vim.api.nvim_set_current_win(self.input_win)
+		vim.cmd("startinsert")
+	end
+
 	-- 启动 client（异步，不阻塞 UI）
 	vim.schedule(function()
 		self:_start_client()

@@ -202,18 +202,7 @@ end
 
 function M.open_chat(adapter_name, opts)
 	local r = reg()
-	-- 已有同类型 chat：toggle show/hide
-	for key, chat in pairs(r.chats) do
-		if key:match("^" .. adapter_name .. "_") then
-			local win = chat.win
-			if win and vim.api.nvim_win_is_valid(win) then
-				chat:hide()
-			else
-				chat:show()
-			end
-			return chat
-		end
-	end
+	-- #34: 每次创建新实例，不再 toggle 已有同类型 chat
 	local chat = r:create_chat(adapter_name, opts)
 	-- client 就绪后注册为主 agent
 	chat.on_ready = function(client)
