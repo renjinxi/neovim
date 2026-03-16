@@ -132,14 +132,13 @@ end
 --- @param channel_id? string 频道 ID，用于文件输出目录
 --- @return string
 function M.get_bus_system_prompt(agent_name, channel_id)
-	local sock = vim.env.NVIM_LISTEN_ADDRESS or vim.v.servername
 	local tmpfile = "/tmp/acp_msg_" .. agent_name .. ".txt"
 	local notes_dir = "notes/acp-bus/" .. (channel_id or "default")
 	return string.format(
 		[[你是 %s，在一个多 agent 协作频道里。
 
-发消息命令：
-echo '内容' > '%s' && nvim --server '%s' --remote-expr 'luaeval("require(\"acp.rpc\").bus_post_file(\"%s\",\"%s\")")'
+发消息命令（注意用 $NVIM_LISTEN_ADDRESS 环境变量，不要写死路径）：
+echo '内容' > '%s' && nvim --server "$NVIM_LISTEN_ADDRESS" --remote-expr 'luaeval("require(\"acp.rpc\").bus_post_file(\"%s\",\"%s\")")'
 
 频道规则：
 - @收件人 开头，默认 @main
@@ -148,7 +147,6 @@ echo '内容' > '%s' && nvim --server '%s' --remote-expr 'luaeval("require(\"acp
 - 每个任务回复一次，然后等指令]],
 		agent_name,
 		tmpfile,
-		sock,
 		agent_name,
 		tmpfile,
 		notes_dir

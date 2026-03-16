@@ -205,12 +205,7 @@ function Scheduler:push_to_agent(name, text, sender)
 					end
 				end
 				if not self_posted then
-					if agent.stream_buf and agent.stream_buf ~= "" then
-						local summary = self:_extract_summary(agent.stream_buf, 200)
-						bus:post(name, "@main " .. summary)
-					else
-						bus:post("系统", name .. " 已完成（无输出）", { no_route = true })
-					end
+					bus:post(name, "@main 已完成（未主动回复）")
 				end
 			end
 			agent.stream_buf = ""
