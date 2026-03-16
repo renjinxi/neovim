@@ -294,6 +294,14 @@ function Chat:_submit_input()
 	-- 清空输入框
 	vim.api.nvim_buf_set_lines(self.input_buf, 0, -1, false, { "" })
 
+	-- / 命令拦截
+	if text:match("^/") then
+		local commands = require("acp.commands")
+		if commands.handle_chat(self, text) then
+			return
+		end
+	end
+
 	-- 频道回调：通过频道路由
 	if self.on_submit then
 		log("INFO", "_submit_input  channel_route  agent=" .. tostring(self.display_name)
@@ -424,7 +432,10 @@ end
 function Chat:_append_system(text)
 	vim.bo[self.buf].modifiable = true
 	local count = vim.api.nvim_buf_line_count(self.buf)
-	vim.api.nvim_buf_set_lines(self.buf, count, count, false, { "*" .. text .. "*" })
+	local lines = vim.split(text, "\n", { plain = true })
+	lines[1] = "*" .. lines[1]
+	lines[#lines] = lines[#lines] .. "*"
+	vim.api.nvim_buf_set_lines(self.buf, count, count, false, lines)
 	vim.bo[self.buf].modifiable = false
 	self:_scroll_to_bottom()
 end
@@ -526,12 +537,20 @@ function Chat:show()
 	return true
 end
 
---- 关闭 chat
-function Chat:close()
+--- 停止 chat 对应的 client，保留 buffer/window
+function Chat:stop()
 	if self.client then
 		self.client:stop()
 		self.client = nil
 	end
+	self.streaming = false
+	self.stream_started = false
+	self:_refresh_winbar()
+end
+
+--- 关闭 chat
+function Chat:close()
+	self:stop()
 	if self.input_win and vim.api.nvim_win_is_valid(self.input_win) then
 		vim.api.nvim_win_close(self.input_win, true)
 	end

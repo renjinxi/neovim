@@ -165,6 +165,7 @@ function Scheduler:push_to_agent(name, text, sender)
 	agent.status = "streaming"
 	agent.stream_buf = ""
 	agent.activity = "receiving"
+	agent.prompt_start_time = os.time()
 	-- 同步 Chat 的 streaming 状态
 	agent:sync_chat_streaming(true)
 	bus:state_changed()
@@ -179,9 +180,11 @@ function Scheduler:push_to_agent(name, text, sender)
 	local prompt_time = os.time()
 	agent.client:prompt(payload, function(stop_reason, err)
 		vim.schedule(function()
+			if agent.leaving then return end
 			agent.streaming = false
 			agent.status = "idle"
 			agent.activity = nil
+			agent.prompt_start_time = nil
 			-- 同步 Chat 的 streaming 状态
 			agent:sync_chat_streaming(false)
 			bus:state_changed()
@@ -207,6 +210,7 @@ function Scheduler:push_to_agent(name, text, sender)
 				if not self_posted then
 					bus:post(name, "@main 已 idle（未主动回复）")
 				end
+				bus:post("系统", name .. " 已完成", { no_route = true })
 			end
 			agent.stream_buf = ""
 			if stop_reason == "cancelled" then

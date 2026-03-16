@@ -124,6 +124,21 @@ function M.bus_send(raw)
 	end
 end
 
+--- agent 主动退出频道
+--- args: {agent_name: string, channel_id?: string}
+function M.bus_leave(raw)
+	local args = parse_args(raw)
+	if not args.agent_name then
+		return err("missing agent_name")
+	end
+	local result, leave_err = acp.bus_leave(args.agent_name, args.channel_id)
+	if result then
+		return ok(true)
+	else
+		return err(leave_err or "unknown error")
+	end
+end
+
 --- 查询 agent 状态
 --- args: {channel_id?: string}
 function M.bus_agents(raw)

@@ -107,12 +107,32 @@ end
 --- @param content string 消息内容
 --- @param opts? table {no_route?: bool}
 function Channel:post(from, content, opts)
+	-- 长消息自动文件化（>300 字）
+	if #content > 300 then
+		local notes_dir = vim.fn.stdpath("config") .. "/notes/acp-bus/" .. self.channel_id
+		vim.fn.mkdir(notes_dir, "p")
+		local filename = os.date("%H%M%S") .. "-" .. from:gsub("[^%w_%-]", "") .. ".md"
+		local filepath = notes_dir .. "/" .. filename
+		local f = io.open(filepath, "w")
+		if f then
+			f:write(content)
+			f:close()
+			content = vim.fn.strcharpart(content, 0, 50) .. "… → " .. filepath
+		end
+	end
+
 	local msg = {
 		from = from,
 		content = content,
 		timestamp = os.time(),
 	}
 	self.messages[#self.messages + 1] = msg
+
+	-- 更新 agent 的 last_rpc_time（agent 通过 RPC 发消息到频道）
+	local agent = self.agents[from]
+	if agent and agent.kind ~= "local" then
+		agent.last_rpc_time = msg.timestamp
+	end
 
 	-- 计算时间间隔
 	local gap = nil
@@ -220,9 +240,8 @@ function Channel:add_agent(name, adapter_name, opts)
 		self:post("你", content)
 	end
 	chat.on_exit_notify = function(code)
-		if self.agents[name] then
-			self.agents[name].status = "disconnected"
-		end
+		if not self.agents[name] then return end
+		self.agents[name].status = "disconnected"
 		self:post("系统", name .. " 退出 (code=" .. tostring(code) .. ")")
 		self:state_changed()
 	end
@@ -249,6 +268,21 @@ function Channel:add_agent(name, adapter_name, opts)
 	chat:open_headless()
 	agent.chat_buf = chat.buf
 	self:state_changed()
+end
+
+--- 主动移除 agent
+--- @param name string
+--- @return table|nil
+function Channel:remove_agent(name)
+	local agent = self.agents[name]
+	if not agent then
+		return nil, "agent not found: " .. tostring(name)
+	end
+	agent.leaving = true
+	self.agents[name] = nil
+	self:post("系统", name .. " 已退出频道", { no_route = true })
+	self:state_changed()
+	return agent
 end
 
 --- @param last_n? number 默认 20

@@ -30,6 +30,45 @@ local function truncate(s, max)
 	return s:sub(1, max - 1) .. "…"
 end
 
+local function format_gap(gap)
+	if not gap then return nil end
+	if gap >= 60 then
+		return string.format("+%dm%02ds", math.floor(gap / 60), gap % 60)
+	end
+	if gap >= 2 then
+		return string.format("+%ds", gap)
+	end
+	return nil
+end
+
+local function looks_like_code(content)
+	if content:find("```", 1, true) then return false end
+	if content:find("\t", 1, true) then return true end
+	if content:find("^%s*[%w_%.]+%s*=%s*") then return true end
+	if content:find("^%s*local%s+[%w_]+") then return true end
+	if content:find("\n", 1, true) then
+		local code_lines = 0
+		for _, line in ipairs(vim.split(content, "\n", { plain = true })) do
+			if line:find("^%s*[%w_%.]+%s*=%s*")
+				or line:find("^%s*local%s+[%w_]+")
+				or line:find("^%s*[%w_%.]+%b()%s*$")
+				or line:find("^%s*[{}%[%]();,]+%s*$") then
+				code_lines = code_lines + 1
+			end
+		end
+		if code_lines >= 2 then return true end
+	end
+	return false
+end
+
+local function render_markdown_content(content)
+	local lines = vim.split(content, "\n", { plain = true })
+	if looks_like_code(content) then
+		return vim.list_extend({ "```" }, vim.list_extend(lines, { "```" }))
+	end
+	return lines
+end
+
 --- 打开频道 UI
 function ChannelView:open()
 	local channel = self.channel
@@ -159,10 +198,27 @@ function ChannelView:_refresh_winbar()
 		else
 			icon, hl = "◉", "Normal"
 		end
+		-- RPC 通道健康检测：agent 在 streaming 状态超过 60s 且无 RPC 回调
+		local rpc_warn = false
+		if status == "streaming" and agent.kind ~= "local" and agent.prompt_start_time then
+			local elapsed = os.time() - agent.prompt_start_time
+			if elapsed >= 60 and not agent.last_rpc_time then
+				rpc_warn = true -- 从未通过 RPC 回调
+			elseif elapsed >= 60 and agent.last_rpc_time and agent.last_rpc_time < agent.prompt_start_time then
+				rpc_warn = true -- 本轮 prompt 期间无 RPC 回调
+			end
+		end
+		if rpc_warn then
+			hl = "DiagnosticWarn"
+		end
+
 		local adapter = agent.adapter_name or "?"
 		local base = name == adapter and name or (name .. "/" .. adapter)
 		base = truncate(base, max_label - 4)
 		local label = hint and string.format("%s %s [%s]", icon, base, hint) or (icon .. " " .. base)
+		if rpc_warn then
+			label = label .. " RPC?"
+		end
 		if name == "main" and queue_depth > 0 then
 			label = label .. string.format(" [q:%d]", queue_depth)
 		end
@@ -181,26 +237,28 @@ function ChannelView:_render_message(msg, gap)
 	vim.bo[self.buf].modifiable = true
 	local count = vim.api.nvim_buf_line_count(self.buf)
 
-	local time_str = os.date("%H:%M:%S", msg.timestamp)
-	local gap_str = ""
-	if gap then
-		if gap >= 60 then
-			gap_str = string.format(" (+%dm%ds)", math.floor(gap / 60), gap % 60)
-		elseif gap >= 2 then
-			gap_str = string.format(" (+%ds)", gap)
-		end
+	local lines = {}
+	if count > 2 then
+		lines[#lines + 1] = ""
+		lines[#lines + 1] = "---"
+		lines[#lines + 1] = ""
+	else
+		lines[#lines + 1] = ""
 	end
 
-	local prefix = "[" .. msg.from .. "]"
-	local time_prefix = time_str .. gap_str .. "  "
-	local indent = string.rep(" ", #time_prefix + #prefix + 2)
-	local lines = {}
-	for _, line in ipairs(vim.split(msg.content, "\n", { plain = true })) do
-		if #lines == 0 then
-			lines[1] = time_prefix .. prefix .. "  " .. line
-		else
-			lines[#lines + 1] = indent .. line
-		end
+	lines[#lines + 1] = "## " .. msg.from
+	lines[#lines + 1] = ""
+
+	local meta = { os.date("%Y-%m-%d %H:%M:%S", msg.timestamp) }
+	local gap_str = format_gap(gap)
+	if gap_str then
+		meta[#meta + 1] = gap_str
+	end
+	lines[#lines + 1] = "*" .. table.concat(meta, " · ") .. "*"
+	lines[#lines + 1] = ""
+
+	for _, line in ipairs(render_markdown_content(msg.content)) do
+		lines[#lines + 1] = line
 	end
 	vim.api.nvim_buf_set_lines(self.buf, count, count, false, lines)
 	vim.bo[self.buf].modifiable = false
@@ -237,6 +295,15 @@ function ChannelView:_submit_input()
 	local text = vim.trim(table.concat(lines, "\n"))
 	if text == "" then return end
 	vim.api.nvim_buf_set_lines(self.input_buf, 0, -1, false, { "" })
+
+	-- / 命令拦截
+	if text:match("^/") then
+		local commands = require("acp.commands")
+		if commands.handle_channel(self.channel, text, self) then
+			return
+		end
+	end
+
 	local has_mention = text:find("@[%w_%-]+")
 	if not has_mention then
 		text = "@main " .. text

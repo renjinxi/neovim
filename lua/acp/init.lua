@@ -14,7 +14,27 @@ function M.setup()
 		if sub == "" then
 			M.toggle_or_start()
 		elseif sub == "chat" then
-			M.open_chat(args[2] or "claude", { api_num = args[3] and tonumber(args[3]) })
+			-- 解析 --join [agent_name]
+			local join = false
+			local join_as = nil
+			local join_idx = nil
+			for i, a in ipairs(args) do
+				if a == "--join" then
+					join = true
+					join_idx = i
+					-- 下一个参数如果不是 flag 也不是 adapter 位置参数，就是 agent_name
+					if args[i + 1] and not args[i + 1]:match("^%-") then
+						join_as = args[i + 1]
+					end
+					break
+				end
+			end
+			local chat_args = vim.tbl_filter(function(a)
+				return a ~= "chat" and a ~= "--join" and a ~= join_as
+			end, args)
+			local adapter = chat_args[1] or "claude"
+			local api_num = chat_args[2] and tonumber(chat_args[2])
+			M.open_chat(adapter, { join = join, join_as = join_as, api_num = api_num })
 		elseif sub == "bus" then
 			local adapter_name = args[2] or "claude"
 			local agent_name = args[3]
@@ -34,10 +54,14 @@ function M.setup()
 			M.open_bus(adapter_name, agent_name)
 		elseif sub == "list" then
 			M.show_picker()
+		elseif sub == "pick" then
+			require("acp.picker").open()
 		elseif sub == "restore" then
 			M.select_bus()
 		elseif sub == "stop" then
 			M.stop_all()
+		elseif sub == "leave" then
+			M.leave_agent(args[2])
 		elseif sub == "cli" then
 			M.open_native_cli(args[2])
 		else
@@ -51,10 +75,10 @@ function M.setup()
 			if #parts <= 2 then
 				return vim.tbl_filter(function(s)
 					return s:find(arg_lead, 1, true) == 1
-				end, { "bus", "chat", "cli", "list", "restore", "stop" })
+				end, { "bus", "chat", "cli", "leave", "list", "pick", "restore", "stop" })
 			elseif parts[2] == "chat" or parts[2] == "bus" then
 				return require("acp.adapter").list()
-			elseif parts[2] == "cli" then
+			elseif parts[2] == "cli" or parts[2] == "leave" then
 				local active_bus = reg():get_active_channel()
 				if active_bus then
 					local names = {}
@@ -71,6 +95,29 @@ function M.setup()
 			return {}
 		end,
 	})
+end
+
+--- 主动让 agent 离开频道
+--- @param agent_name string
+--- @param channel_id? string
+function M.bus_leave(agent_name, channel_id)
+	local bus = reg():get_active_channel(channel_id)
+	if not bus then
+		return nil, "bus not open"
+	end
+	if not agent_name or agent_name == "" then
+		return nil, "missing agent_name"
+	end
+	local agent, remove_err = bus:remove_agent(agent_name)
+	if not agent then
+		return nil, remove_err
+	end
+	if agent.chat and agent.chat.stop then
+		agent.chat:stop()
+	elseif agent.client then
+		agent.client:stop()
+	end
+	return true
 end
 
 --- 无参数时：有活跃会话 toggle，没有则开 claude chat
@@ -202,20 +249,94 @@ end
 
 function M.open_chat(adapter_name, opts)
 	local r = reg()
-	-- #34: 每次创建新实例，不再 toggle 已有同类型 chat
+	opts = opts or {}
+	local join = opts.join
+	local join_as = opts.join_as
+	opts.join = nil -- 不传给 chat 构造
+	opts.join_as = nil
 	local chat = r:create_chat(adapter_name, opts)
-	-- client 就绪后注册为主 agent
-	chat.on_ready = function(client)
-		local active_bus = r:get_active_channel()
-		if active_bus and active_bus.agents["main"] then
+	if join and join_as then
+		-- --join <name>：作为指定角色加入频道
+		chat.display_name = join_as
+		-- 频道回调：输入走频道路由
+		chat.on_submit = function(text)
+			local active_bus = r:get_active_channel()
+			if active_bus then
+				active_bus:post("你", "@" .. join_as .. " " .. text)
+			end
+		end
+		-- 频道回调：转发 update
+		chat.on_agent_update = function(params)
+			local active_bus = r:get_active_channel()
+			if active_bus then
+				active_bus:_on_agent_update(join_as, params)
+			end
+		end
+		-- 频道回调：进程退出
+		chat.on_exit_notify = function(code)
+			local active_bus = r:get_active_channel()
+			if not active_bus or not active_bus.agents[join_as] then return end
+			active_bus.agents[join_as].status = "disconnected"
+			active_bus:post("系统", join_as .. " 退出 (code=" .. tostring(code) .. ")")
+			active_bus:state_changed()
+		end
+		chat.on_ready = function(client)
+			local active_bus = r:get_active_channel()
+			if not active_bus then
+				vim.notify("[acp] 没有活跃频道，--join 无效", vim.log.levels.WARN)
+				return
+			end
+			local agent = active_bus.agents[join_as]
+			if agent and agent.kind ~= "local" then
+				-- 已有同名 agent，替换 client
+				agent.client = client
+				agent.status = "idle"
+				agent.adapter_name = adapter_name
+				agent.chat = chat
+			else
+				-- 注册为新 agent
+				local Agent = require("acp.agent")
+				local new_agent = Agent.new_spawned(join_as, {
+					adapter_name = adapter_name,
+					chat = chat,
+				})
+				new_agent.client = client
+				new_agent.status = "idle"
+				active_bus.agents[join_as] = new_agent
+			end
+			active_bus:_refresh_winbar()
+			active_bus:post("系统", join_as .. " (" .. adapter_name .. ") 已上线 (--join)")
+			active_bus:state_changed()
+		end
+	elseif join then
+		-- --join：就绪后强制注册为频道 main agent
+		chat.on_ready = function(client)
+			local active_bus = r:get_active_channel()
+			if not active_bus then
+				vim.notify("[acp] 没有活跃频道，--join 无效", vim.log.levels.WARN)
+				return
+			end
 			local main = active_bus.agents["main"]
-			-- 只在 main 无活跃 client 时注册
-			if not main.client or not main.client.alive then
-				main.client = client
-				main.status = "idle"
-				main.adapter_name = adapter_name
-				active_bus:_refresh_winbar()
-				active_bus:post("系统", "main (" .. adapter_name .. ") 已上线")
+			if not main then return end
+			main.client = client
+			main.status = "idle"
+			main.adapter_name = adapter_name
+			active_bus:_refresh_winbar()
+			active_bus:post("系统", "main (" .. adapter_name .. ") 已上线 (--join)")
+		end
+	else
+		-- 默认：只在 main 无活跃 client 时自动注册
+		chat.on_ready = function(client)
+			local active_bus = r:get_active_channel()
+			if active_bus and active_bus.agents["main"] then
+				local main = active_bus.agents["main"]
+				if not main.client or not main.client.alive then
+					main.client = client
+					main.status = "idle"
+					main.adapter_name = adapter_name
+					active_bus:_refresh_winbar()
+					active_bus:post("系统", "main (" .. adapter_name .. ") 已上线")
+				end
 			end
 		end
 	end
@@ -326,6 +447,14 @@ function M.bus_send(agent_name, text, channel_id)
 	end
 	bus:post("main", content)
 	return true
+end
+
+function M.leave_agent(agent_name)
+	local ok, leave_err = M.bus_leave(agent_name)
+	if ok then
+		return
+	end
+	vim.notify("[acp] " .. tostring(leave_err), vim.log.levels.WARN)
 end
 
 --- RPC: 获取 active bus 实例

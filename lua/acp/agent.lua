@@ -21,6 +21,8 @@ function Agent.new_spawned(name, opts)
 		system_prompt = opts.system_prompt,
 		prompted = false,
 		current_task = nil,
+		last_rpc_time = nil, -- 最后一次 RPC 回调（bus_post）的时间
+		prompt_start_time = nil, -- 当前 prompt 开始时间
 	}, Agent)
 end
 
@@ -41,6 +43,8 @@ function Agent.new_local()
 		system_prompt = nil,
 		prompted = false,
 		current_task = nil,
+		last_rpc_time = nil,
+		prompt_start_time = nil,
 	}, Agent)
 end
 
