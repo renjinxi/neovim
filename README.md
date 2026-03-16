@@ -1,115 +1,125 @@
-# Neovim Configuration
+# Neovim + ACP: Multi-AI Agent Collaboration in Your Editor
 
-现代 Neovim 配置，核心探索方向是 **ACP（Agent Communication Protocol）多 AI 协作系统**。
+![Neovim](https://img.shields.io/badge/Neovim-0.11+-57A143?logo=neovim&logoColor=white)
+![Lua](https://img.shields.io/badge/Lua-2C2D72?logo=lua&logoColor=white)
+![ACP](https://img.shields.io/badge/ACP-Agent_Communication_Protocol-blue)
+![Multi-Agent](https://img.shields.io/badge/Multi--Agent-Claude_%7C_Codex_%7C_Gemini-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Active_Development-brightgreen)
 
-## ACP 频道系统
+> **What if multiple AI agents could collaborate inside your editor — and you could watch, intervene, and steer them in real time?**
 
-在 Neovim 中实现多 AI agent 协作：你在编辑器前，主 agent 是你的助手，子 agent 是它派出去干活的。频道是所有通信的可见层，人类随时介入。
+This is a Neovim configuration with a built-in **ACP (Agent Communication Protocol) channel system** that enables multiple AI agents (Claude, Codex, Gemini) to work together in shared message channels. You sit in front of Neovim, your main agent assists you, and sub-agents are dispatched to do the work. The channel is the visible layer — humans can jump in anytime.
+
+## How It Works
 
 ```
-你（nvim 前）
+You (in Neovim)
   │
-  └── 主 agent (AcpChat)
+  └── Main Agent (AcpChat)
         │
         ▼
-      频道 (Channel)
-        ├── 子 agent-1 (claude)
-        ├── 子 agent-2 (codex)
-        └── 子 agent-N (gemini)
+      Channel
+        ├── agent-1 (claude)   ── review code
+        ├── agent-2 (codex)    ── implement feature
+        └── agent-N (gemini)   ── research docs
 ```
 
-### 已实现能力
+Agents communicate through **shared channels** with `@mention` routing. Messages flow through the channel — you see everything, and can send messages to any agent directly.
 
-- **协议层**：JSON-RPC 2.0 + ACP 握手 + 多 adapter（claude/c1/c2/gemini/codex）
-- **频道通信**：共享消息空间 + @mention 路由 + 人类直接参与
-- **Chat UI**：独立 1v1 对话窗口 + 频道消息联动
-- **可观测性**：agent 状态 winbar + Telescope picker + 独立 chat buffer
-- **命令系统**：`/add` `/stop` `/list` `/open` `/pick` `/status` `/cancel` `/exit` `/leave`
-- **持久化**：频道快照保存/恢复
-- **长消息文件化**：>300 字自动写文件，频道只显示摘要
-- **健康监控**：双通道状态检测（ACP + RPC 回调），streaming 超时警告
+## Key Features
 
-### 里程碑
+- **Multi-adapter support** — Claude, Codex, Gemini via ACP protocol (JSON-RPC 2.0)
+- **Channel-based collaboration** — shared message space with @mention routing
+- **Human-in-the-loop** — observe, intervene, and direct agents in real time
+- **Chat UI** — standalone 1v1 conversation windows linked to channels
+- **Observability** — agent status winbar, Telescope picker, per-agent chat buffers
+- **Command system** — `/add`, `/stop`, `/list`, `/open`, `/pick`, `/status`, `/cancel`, `/exit`, `/leave`
+- **Persistence** — channel snapshot save/restore
+- **Auto file-off** — long messages (>300 chars) auto-saved to files, channel shows summary
+- **Health monitoring** — dual-channel status detection (ACP + RPC callback), streaming timeout warnings
 
-| 阶段 | 内容 | 状态 |
-|------|------|------|
-| M0 | 基础通信 — 协议层、单 agent 对话 | ✅ |
-| M1 | 频道协作 — 多 agent、@mention 路由、架构重构 | ✅ |
-| M2 | 任务层 — task 对象、结构化协作原语、可观测面板 | 设计中 |
-| M3 | 自主扩展 — 子 agent spawn 新 agent | 规划中 |
-| M4 | 频道树 — 频道嵌套、子频道汇报父频道 | 规划中 |
-| M5 | 远程 Agent — HTTP/WebSocket transport | 规划中 |
+## Roadmap
 
-### 使用
+| Milestone | Description | Status |
+|-----------|-------------|--------|
+| M0 | Basic communication — protocol layer, single agent chat | ✅ Done |
+| M1 | Channel collaboration — multi-agent, @mention routing, architecture redesign | ✅ Done |
+| M2 | Task layer — task objects, structured collaboration primitives, inspect panel | Design |
+| M3 | Self-expansion — sub-agents can spawn new agents | Planned |
+| M4 | Channel tree — nested channels, child reports to parent | Planned |
+| M5 | Remote agents — HTTP/WebSocket transport | Planned |
+
+## Quick Start
 
 ```vim
-" 打开 Chat
+" Open a chat with Claude
 :Acp chat claude
-:Acp chat gemini
 
-" 频道操作
-:Acp open              " 打开频道
-:Acp pick              " Telescope agent 选择器
-:Acp leave <name>      " agent 退出频道
+" Open a channel and add agents
+:Acp open
+/add claude reviewer
+/add codex implementer
 
-" 频道输入框命令（/ 开头）
-/add claude reviewer   " 添加 agent
-/list                  " 列出所有 agent
-/stop <name>           " 停止 agent
+" Send a message to a specific agent
+" (type in the channel input, use @name to route)
+
+" Telescope agent picker
+:Acp pick
+
+" Agent leaves channel
+:Acp leave reviewer
 ```
 
-### 架构（17 模块）
+## Architecture (17 modules)
 
 ```
 lua/acp/
-├── init.lua          # 公共 API + :Acp 命令
-├── channel.lua       # 频道核心（消息、agent 管理、路由）
-├── channel_view.lua  # 频道 UI（buffer 渲染、winbar、输入框）
-├── bus.lua           # 频道 facade（向后兼容入口）
-├── router.lua        # @mention 路由逻辑
-├── scheduler.lua     # agent 调度 + main 推送队列
-├── task.lua          # 任务数据模型
-├── agent.lua         # agent 数据结构
-├── registry.lua      # 全局频道注册表
+├── init.lua          # Public API + :Acp commands
+├── channel.lua       # Channel core — messages, agent mgmt, routing
+├── channel_view.lua  # Channel UI — buffer rendering, winbar, input
+├── bus.lua           # Channel facade (backward compat)
+├── router.lua        # @mention routing
+├── scheduler.lua     # Agent scheduling + main push queue
+├── task.lua          # Task data model
+├── agent.lua         # Agent data structure
+├── registry.lua      # Global channel registry
 ├── chat.lua          # 1v1 Chat UI
-├── client.lua        # ACP 协议客户端（握手/prompt/stream）
-├── jsonrpc.lua       # JSON-RPC 2.0 编解码
-├── adapter.lua       # adapter 配置（claude/gemini/codex）
-├── commands.lua      # 输入框命令系统
+├── client.lua        # ACP protocol client (handshake/prompt/stream)
+├── jsonrpc.lua       # JSON-RPC 2.0 codec
+├── adapter.lua       # Adapter configs (claude/gemini/codex)
+├── commands.lua      # Input command system
 ├── picker.lua        # Telescope agent picker
-├── rpc.lua           # nvim RPC 入口（供外部调用）
-└── store.lua         # 频道持久化
+├── rpc.lua           # Neovim RPC entry (for external processes)
+└── store.lua         # Channel persistence
 ```
 
-### 项目文档
+## Documentation
 
-- 问题清单：`notes/acp-channel/issues.md`
-- 里程碑规划：`notes/acp-channel/roadmap.md`
-- 架构设计：`notes/acp-channel/design/`
-- 调研资料：`notes/acp-channel/research/`
+- Issue tracker: [`notes/acp-channel/issues.md`](notes/acp-channel/issues.md)
+- Roadmap: [`notes/acp-channel/roadmap.md`](notes/acp-channel/roadmap.md)
+- Architecture design: [`notes/acp-channel/design/`](notes/acp-channel/design/)
+- Research notes: [`notes/acp-channel/research/`](notes/acp-channel/research/)
 
-## Neovim 配置概览
+## Neovim Config
 
-90+ 插件，Lazy.nvim 管理，支持 native Neovim 和 VSCode/Cursor 双环境。
+Beyond ACP, this is a full-featured Neovim setup with 90+ plugins (Lazy.nvim), supporting both native Neovim and VSCode/Cursor.
 
-- **LSP**：15+ 语言服务器（Mason 自动安装）
-- **补全**：nvim-cmp + luasnip
-- **调试**：nvim-dap（Python/C++/Go/JS）
-- **导航**：Telescope + Flash + nvim-tree
-- **Git**：Neogit + LazyGit + gitsigns + diffview
-- **UI**：Rose Pine 主题 + Heirline 状态栏
-- **任务**：Overseer + Neotest
-
-### 目录结构
+- **LSP** — 15+ language servers via Mason
+- **Completion** — nvim-cmp + luasnip
+- **Debugging** — nvim-dap (Python/C++/Go/JS)
+- **Navigation** — Telescope + Flash + nvim-tree
+- **Git** — Neogit + LazyGit + gitsigns + diffview
+- **UI** — Rose Pine + Heirline statusline
 
 ```
 lua/
-├── core/           # 基础配置（options/autocmds/env）
-├── plugins/        # 插件生态
-│   ├── plugins/    # 插件声明（lazy.nvim specs）
-│   ├── config/     # 插件配置（35+ 文件）
-│   ├── keymaps/    # 快捷键（all.lua 集中管理）
-│   └── dap/        # 调试配置
-├── acp/            # ACP 频道系统（见上）
-└── user/           # 用户自定义
+├── core/           # Base config (options/autocmds/env)
+├── plugins/        # Plugin ecosystem (specs, configs, keymaps, dap)
+├── acp/            # ACP channel system (see above)
+└── user/           # User customizations
 ```
+
+## Contributing
+
+This project is in active development. If you're interested in multi-AI agent collaboration within editors, feel free to open an issue or reach out.
