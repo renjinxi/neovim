@@ -580,6 +580,9 @@ function Bus:send_to_agent(name, text, sender)
 				session_write(self.session_dir, "agent-" .. name .. ".log",
 					string.format("[%s] [%s]  %s\n\n", os.date("%H:%M:%S"), name, agent.stream_buf))
 			end
+			if not stop_reason or (stop_reason ~= "cancelled" and stop_reason ~= "error") then
+				self:post("系统", name .. " 已完成", { no_route = true })
+			end
 			agent.stream_buf = ""
 			if stop_reason == "cancelled" then
 				self:post("系统", name .. " 已取消")

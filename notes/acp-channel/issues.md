@@ -156,10 +156,17 @@ planner 按任务类型派单而非只按名字 @agent。
 - 或者改架构：agent prompt 完成后，bus 自动把 stream_buf 内容 post 到频道（不依赖 agent 主动回复）
 **状态**：待设计
 
-### #32 agent idle 时通知 main
-频道知道每个 agent 的状态（streaming → idle）。当 agent 从 busy/streaming 变为 idle 时，应自动通知 main agent，让 main 知道任务完成了可以跟进。
-当前 agent 变 idle 只刷新 winbar，main 不知道。
+### #32 agent idle 时频道系统通知
+agent 从 streaming→idle 时，频道自动 post 一条系统消息"xxx 已完成"（no_route，不触发路由）。
+改动点：`send_to_agent` prompt 回调里正常完成时加一行 post。
+不需要 push 到 main agent（避免浪费 token），频道消息即可。
 **状态**：待实现
+
+### #33 agent 回复自动收集到频道（待讨论）
+agent prompt 完成后，bus 自动把 stream_buf 内容 post 到频道，替代 agent 手动用工具回复。
+**问题**：agent 输出可能很长，直接灌到频道会很乱，不够灵活。
+**可能方案**：长内容截断/摘要、写文件后只 post 路径、由 agent 自行决定回复什么
+**状态**：待讨论，暂不实现
 
 ---
 
