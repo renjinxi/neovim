@@ -174,6 +174,19 @@ agent prompt 完成后，bus 自动把 stream_buf 内容 post 到频道，替代
 **改动点**：init.lua `open_chat()` 去掉同类型 toggle 逻辑，或加子命令区分（`:Acp chat claude new` vs `:Acp chat claude`）
 **状态**：待修复
 
+### #35 频道长消息自动文件化
+agent 经常无视 system prompt 的"长内容写文件"规则，直接大段文字刷屏频道。
+**方案**：两层——引导优先，兜底保底。
+**第一层：引导 agent 主动写文件**
+- RPC 加"附件"语义：bus_post 支持 `{text, attachment: "path/to/file.md"}`，agent 只需传路径
+- 频道显示摘要 + 文件链接，agent 自己决定摘要内容，比系统截断更合理
+- system prompt 给出附件用法模板，降低认知负担
+**第二层：系统兜底强制截断**
+- channel:post() 检测消息长度，超过阈值（300 字）时自动写文件 + 频道只显示摘要
+- 对 agent 透明，不需要改 prompt
+**排期**：阶段二完成后实现（依赖 channel.lua 抽出）
+**状态**：待实现
+
 ---
 
 ## 功能路线图

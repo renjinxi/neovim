@@ -32,8 +32,10 @@ function Chat.new(adapter_name, opts)
 		streaming = false,
 		stream_started = false, -- 当前 turn 是否已写 header
 		on_ready = nil, -- client 启动成功后的回调
-		bus = nil, -- 关联的 Bus 实例（频道模式）
-		bus_agent_name = nil, -- 在 bus 中的名字
+		display_name = opts.agent_name, -- 显示名（频道 agent 名）
+		on_agent_update = nil, -- 频道回调：session/update 转发
+		on_submit = nil, -- 频道回调：输入框提交走频道路由
+		on_exit_notify = nil, -- 频道回调：进程退出通知
 	}, Chat)
 end
 
@@ -137,8 +139,8 @@ end
 --- headless 启动：只创建 buffer + client，不创建窗口
 function Chat:open_headless()
 	log("INFO", "open_headless  adapter=" .. self.adapter_name
-		.. "  bus_agent=" .. tostring(self.bus_agent_name))
-	local display_name = self.bus_agent_name or self.adapter_name
+		.. "  agent=" .. tostring(self.display_name))
+	local display_name = self.display_name or self.adapter_name
 
 	-- 主 buffer
 	self.buf = vim.api.nvim_create_buf(false, true)
@@ -208,7 +210,7 @@ end
 --- 启动 ACP client
 function Chat:_start_client()
 	log("INFO", "_start_client  adapter=" .. self.adapter_name
-		.. "  bus=" .. tostring(self.bus ~= nil)
+		.. "  agent=" .. tostring(self.display_name)
 		.. "  cwd=" .. (self.opts.cwd or vim.fn.getcwd()))
 	local adapter_config = adapter_mod.get(self.adapter_name, self.opts)
 	self.client = client_mod.new(adapter_config)
@@ -223,24 +225,20 @@ function Chat:_start_client()
 				vim.schedule(function()
 					log("INFO", "on_exit  adapter=" .. self.adapter_name
 						.. "  code=" .. tostring(code)
-						.. "  bus_agent=" .. tostring(self.bus_agent_name))
+						.. "  agent=" .. tostring(self.display_name))
 					self:_append_system("进程退出 (code=" .. tostring(code) .. ")")
 					self:_refresh_winbar()
-					-- bus 模式：通知 bus
-					if self.bus and self.bus_agent_name then
-						if self.bus.agents[self.bus_agent_name] then
-							self.bus.agents[self.bus_agent_name].status = "disconnected"
-						end
-						self.bus:post("系统", self.bus_agent_name .. " 退出 (code=" .. tostring(code) .. ")")
-						self.bus:_refresh_winbar()
+					-- 回调通知
+					if self.on_exit_notify then
+						self.on_exit_notify(code)
 					end
 				end)
 			end,
 		})
 	end)
 
-	local display_name = self.bus_agent_name or self.adapter_name
-	local header = self.bus_agent_name and ("# Agent: " .. display_name) or ("# ACP Chat: " .. display_name)
+	local display_name = self.display_name or self.adapter_name
+	local header = self.display_name and ("# Agent: " .. display_name) or ("# ACP Chat: " .. display_name)
 
 	vim.bo[self.buf].modifiable = true
 	if ok then
@@ -290,12 +288,11 @@ function Chat:_submit_input()
 	-- 清空输入框
 	vim.api.nvim_buf_set_lines(self.input_buf, 0, -1, false, { "" })
 
-	-- bus 模式：通过频道路由
-	if self.bus and self.bus_agent_name then
-		log("INFO", "_submit_input  bus_route  agent=" .. self.bus_agent_name
+	-- 频道回调：通过频道路由
+	if self.on_submit then
+		log("INFO", "_submit_input  channel_route  agent=" .. tostring(self.display_name)
 			.. "  text_len=" .. #text)
-		local content = "@" .. self.bus_agent_name .. " " .. text
-		self.bus:post("你", content)
+		self.on_submit(text)
 	else
 		self:send(text)
 	end
@@ -354,11 +351,9 @@ function Chat:_on_update(params)
 		end
 	end
 
-	-- bus 模式：转发给 bus
-	if self.bus and self.bus_agent_name then
-		log("DEBUG", "_on_update bus_forward  agent=" .. self.bus_agent_name
-			.. "  kind=" .. tostring(kind))
-		self.bus:_on_agent_update(self.bus_agent_name, params)
+	-- 频道回调：转发 update
+	if self.on_agent_update then
+		self.on_agent_update(params)
 	end
 end
 
@@ -458,7 +453,7 @@ function Chat:_refresh_winbar()
 	else
 		icon, hl = "◉", "Normal"
 	end
-	local display = self.bus_agent_name or self.adapter_name
+	local display = self.display_name or self.adapter_name
 	local label = string.format("%s %s", icon, display)
 	vim.wo[self.win].winbar = string.format(" %%#%s#%s%%*", hl, label)
 end
