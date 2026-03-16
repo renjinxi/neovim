@@ -212,11 +212,15 @@ function M.open_chat(adapter_name, opts)
 	-- client 就绪后注册为主 agent
 	chat.on_ready = function(client)
 		if active_bus and active_bus.agents["main"] then
-			active_bus.agents["main"].client = client
-			active_bus.agents["main"].status = "idle"
-			active_bus.agents["main"].adapter_name = adapter_name
-			active_bus:_refresh_winbar()
-			active_bus:post("系统", "main (" .. adapter_name .. ") 已上线")
+			local main = active_bus.agents["main"]
+			-- 只在 main 无活跃 client 时注册
+			if not main.client or not main.client.alive then
+				main.client = client
+				main.status = "idle"
+				main.adapter_name = adapter_name
+				active_bus:_refresh_winbar()
+				active_bus:post("系统", "main (" .. adapter_name .. ") 已上线")
+			end
 		end
 	end
 	chat:open()

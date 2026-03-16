@@ -39,6 +39,7 @@ function Bus.new()
 		input_win = nil,
 		_main_busy = false,
 		_main_queue = {},
+		_drain_pending = false,
 		_saved = false,
 		session_dir = nil, -- 本次频道的日志目录
 	}, Bus)
@@ -143,9 +144,17 @@ function Bus:open()
 	self:_refresh_winbar()
 end
 
+--- 截断字符串（超出 max 则加 …）
+local function truncate(s, max)
+	if not s then return "" end
+	if #s <= max then return s end
+	return s:sub(1, max - 1) .. "…"
+end
+
 --- 刷新频道窗口的 winbar（agent 状态栏）
 function Bus:_refresh_winbar()
 	if not self.win or not vim.api.nvim_win_is_valid(self.win) then return end
+	local win_width = vim.api.nvim_win_get_width(self.win)
 	local parts = {}
 	-- main 排最前
 	local names = {}
@@ -157,6 +166,10 @@ function Bus:_refresh_winbar()
 		if b == "main" then return false end
 		return a < b
 	end)
+	-- 每个标签最大宽度，根据 agent 数量和窗口宽度动态计算
+	local max_label = math.max(12, math.floor((win_width - 2) / math.max(1, #names)) - 3)
+	max_label = math.min(max_label, 25)
+
 	for _, name in ipairs(names) do
 		local agent = self.agents[name]
 		local icon, hl, hint
@@ -177,16 +190,17 @@ function Bus:_refresh_winbar()
 			icon, hl = "◌", "Comment"
 		elseif status == "streaming" then
 			icon, hl = "●", "DiagnosticOk"
-			hint = agent.activity
+			hint = truncate(agent.activity, 10)
 		else
 			icon, hl = "◉", "Normal"
 		end
 		local adapter = agent.adapter_name or "?"
 		local base = name == adapter and name or (name .. "/" .. adapter)
+		base = truncate(base, max_label - 4) -- 预留 icon + 空格 + hint
 		local label = hint and string.format("%s %s [%s]", icon, base, hint) or (icon .. " " .. base)
 		-- main 显示队列深度
 		if name == "main" and #self._main_queue > 0 then
-			label = label .. string.format(" [queue:%d]", #self._main_queue)
+			label = label .. string.format(" [q:%d]", #self._main_queue)
 		end
 		parts[#parts + 1] = string.format("%%#%s#%s%%*", hl, label)
 	end
@@ -386,6 +400,16 @@ function Bus:_push_to_main(content, from)
 		return
 	end
 
+	-- 如果 main Chat 正在直接对话，入队等待
+	local main_chat = self:_find_main_chat()
+	if main_chat and main_chat.streaming then
+		log("INFO", "_push_to_main: main chat busy, queueing  msg=" .. content:sub(1, 80))
+		self._main_queue[#self._main_queue + 1] = { content = content, from = from }
+		self:_refresh_winbar()
+		self:_schedule_main_queue_drain()
+		return
+	end
+
 	-- 队列：如果正在处理，入队等待
 	if self._main_busy then
 		log("INFO", "_push_to_main: queued  msg=" .. content:sub(1, 80))
@@ -396,7 +420,6 @@ function Bus:_push_to_main(content, from)
 	self._main_busy = true
 	main.status = "streaming"
 	-- 同步主 Chat 的 streaming 状态
-	local main_chat = self:_find_main_chat()
 	if main_chat then
 		main_chat.streaming = true
 		main_chat:_refresh_winbar()
@@ -410,20 +433,9 @@ function Bus:_push_to_main(content, from)
 	self:_notify_main_chat(from or "频道", content)
 
 	local stream_buf = ""
-	local orig_on_update = main.client.on_update
 
-	main.client.on_update = function(params)
-		if orig_on_update then orig_on_update(params) end
-		if not params or not params.update then return end
-		local kind = params.update.sessionUpdate
-		if kind == "agent_message_chunk" then
-			local text = self:_extract_text(params.update.content)
-			if text ~= "" then stream_buf = stream_buf .. text end
-		end
-	end
-
+	-- 用 on_chunk（第3参数）收集输出，不再 monkey-patch on_update
 	main.client:prompt(content, function(_)
-		main.client.on_update = orig_on_update
 		local elapsed = math.floor((os.clock() - t0) * 1000)
 		log("INFO", "_push_to_main: done  elapsed=" .. elapsed .. "ms  reply_len=" .. #stream_buf)
 		if stream_buf ~= "" then
@@ -446,7 +458,32 @@ function Bus:_push_to_main(content, from)
 				self:_push_to_main(next_item.content, next_item.from)
 			end)
 		end
+	end, function(params)
+		-- on_chunk：只收集 text，不影响全局 on_update
+		if not params or not params.update then return end
+		local kind = params.update.sessionUpdate
+		if kind == "agent_message_chunk" then
+			local text = self:_extract_text(params.update.content)
+			if text ~= "" then stream_buf = stream_buf .. text end
+		end
 	end)
+end
+
+--- 延迟检查队列（等 main chat 空闲后排水）
+function Bus:_schedule_main_queue_drain()
+	if self._drain_pending then return end
+	self._drain_pending = true
+	vim.defer_fn(function()
+		self._drain_pending = false
+		if self._main_busy or #self._main_queue == 0 then return end
+		local main_chat = self:_find_main_chat()
+		if main_chat and main_chat.streaming then
+			self:_schedule_main_queue_drain() -- 还在忙，继续等
+			return
+		end
+		local next_item = table.remove(self._main_queue, 1)
+		self:_push_to_main(next_item.content, next_item.from)
+	end, 500)
 end
 
 --- 查找主 agent 关联的 Chat 实例

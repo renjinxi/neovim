@@ -150,12 +150,24 @@ function Client:start(opts)
 		self:_log("authenticate ok  elapsed=" .. math.floor((os.clock()-t_auth)*1000) .. "ms  method=" .. self.adapter.auth_method)
 	end
 
-	-- ACP 握手：session/new
+	-- ACP 握手：session/new（30s 超时，自动重试 2 次）
 	local t2 = os.clock()
 	local session_args = { cwd = cwd, mcpServers = {} }
-	local session_result, session_err = self:_request_sync("session/new", session_args, 15000)
+	local session_result, session_err
+	local max_retries = 2
+	for attempt = 0, max_retries do
+		session_result, session_err = self:_request_sync("session/new", session_args, 30000)
+		if not session_err then
+			break
+		end
+		if attempt < max_retries then
+			self:_log("session/new retry  attempt=" .. (attempt + 1) .. "  err=" .. tostring(session_err))
+			-- 等待 2 秒后重试
+			vim.wait(2000, function() return false end, 100)
+		end
+	end
 	if session_err then
-		self:_log("session/new FAILED  err=" .. tostring(session_err))
+		self:_log("session/new FAILED  err=" .. tostring(session_err) .. "  attempts=" .. (max_retries + 1))
 		self:stop()
 		error("session/new failed: " .. tostring(session_err))
 	end
